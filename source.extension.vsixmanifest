@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Vsix Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
+<Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
   <Identifier Id="1e0c061a-af97-43bb-930d-7e3629676249">
-    <Name>VSWindowTitleChanger</Name>
+    <Name>Visual Studio Window Title Changer</Name>
     <Author>István Pásztor</Author>
     <Version>1.0</Version>
     <Description xml:space="preserve">This extension changes the Visual Studio main window title based on the full pathname of the currently opened solution. You setup a list of regex+title_pattern pairs and the first regex that matches the full pathname of the solution file will select the actual pattern. The pattern can contain caputred groups from the regex.</Description>
@@ -14,20 +14,7 @@
         <Edition>Ultimate</Edition>
         <Edition>Premium</Edition>
         <Edition>Pro</Edition>
-        <Edition>IntegratedShell</Edition>
-        <Edition>VSLS</Edition>
-      </VisualStudio>
-      <VisualStudio Version="11.0">
-        <Edition>Ultimate</Edition>
-        <Edition>Premium</Edition>
-        <Edition>Pro</Edition>
-        <Edition>IntegratedShell</Edition>
-        <Edition>VSLS</Edition>
-      </VisualStudio>
-      <VisualStudio Version="12.0">
-        <Edition>Ultimate</Edition>
-        <Edition>Premium</Edition>
-        <Edition>Pro</Edition>
+        <Edition>Express_All</Edition>
         <Edition>IntegratedShell</Edition>
         <Edition>VSLS</Edition>
       </VisualStudio>
@@ -35,9 +22,9 @@
     <SupportedFrameworkRuntimeEdition MinVersion="1.0" MaxVersion="4.5" />
   </Identifier>
   <References>
-        <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
-            <Name>Visual Studio MPF</Name>
-        </Reference>
+    <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
+      <Name>Visual Studio MPF</Name>
+    </Reference>
   </References>
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
