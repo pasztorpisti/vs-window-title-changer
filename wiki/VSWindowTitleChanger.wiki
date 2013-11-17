@@ -1,4 +1,5 @@
 #summary A brief intro.
+#labels Featured
 
 = Introduction =
 
