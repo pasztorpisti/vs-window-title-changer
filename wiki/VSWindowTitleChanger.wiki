@@ -1,0 +1,7 @@
+#summary A brief intro.
+
+= Introduction =
+
+A Visual Studio extension that sets the title of the Visual Studio main window based on the full pathname of the loaded solution file. Comes handy when you are running many instances of Visual Studio with solutions that have the same filename but reside in different branch directories.
+
+You can find a compiled binary and a brief how-to on the Visual Studio Gallery page of the extension: http://visualstudiogallery.msdn.microsoft.com/2e8ebfe4-023f-4c4d-9b7a-d05bbc5cb239
