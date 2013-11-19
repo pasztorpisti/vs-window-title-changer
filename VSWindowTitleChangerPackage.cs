@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Windows.Threading;
 using EnvDTE;
 using Microsoft.VisualStudio;
@@ -26,9 +23,15 @@ namespace VSWindowTitleChanger
 	// This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is
 	// a package.
 	[PackageRegistration(UseManagedResourcesOnly = true)]
+	// In order be loaded inside Visual Studio in a machine that has not the VS SDK installed, 
+	// package needs to have a valid load key (it can be requested at 
+	// http://msdn.microsoft.com/vstudio/extend/). This attributes tells the shell that this 
+	// package has a load key embedded in its resources.
+	[ProvideLoadKey("Standard", "1.0", "Visual Studio Window Title Changer", "WoofWoof", 1)]
 	// This attribute is used to register the informations needed to show the this package
 	// in the Help/About dialog of Visual Studio.
-	[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
+	// TODO: check if the first false parameter hides the aboutbox info in VS2010
+	[InstalledProductRegistration(false, "#110", "#112", "1.0", IconResourceID = 400)]
 	[Guid(GuidList.guidVSWindowTitleChangerPkgString)]
 	[ProvideOptionPage(typeof(ToolOptions), "VS Window Title Changer", "Settings", 0, 0, true)]
 	[ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids80.DesignMode)]
@@ -42,183 +45,14 @@ namespace VSWindowTitleChanger
 			Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
 		}
 
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-		private static extern bool SetWindowText(IntPtr hwnd, String lpString);
+		private TitleFormatter m_TitleFormatter;
+		private VSMainWindow m_VSMainWindow;
+		private Dispatcher m_UIThradDispatcher;
+		private DispatcherTimer m_DispatcherTimer;
+		private bool m_Debug = false;
 
-		private Dispatcher _uiThradDispatcher;
-		private DispatcherTimer _dispatcherTimer;
-		private bool _debug = false;
-
-		private const int UPDATE_PERIOD_SECS = 5;
-		private const int DEBUG_UPDATE_PERIOD_SECS = 1;
-
-
-		private static int NormalizeIndex(int str_length, int index)
-		{
-			if (index < 0)
-				return Math.Max(0, str_length + index);
-			return Math.Min(str_length - 1, index);
-		}
-
-		private string ProcessComplexFormatSpecifier(string format, GroupCollection groups)
-		{
-			string group_index_str = null;
-			string slice_0_str = null;
-			string slice_1_str = null;
-			int idx1 = format.IndexOf(',');
-			if (idx1 < 0)
-			{
-				// something like "1"
-				group_index_str = format;
-			}
-			else
-			{
-				group_index_str = format.Substring(0, idx1);
-				slice_0_str = format.Substring(0, idx1);
-				int idx2 = format.IndexOf(':');
-				if (idx2 < 0)
-				{
-					// something like "1,5" or "1,-5"
-					slice_0_str = format.Substring(idx1+1);
-				}
-				else
-				{
-					// something like "1,5:4"
-					slice_0_str = format.Substring(idx1+1, idx2-idx1-1);
-					slice_1_str = format.Substring(idx2+1);
-				}
-			}
-
-			int group_index = Convert.ToInt32(group_index_str);
-			if (group_index < 0 || group_index >= groups.Count)
-				return null;
-			if (!groups[group_index].Success)
-				return "";
-
-			string s = groups[group_index].Value;
-			if (slice_0_str == null)
-				// something like "1"
-				return s;
-
-			int slice_0 = Convert.ToInt32(slice_0_str);
-			if (slice_1_str == null)
-			{
-				// something like "1,5" or "1,-5"
-				if (slice_0 < 0)
-					return s.Substring(NormalizeIndex(s.Length, slice_0));
-				return s.Substring(0, NormalizeIndex(s.Length, slice_0));
-			}
-			else
-			{
-				// something like "1,5:4"
-				slice_0 = NormalizeIndex(s.Length, slice_0);
-				int slice_1 = NormalizeIndex(s.Length, Convert.ToInt32(slice_1_str));
-				if (slice_0 >= slice_1)
-					return "";
-				return s.Substring(slice_0, slice_1 - slice_0);
-			}
-		}
-
-		private string CreateFormattedTitle(string title_pattern, GroupCollection groups)
-		{
-			int len = title_pattern.Length;
-			string title = "";
-			for (int i = 0; i < len; ++i)
-			{
-				if (title_pattern[i] != '$')
-				{
-					title += title_pattern[i];
-					continue;
-				}
-	
-				++i;
-				if (i == len || title_pattern[i] == '$')
-				{
-					title += '$';
-				}
-				else if (title_pattern[i] >= '0' && title_pattern[i] <= '9')
-				{
-					int idx = title_pattern[i] - '0';
-					if (idx >= groups.Count)
-					{
-						title += '$';
-						title += title_pattern[i];
-					}
-					else
-					{
-						Group group = groups[idx];
-						if (group.Success)
-							title += group.Value;
-					}
-				}
-				else if (title_pattern[i] == '{')
-				{
-					int idx2 = title_pattern.IndexOf('}', i + 1);
-					if (idx2 < 0)
-					{
-						title += "${";
-					}
-					else
-					{
-						string formatted = null;
-						try
-						{
-							formatted = ProcessComplexFormatSpecifier(title_pattern.Substring(i + 1, idx2 - i - 1), groups);
-						}
-						catch (System.Exception)
-						{
-						}
-
-						if (formatted == null)
-							title += title_pattern.Substring(i - 1, idx2 - i + 2);
-						else
-							title += formatted;
-
-						i = idx2;
-					}
-				}
-				else
-				{
-					title += '$';
-					title += title_pattern[i];
-				}
-			}
-
-			return title;
-		}
-
-		private string TryMakeWindowTitleFromPattern(ToolOptions.WindowTitlePattern pattern, DBGMODE dbgmode, string solution_path)
-		{
-			Regex regex;
-			try
-			{
-				RegexOptions regex_options = pattern.RegexIgnoreCase ? RegexOptions.IgnoreCase : RegexOptions.None;
-				regex = new Regex(pattern.Regex, regex_options);
-			}
-			catch (ArgumentException)
-			{
-				return null;
-			}
-			Match match = regex.Match(solution_path);
-			if (!match.Success)
-				return null;
-
-			string title_pattern;
-			switch (dbgmode)
-			{
-				case DBGMODE.DBGMODE_Break:
-					title_pattern = pattern.TitlePatternBreakMode;
-					break;
-				case DBGMODE.DBGMODE_Run:
-					title_pattern = pattern.TitlePatternRunningMode;
-					break;
-				default:
-					title_pattern = pattern.TitlePattern;
-					break;
-			}
-
-			return CreateFormattedTitle(title_pattern, match.Groups);
-		}
+		private const int UPDATE_PERIOD_MILLISECS = 3000;
+		private const int DEBUG_UPDATE_PERIOD_MILLISECS = 200;
 
 		private void UpdateWindowTitle()
 		{
@@ -235,81 +69,31 @@ namespace VSWindowTitleChanger
 			DBGMODE dbgmode = adbgmode[0] & ~DBGMODE.DBGMODE_EncMask;
 
 			ToolOptions options = (ToolOptions)GetDialogPage(typeof(ToolOptions));
-			if (_debug != options.Debug)
+			if (m_Debug != options.Debug)
 			{
-				_debug = options.Debug;
-				_dispatcherTimer.Interval = new TimeSpan(0, 0, _debug ? DEBUG_UPDATE_PERIOD_SECS : UPDATE_PERIOD_SECS);
+				m_Debug = options.Debug;
+				int update_millis = m_Debug ? DEBUG_UPDATE_PERIOD_MILLISECS : UPDATE_PERIOD_MILLISECS;
+				m_DispatcherTimer.Interval = new TimeSpan(0, 0, 0, update_millis/1000, update_millis%1000);
 			}
 
-			List<ToolOptions.WindowTitlePattern> patterns = options.WindowTitlePatterns;
-
-			string title = null;
-			foreach (ToolOptions.WindowTitlePattern pattern in patterns)
-			{
-				title = TryMakeWindowTitleFromPattern(pattern, dbgmode, solution_path);
-				if (title != null)
-				{
-					if (options.Debug)
-						title += string.Format(" [Debug: pattern='{0}' solution_path={1}]", pattern.Name, solution_path);
-					break;
-				}
-			}
-
-			if (title == null)
-			{
-				// default title
-				if (solution_path.Length != 0)
-				{
-					title = new FileInfo(solution_path).Name;
-					title += " - Visual Studio";
-				}
-				else
-				{
-					title = "Visual Studio";
-				}
-
-				if (options.Debug)
-					title += string.Format(" [Debug: pattern='<builtin default>' solution_path={0}]", solution_path);
-			}
-
-			// This doesn't always return the actual VS main window handle, it seems to return
-			// the handle of the currently active top level window of the process (if it has a taskbar button).
-			//IntPtr hwnd = System.Diagnostics.Process.GetCurrentProcess().MainWindowHandle;
+			TitleFormatter.Input input = new TitleFormatter.Input();
+			input.options = options;
+			input.solution_path = solution_path;
+			input.dbgmode = dbgmode;
+			string title = m_TitleFormatter.FormatTitle(ref input);
 
 			DTE dte = (DTE)GetService(typeof(DTE));
-			IntPtr hwnd = (IntPtr)dte.MainWindow.HWnd;
+			title += " ";
+			Document doc = dte.ActiveDocument;
+			if (doc != null)
+				title += doc.FullName;
 
-			SetWindowText(hwnd, title);
+			m_VSMainWindow.SetTitle(title);
 		}
 
 		void Schedule_UpdateWindowTitle()
 		{
-			_uiThradDispatcher.BeginInvoke(new Action(delegate() { UpdateWindowTitle(); }));
-		}
-
-		private uint _solutionEventsCookie;
-		private uint _debuggerEventsCookie;
-
-		protected override void Initialize()
-		{
-			Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
-			base.Initialize();
-
-			IVsSolution vs_solution = (IVsSolution)GetService(typeof(IVsSolution));
-			vs_solution.AdviseSolutionEvents(this, out _solutionEventsCookie);
-
-			IVsDebugger debugger = (IVsDebugger)GetService(typeof(IVsDebugger));
-			debugger.AdviseDebuggerEvents(this, out _debuggerEventsCookie);
-
-			_uiThradDispatcher = Dispatcher.CurrentDispatcher;
-
-			_dispatcherTimer = new DispatcherTimer();
-			_dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
-			// Update every X seconds to handle unexpected window title changes
-			_dispatcherTimer.Interval = new TimeSpan(0, 0, _debug ? DEBUG_UPDATE_PERIOD_SECS : UPDATE_PERIOD_SECS);
-			_dispatcherTimer.Start();
-
-			Schedule_UpdateWindowTitle();
+			m_UIThradDispatcher.BeginInvoke(new Action(delegate() { UpdateWindowTitle(); }));
 		}
 
 		private void dispatcherTimer_Tick(object sender, EventArgs e)
@@ -317,16 +101,60 @@ namespace VSWindowTitleChanger
 			UpdateWindowTitle();
 		}
 
+		private uint m_SolutionEventsCookie;
+		private uint m_DebuggerEventsCookie;
+
+		private void DelayedInit()
+		{
+			m_TitleFormatter = new TitleFormatter();
+
+			m_DispatcherTimer = new DispatcherTimer();
+			m_DispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
+			// Update every X seconds to handle unexpected window title changes
+			int update_millis = m_Debug ? DEBUG_UPDATE_PERIOD_MILLISECS : UPDATE_PERIOD_MILLISECS;
+			m_DispatcherTimer.Interval = new TimeSpan(0, 0, 0, update_millis / 1000, update_millis % 1000);
+			m_DispatcherTimer.Start();
+
+			IVsSolution vs_solution = (IVsSolution)GetService(typeof(IVsSolution));
+			vs_solution.AdviseSolutionEvents(this, out m_SolutionEventsCookie);
+
+			IVsDebugger debugger = (IVsDebugger)GetService(typeof(IVsDebugger));
+			debugger.AdviseDebuggerEvents(this, out m_DebuggerEventsCookie);
+
+			DTE dte = (DTE)GetService(typeof(DTE));
+			m_VSMainWindow = new VSMainWindow();
+			m_VSMainWindow.Initialize((IntPtr)dte.MainWindow.HWnd);
+
+			UpdateWindowTitle();
+		}
+
+		protected override void Initialize()
+		{
+			Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
+			base.Initialize();
+
+			m_UIThradDispatcher = Dispatcher.CurrentDispatcher;
+			// We do delayed initialization because DTE is currently null...
+			m_UIThradDispatcher.BeginInvoke(new Action(delegate() { DelayedInit(); }));
+		}
+
 		protected override void Dispose(bool disposing)
 		{
 			Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Dispose() of: {0}", this.ToString()));
-			_dispatcherTimer.Stop();
+
+			if (m_DispatcherTimer != null)
+				m_DispatcherTimer.Stop();
 
 			IVsSolution vs_solution = (IVsSolution)GetService(typeof(IVsSolution));
-			vs_solution.UnadviseSolutionEvents(_solutionEventsCookie);
+			if (vs_solution != null)
+				vs_solution.UnadviseSolutionEvents(m_SolutionEventsCookie);
 
 			IVsDebugger debugger = (IVsDebugger)GetService(typeof(IVsDebugger));
-			debugger.UnadviseDebuggerEvents(_debuggerEventsCookie);
+			if (debugger != null)
+				debugger.UnadviseDebuggerEvents(m_DebuggerEventsCookie);
+
+			if (m_VSMainWindow != null)
+				m_VSMainWindow.Deinitialize();
 		}
 
 		// IVsSolutionEvents
