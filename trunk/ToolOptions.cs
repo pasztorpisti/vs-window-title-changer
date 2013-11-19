@@ -30,6 +30,12 @@ namespace VSWindowTitleChanger
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public List<WindowTitlePattern> WindowTitlePatterns { get; set; }
 
+		public override void ResetSettings()
+		{
+			CopyOptions(new SerializedOptions(), this);
+			Fixup();
+		}
+
 		public class SerializedOptions : ISerializedOptions
 		{
 			public bool Debug { get; set; }
@@ -53,8 +59,15 @@ namespace VSWindowTitleChanger
 					CopyOptions(this, options);
 					XmlSerializer xs = new XmlSerializer(typeof(SerializedOptions));
 					StringWriter sw = new StringWriter();
-					XmlTextWriter xtw = new XmlTextWriter(sw);
-					xtw.Formatting = Formatting.None;
+					XmlWriterSettings settings = new XmlWriterSettings()
+					{
+						OmitXmlDeclaration = true,
+						Indent = false,
+						NewLineChars = "",
+						NewLineHandling = NewLineHandling.Entitize,
+						NewLineOnAttributes = false,
+					};
+					XmlWriter xtw = XmlTextWriter.Create(sw, settings);
 					xs.Serialize(xtw, options);
 					return sw.ToString();
 				}
@@ -67,6 +80,11 @@ namespace VSWindowTitleChanger
 			{
 				try
 				{
+					if (string.IsNullOrEmpty(value))
+					{
+						ResetSettings();
+						return;
+					}
 					XmlSerializer xs = new XmlSerializer(typeof(SerializedOptions));
 					StringReader sr = new StringReader(value);
 					SerializedOptions options = (SerializedOptions)xs.Deserialize(sr);
