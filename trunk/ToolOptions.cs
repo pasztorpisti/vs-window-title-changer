@@ -1,113 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
+using System.Xml;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.Shell;
 
 namespace VSWindowTitleChanger
 {
+	public interface ISerializedOptions
+	{
+		bool Debug { get; set; }
+		List<WindowTitlePattern> WindowTitlePatterns { get; set; }
+	}
+
 	[ClassInterface(ClassInterfaceType.AutoDual)]
 	[ComVisible(true)]
-	class ToolOptions : DialogPage
+	public class ToolOptions : DialogPage, ISerializedOptions
 	{
 		[Category("Solution File Pathname Matching")]
 		[DisplayName("Debug Mode")]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool Debug { get; set; }
-
-		[Serializable]
-		public class WindowTitlePattern
-		{
-			private string name;
-			private bool regexIgnoreCase = true;
-			private string regex;
-			private string titlePattern;
-			private string titlePatternBreakMode;
-			private string titlePatternRunningMode;
-
-			public void Fixup()
-			{
-				if (name == null)
-					name = "New Pattern";
-				if (regex == null)
-					regex = @".+\\([^\\]+)\.sln$";
-				if (titlePattern == null)
-					titlePattern = "$1 - Visual Studio";
-				if (titlePatternBreakMode == null)
-					titlePatternBreakMode = "$1 - Visual Studio (Debugging)";
-				if (titlePatternRunningMode == null)
-					titlePatternRunningMode = "$1 - Visual Studio (Running)";
-			}
-
-			public WindowTitlePattern()
-			{
-				Fixup();
-			}
-
-			[Category("Organization")]
-			[DisplayName("Name")]
-			public string Name { get { return name; } set { name = value; } }
-
-			[Category("Solution File Pathname Matching")]
-			[DisplayName("Case Insensitive Regex")]
-			public bool RegexIgnoreCase { get { return regexIgnoreCase; } set { regexIgnoreCase = value; } }
-
-			[Category("Solution File Pathname Matching")]
-			[DisplayName("Solution File Pathname Regex")]
-			public string Regex
-			{
-				get { return regex; }
-				set
-				{
-					regex = value;
-					// This throws an exception if the regex is invalid and the
-					// collection editor automatically shows a nice detailed error message.
-					new Regex(value);
-				}
-			}
-
-			[Category("Solution File Pathname Matching")]
-			[DisplayName("Window Title Pattern")]
-			public string TitlePattern { get { return titlePattern; } set { titlePattern = value; } }
-
-			[Category("Solution File Pathname Matching")]
-			[DisplayName("Window Title Pattern in Break Mode")]
-			public string TitlePatternBreakMode { get { return titlePatternBreakMode; } set { titlePatternBreakMode = value; } }
-
-			[Category("Solution File Pathname Matching")]
-			[DisplayName("Window Title Pattern in Running Mode")]
-			public string TitlePatternRunningMode { get { return titlePatternRunningMode; } set { titlePatternRunningMode = value; } }
-
-			public override string ToString()
-			{
-				return name;
-			}
-		}
-
-		private List<WindowTitlePattern> windowTitlePatterns = new List<WindowTitlePattern>();
 
 		[Category("Window Title Changer Options")]
 		[DisplayName("Window Title Patterns")]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public List<WindowTitlePattern> WindowTitlePatterns
+		public List<WindowTitlePattern> WindowTitlePatterns { get; set; }
+
+		public class SerializedOptions : ISerializedOptions
 		{
-			get { return windowTitlePatterns; }
-			set { windowTitlePatterns = value; }
+			public bool Debug { get; set; }
+			public List<WindowTitlePattern> WindowTitlePatterns { get; set; }
 		}
 
-		// The below invisible WindowTitlePatternsString property and its binary/base64 serialization is
-		// there because I couldn't get VS to serialize the WindowTitlePatterns collection property. For this
-		// reason the WindowTitlePatterns property is used only by the designer and the invisible
-		// WindowTitlePatternsString is used for its serialization...
-		private sealed class MySerializationBinder : System.Runtime.Serialization.SerializationBinder
+		private static void CopyOptions(ISerializedOptions src, ISerializedOptions dest)
 		{
-			public override Type BindToType(string assemblyName, string typeName)
-			{
-				return Type.GetType(String.Format("{0}, {1}", typeName, Assembly.GetExecutingAssembly().FullName));
-			}
+			foreach (PropertyInfo pi in typeof(ISerializedOptions).GetProperties())
+				pi.SetValue(dest, pi.GetValue(src, null), null);
 		}
 
 		[Browsable(false)]
@@ -115,36 +47,125 @@ namespace VSWindowTitleChanger
 		{
 			get
 			{
-				BinaryFormatter bf = new BinaryFormatter();
-				using (MemoryStream mem_stream = new MemoryStream())
+				try
 				{
-					foreach (WindowTitlePattern wtp in windowTitlePatterns)
-						bf.Serialize(mem_stream, wtp);
-					return Convert.ToBase64String(mem_stream.ToArray());
+					SerializedOptions options = new SerializedOptions();
+					CopyOptions(this, options);
+					XmlSerializer xs = new XmlSerializer(typeof(SerializedOptions));
+					StringWriter sw = new StringWriter();
+					XmlTextWriter xtw = new XmlTextWriter(sw);
+					xtw.Formatting = Formatting.None;
+					xs.Serialize(xtw, options);
+					return sw.ToString();
+				}
+				catch (System.Exception)
+				{
+					return "";
 				}
 			}
 			set
 			{
-				List<WindowTitlePattern> wtps = new List<WindowTitlePattern>();
 				try
 				{
-					BinaryFormatter bf = new BinaryFormatter();
-					bf.Binder = new MySerializationBinder();
-					using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(value)))
-					{
-						while (ms.Position != ms.Length)
-						{
-							WindowTitlePattern wtp = (WindowTitlePattern)bf.Deserialize(ms);
-							wtp.Fixup();
-							wtps.Add(wtp);
-						}
-					}
-					windowTitlePatterns = wtps;
+					XmlSerializer xs = new XmlSerializer(typeof(SerializedOptions));
+					StringReader sr = new StringReader(value);
+					SerializedOptions options = (SerializedOptions)xs.Deserialize(sr);
+					CopyOptions(options, this);
+					Fixup();
 				}
 				catch (System.Exception)
 				{
 				}
 			}
+		}
+
+		private void Fixup()
+		{
+			if (WindowTitlePatterns == null)
+			{
+				WindowTitlePatterns = new List<WindowTitlePattern>();
+			}
+			else
+			{
+				foreach (WindowTitlePattern wtp in WindowTitlePatterns)
+					wtp.Fixup();
+			}
+		}
+
+		public ToolOptions()
+		{
+			Fixup();
+		}
+
+	}
+
+
+
+	public class WindowTitlePattern
+	{
+		private string m_Name;
+		private bool m_RegexIgnoreCase = true;
+		private string m_Regex;
+		private string m_TitlePattern;
+		private string m_TitlePatternBreakMode;
+		private string m_TitlePatternRunningMode;
+
+		public void Fixup()
+		{
+			if (m_Name == null)
+				m_Name = "New Pattern";
+			if (m_Regex == null)
+				m_Regex = @".+\\([^\\]+)\.sln$";
+			if (m_TitlePattern == null)
+				m_TitlePattern = "$1 - Visual Studio";
+			if (m_TitlePatternBreakMode == null)
+				m_TitlePatternBreakMode = "$1 - Visual Studio (Debugging)";
+			if (m_TitlePatternRunningMode == null)
+				m_TitlePatternRunningMode = "$1 - Visual Studio (Running)";
+		}
+
+		public WindowTitlePattern()
+		{
+			Fixup();
+		}
+
+		[Category("Organization")]
+		[DisplayName("Name")]
+		public string Name { get { return m_Name; } set { m_Name = value; } }
+
+		[Category("Solution File Pathname Matching")]
+		[DisplayName("Case Insensitive Regex")]
+		public bool RegexIgnoreCase { get { return m_RegexIgnoreCase; } set { m_RegexIgnoreCase = value; } }
+
+		[Category("Solution File Pathname Matching")]
+		[DisplayName("Solution File Pathname Regex")]
+		public string Regex
+		{
+			get { return m_Regex; }
+			set
+			{
+				m_Regex = value;
+				// This throws an exception if the regex is invalid and the
+				// collection editor automatically shows a nice detailed error message.
+				new Regex(value);
+			}
+		}
+
+		[Category("Solution File Pathname Matching")]
+		[DisplayName("Window Title Pattern")]
+		public string TitlePattern { get { return m_TitlePattern; } set { m_TitlePattern = value; } }
+
+		[Category("Solution File Pathname Matching")]
+		[DisplayName("Window Title Pattern in Break Mode")]
+		public string TitlePatternBreakMode { get { return m_TitlePatternBreakMode; } set { m_TitlePatternBreakMode = value; } }
+
+		[Category("Solution File Pathname Matching")]
+		[DisplayName("Window Title Pattern in Running Mode")]
+		public string TitlePatternRunningMode { get { return m_TitlePatternRunningMode; } set { m_TitlePatternRunningMode = value; } }
+
+		public override string ToString()
+		{
+			return m_Name;
 		}
 	}
 }

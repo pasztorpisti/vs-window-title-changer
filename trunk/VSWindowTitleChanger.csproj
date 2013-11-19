@@ -87,9 +87,11 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="TitleFormatter.cs" />
     <Compile Include="ToolOptions.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="VSMainWindow.cs" />
     <Compile Include="VSWindowTitleChangerPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
