@@ -91,9 +91,11 @@ namespace VSWindowTitleChanger
 			m_VSMainWindow.SetTitle(title);
 		}
 
+		private delegate void MyAction();
+
 		void Schedule_UpdateWindowTitle()
 		{
-			m_UIThradDispatcher.BeginInvoke(new Action(delegate() { UpdateWindowTitle(); }));
+			m_UIThradDispatcher.BeginInvoke(new MyAction(delegate() { UpdateWindowTitle(); }));
 		}
 
 		private void dispatcherTimer_Tick(object sender, EventArgs e)
@@ -135,7 +137,7 @@ namespace VSWindowTitleChanger
 
 			m_UIThradDispatcher = Dispatcher.CurrentDispatcher;
 			// We do delayed initialization because DTE is currently null...
-			m_UIThradDispatcher.BeginInvoke(new Action(delegate() { DelayedInit(); }));
+			m_UIThradDispatcher.BeginInvoke(new MyAction(delegate() { DelayedInit(); }));
 		}
 
 		protected override void Dispose(bool disposing)
