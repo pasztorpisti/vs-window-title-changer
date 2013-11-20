@@ -16,7 +16,9 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin_2005\Debug\</OutputPath>
+    <IntermediateOutputPath>obj_2005\Debug\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj_2005\Debug\</BaseIntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
