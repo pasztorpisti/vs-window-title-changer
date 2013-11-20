@@ -82,12 +82,6 @@ namespace VSWindowTitleChanger
 			input.dbgmode = dbgmode;
 			string title = m_TitleFormatter.FormatTitle(ref input);
 
-			DTE dte = (DTE)GetService(typeof(DTE));
-			title += " ";
-			Document doc = dte.ActiveDocument;
-			if (doc != null)
-				title += doc.FullName;
-
 			m_VSMainWindow.SetTitle(title);
 		}
 
