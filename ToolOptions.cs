@@ -20,15 +20,18 @@ namespace VSWindowTitleChanger
 	[ComVisible(true)]
 	public class ToolOptions : DialogPage, ISerializedOptions
 	{
+		private bool m_Debug;
+		private List<WindowTitlePattern> m_WindowTitlePatterns;
+
 		[Category("Solution File Pathname Matching")]
 		[DisplayName("Debug Mode")]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public bool Debug { get; set; }
+		public bool Debug { get { return m_Debug; } set { m_Debug = value; } }
 
 		[Category("Window Title Changer Options")]
 		[DisplayName("Window Title Patterns")]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public List<WindowTitlePattern> WindowTitlePatterns { get; set; }
+		public List<WindowTitlePattern> WindowTitlePatterns { get { return m_WindowTitlePatterns; } set { m_WindowTitlePatterns = value; } }
 
 		public override void ResetSettings()
 		{
@@ -38,8 +41,11 @@ namespace VSWindowTitleChanger
 
 		public class SerializedOptions : ISerializedOptions
 		{
-			public bool Debug { get; set; }
-			public List<WindowTitlePattern> WindowTitlePatterns { get; set; }
+			private bool m_Debug;
+			private List<WindowTitlePattern> m_WindowTitlePatterns;
+
+			public bool Debug { get { return m_Debug; } set { m_Debug = value; } }
+			public List<WindowTitlePattern> WindowTitlePatterns { get { return m_WindowTitlePatterns; } set { m_WindowTitlePatterns = value; } }
 		}
 
 		private static void CopyOptions(ISerializedOptions src, ISerializedOptions dest)
@@ -59,14 +65,12 @@ namespace VSWindowTitleChanger
 					CopyOptions(this, options);
 					XmlSerializer xs = new XmlSerializer(typeof(SerializedOptions));
 					StringWriter sw = new StringWriter();
-					XmlWriterSettings settings = new XmlWriterSettings()
-					{
-						OmitXmlDeclaration = true,
-						Indent = false,
-						NewLineChars = "",
-						NewLineHandling = NewLineHandling.Entitize,
-						NewLineOnAttributes = false,
-					};
+					XmlWriterSettings settings = new XmlWriterSettings();
+					settings.OmitXmlDeclaration = true;
+					settings.Indent = false;
+					settings.NewLineChars = "";
+					settings.NewLineHandling = NewLineHandling.Entitize;
+					settings.NewLineOnAttributes = false;
 					XmlWriter xtw = XmlTextWriter.Create(sw, settings);
 					xs.Serialize(xtw, options);
 					return sw.ToString();
