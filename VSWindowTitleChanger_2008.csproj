@@ -18,8 +18,8 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin_2008\Debug\</OutputPath>
-    <IntermediateOutputPath>obj_2008\Debug\</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>obj_2008\Debug\</BaseIntermediateOutputPath>
+    <IntermediateOutputPath>obj\obj_2008\Debug\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\obj_2008\Debug\</BaseIntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -28,8 +28,8 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin_2008\Release\</OutputPath>
-    <IntermediateOutputPath>obj_2008\Release\</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>obj_2008\Release\</BaseIntermediateOutputPath>
+    <IntermediateOutputPath>obj\obj_2008\Release\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\obj_2008\Release\</BaseIntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
