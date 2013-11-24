@@ -10,9 +10,19 @@ using Microsoft.VisualStudio.Shell;
 
 namespace VSWindowTitleChanger
 {
+	public enum EExtensionActivationRule
+	{
+		AlwaysActive,
+		AlwaysInactive,
+		ActiveWithMultipleVSInstances,
+		ActiveWithMultipleVSInstancesOfTheSameVersion,
+	}
+
 	public interface ISerializedOptions
 	{
 		bool Debug { get; set; }
+		bool SlashPathSeparator { get; set; }
+		EExtensionActivationRule ExtensionActivationRule { get; set; }
 		List<WindowTitlePattern> WindowTitlePatterns { get; set; }
 	}
 
@@ -21,17 +31,34 @@ namespace VSWindowTitleChanger
 	public class ToolOptions : DialogPage, ISerializedOptions
 	{
 		private bool m_Debug;
+		private bool m_SlashPathSeparator;
+		private EExtensionActivationRule m_ExtensionActivationRule;
 		private List<WindowTitlePattern> m_WindowTitlePatterns;
 
-		[Category("Solution File Pathname Matching")]
+		[Category("Debugging")]
 		[DisplayName("Debug Mode")]
+		[Description("Shows additional debug info on the titlebar and the output window of Visual Studio.")]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool Debug { get { return m_Debug; } set { m_Debug = value; } }
 
 		[Category("Window Title Changer Options")]
-		[DisplayName("Window Title Patterns")]
+		[DisplayName("Use '/' as Path Separator")]
+		[Description("Replaces every backslashes to forward slashes in the pathnames of solution files and documents because matching backslashes results in uglier regular expressions.")]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public bool SlashPathSeparator { get { return m_SlashPathSeparator; } set { m_SlashPathSeparator = value; } }
+
+		[Category("Window Title Changer Options")]
+		[DisplayName("Extension Activation")]
+		[Description("Turn on/off the extension. You can also ask it to be active only in case of multiple Visual Studio instances.")]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public EExtensionActivationRule ExtensionActivationRule { get { return m_ExtensionActivationRule; } set { m_ExtensionActivationRule = value; } }
+
+		[Category("Window Title Changer Options")]
+		[DisplayName("Solution Pathname and Window Title Patterns")]
+		[Description("This collection contains the rules and patterns that are used to format the titlebar of the Visual Studio main window based on the state of the IDE.")]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public List<WindowTitlePattern> WindowTitlePatterns { get { return m_WindowTitlePatterns; } set { m_WindowTitlePatterns = value; } }
+
 
 		public override void ResetSettings()
 		{
@@ -42,9 +69,13 @@ namespace VSWindowTitleChanger
 		public class SerializedOptions : ISerializedOptions
 		{
 			private bool m_Debug;
+			private bool m_SlashPathSeparator = true;
+			private EExtensionActivationRule m_ExtensionActivationRule;
 			private List<WindowTitlePattern> m_WindowTitlePatterns;
 
 			public bool Debug { get { return m_Debug; } set { m_Debug = value; } }
+			public bool SlashPathSeparator { get { return m_SlashPathSeparator; } set { m_SlashPathSeparator = value; } }
+			public EExtensionActivationRule ExtensionActivationRule { get { return m_ExtensionActivationRule; } set { m_ExtensionActivationRule = value; } }
 			public List<WindowTitlePattern> WindowTitlePatterns { get { return m_WindowTitlePatterns; } set { m_WindowTitlePatterns = value; } }
 		}
 
@@ -122,28 +153,23 @@ namespace VSWindowTitleChanger
 	}
 
 
+	//---------------------------------------------------------------------------------------------
+
 
 	public class WindowTitlePattern
 	{
 		private string m_Name;
-		private bool m_RegexIgnoreCase = true;
 		private string m_Regex;
-		private string m_TitlePattern;
-		private string m_TitlePatternBreakMode;
-		private string m_TitlePatternRunningMode;
+		private string[] m_ConditionalPatterns;
 
 		public void Fixup()
 		{
 			if (m_Name == null)
 				m_Name = "New Pattern";
 			if (m_Regex == null)
-				m_Regex = @".+\\([^\\]+)\.sln$";
-			if (m_TitlePattern == null)
-				m_TitlePattern = "$1 - Visual Studio";
-			if (m_TitlePatternBreakMode == null)
-				m_TitlePatternBreakMode = "$1 - Visual Studio (Debugging)";
-			if (m_TitlePatternRunningMode == null)
-				m_TitlePatternRunningMode = "$1 - Visual Studio (Running)";
+				m_Regex = "";
+			if (m_ConditionalPatterns == null)
+				m_ConditionalPatterns = new string[0];
 		}
 
 		public WindowTitlePattern()
@@ -153,37 +179,28 @@ namespace VSWindowTitleChanger
 
 		[Category("Organization")]
 		[DisplayName("Name")]
+		[Description("This is for here to make it easier for your to organize things. The extension doesn't use this.")]
 		public string Name { get { return m_Name; } set { m_Name = value; } }
 
-		[Category("Solution File Pathname Matching")]
-		[DisplayName("Case Insensitive Regex")]
-		public bool RegexIgnoreCase { get { return m_RegexIgnoreCase; } set { m_RegexIgnoreCase = value; } }
-
-		[Category("Solution File Pathname Matching")]
-		[DisplayName("Solution File Pathname Regex")]
+		[Category("Solution Specific Patterns")]
+		[DisplayName("Solution File Path Regex")]
+		[Description("A regex that is matched against the full pathname of the solution file. The captured groups will be available in the window title patterns as sln_0, sln_1, ...")]
 		public string Regex
 		{
 			get { return m_Regex; }
 			set
 			{
-				m_Regex = value;
-				// This throws an exception if the regex is invalid and the
-				// collection editor automatically shows a nice detailed error message.
-				new Regex(value);
+				m_Regex = value == null ? "" : value;
+				// This throws an exception if the regex is invalid and the collection editor
+				// automatically shows a nice detailed error message (at least in VS2010).
+				new Regex(value, RegexOptions.IgnoreCase);
 			}
 		}
 
-		[Category("Solution File Pathname Matching")]
-		[DisplayName("Window Title Pattern")]
-		public string TitlePattern { get { return m_TitlePattern; } set { m_TitlePattern = value; } }
-
-		[Category("Solution File Pathname Matching")]
-		[DisplayName("Window Title Pattern in Break Mode")]
-		public string TitlePatternBreakMode { get { return m_TitlePatternBreakMode; } set { m_TitlePatternBreakMode = value; } }
-
-		[Category("Solution File Pathname Matching")]
-		[DisplayName("Window Title Pattern in Running Mode")]
-		public string TitlePatternRunningMode { get { return m_TitlePatternRunningMode; } set { m_TitlePatternRunningMode = value; } }
+		[Category("Solution Specific Patterns")]
+		[DisplayName("Window Title Patterns")]
+		[Description("A list of conditional and unconditional window title patterns. Conditional patters have the form 'IF condition_expr THEN window_title_expr'.")]
+		public string[] ConditionalPatterns { get { return m_ConditionalPatterns; } set { m_ConditionalPatterns = value; } }
 
 		public override string ToString()
 		{

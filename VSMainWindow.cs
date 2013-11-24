@@ -44,6 +44,26 @@ namespace VSWindowTitleChanger
 			}
 		}
 
+		[DllImport("user32.dll")]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		private static extern bool IsIconic(IntPtr hWnd);
+
+		public bool Minimized
+		{
+			get
+			{
+				return IsIconic(m_MainHWND);
+			}
+		}
+
+		[System.Runtime.InteropServices.DllImport("user32.dll")]
+		private static extern IntPtr GetForegroundWindow();
+
+		public bool IsForegroundWindow()
+		{
+			return m_MainHWND == GetForegroundWindow();
+		}
+
 		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
 		private static extern bool SetWindowText(IntPtr hwnd, String lpString);
 
