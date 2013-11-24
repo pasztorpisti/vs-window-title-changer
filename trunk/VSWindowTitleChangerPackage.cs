@@ -45,29 +45,23 @@ namespace VSWindowTitleChanger
 			Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
 		}
 
+		public object GetInterface(Type interface_type)
+		{
+			return GetService(interface_type);
+		}
+
 		private TitleFormatter m_TitleFormatter;
 		private VSMainWindow m_VSMainWindow;
 		private Dispatcher m_UIThradDispatcher;
 		private DispatcherTimer m_DispatcherTimer;
 		private bool m_Debug = false;
 
-		private const int UPDATE_PERIOD_MILLISECS = 3000;
+		// Some property changes are detected only through updates...
+		private const int UPDATE_PERIOD_MILLISECS = 1000;
 		private const int DEBUG_UPDATE_PERIOD_MILLISECS = 200;
 
 		private void UpdateWindowTitle()
 		{
-			IVsSolution vs_solution = (IVsSolution)GetService(typeof(IVsSolution));
-			string solution_path, temp_solution_dir, temp_solution_options;
-			if (VSConstants.S_OK != vs_solution.GetSolutionInfo(out temp_solution_dir, out solution_path, out temp_solution_options) ||
-				solution_path == null)
-				solution_path = "";
-
-			IVsDebugger debugger = (IVsDebugger)GetService(typeof(IVsDebugger));
-			DBGMODE[] adbgmode = new DBGMODE[] { DBGMODE.DBGMODE_Design };
-			if (VSConstants.S_OK != debugger.GetMode(adbgmode))
-				adbgmode[0] = DBGMODE.DBGMODE_Design;
-			DBGMODE dbgmode = adbgmode[0] & ~DBGMODE.DBGMODE_EncMask;
-
 			ToolOptions options = (ToolOptions)GetDialogPage(typeof(ToolOptions));
 			if (m_Debug != options.Debug)
 			{
@@ -76,13 +70,7 @@ namespace VSWindowTitleChanger
 				m_DispatcherTimer.Interval = new TimeSpan(0, 0, 0, update_millis/1000, update_millis%1000);
 			}
 
-			TitleFormatter.Input input = new TitleFormatter.Input();
-			input.options = options;
-			input.solution_path = solution_path;
-			input.dbgmode = dbgmode;
-			string title = m_TitleFormatter.FormatTitle(ref input);
-
-			m_VSMainWindow.SetTitle(title);
+			m_TitleFormatter.UpdateWindowTitle(options);
 		}
 
 		private delegate void MyAction();
@@ -102,7 +90,18 @@ namespace VSWindowTitleChanger
 
 		private void DelayedInit()
 		{
-			m_TitleFormatter = new TitleFormatter();
+			DTE dte = (DTE)GetService(typeof(DTE));
+			if (dte == null)
+			{
+				// Usually this branch never executes but I want to make sure...
+				m_UIThradDispatcher.BeginInvoke(new MyAction(delegate() { DelayedInit(); }));
+				return;
+			}
+
+			m_VSMainWindow = new VSMainWindow();
+			m_VSMainWindow.Initialize((IntPtr)dte.MainWindow.HWnd);
+
+			m_TitleFormatter = new TitleFormatter(this, m_VSMainWindow);
 
 			m_DispatcherTimer = new DispatcherTimer();
 			m_DispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
@@ -116,10 +115,6 @@ namespace VSWindowTitleChanger
 
 			IVsDebugger debugger = (IVsDebugger)GetService(typeof(IVsDebugger));
 			debugger.AdviseDebuggerEvents(this, out m_DebuggerEventsCookie);
-
-			DTE dte = (DTE)GetService(typeof(DTE));
-			m_VSMainWindow = new VSMainWindow();
-			m_VSMainWindow.Initialize((IntPtr)dte.MainWindow.HWnd);
 
 			UpdateWindowTitle();
 		}
@@ -161,10 +156,12 @@ namespace VSWindowTitleChanger
 		}
 		public virtual int OnAfterLoadProject(IVsHierarchy pStubHierarchy, IVsHierarchy pRealHierarchy)
 		{
+			Schedule_UpdateWindowTitle();
 			return VSConstants.S_OK;
 		}
 		public virtual int OnAfterOpenProject(IVsHierarchy pHierarchy, int fAdded)
 		{
+			Schedule_UpdateWindowTitle();
 			return VSConstants.S_OK;
 		}
 		public virtual int OnAfterOpenSolution(object pUnkReserved, int fNewSolution)
