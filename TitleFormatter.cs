@@ -70,13 +70,13 @@ namespace VSWindowTitleChanger
 					for (int i = 0, e = m.Groups.Count; i < e; ++i)
 					{
 						if (m.Groups[i].Success)
-							eval_ctx.SetVariable(string.Format("sln_{0}", i), m.Groups[i].Value);
+							eval_ctx.SetVariable(string.Format("$sln_{0}", i), m.Groups[i].Value);
 					}
 					foreach (string name in regex.GetGroupNames())
 					{
 						Group g = m.Groups[name];
 						if (g.Success)
-							eval_ctx.SetVariable("sln_" + name, g.Value);
+							eval_ctx.SetVariable("$sln_" + name, g.Value);
 					}
 					title = TryConditionalPatterns(safe_eval_ctx, wtp.ConditionalPatterns);
 					if (title != null)

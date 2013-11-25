@@ -24,11 +24,16 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 		String,
 		Variable,
 
+		Ternary,
+		TernaryOperandSeparator,
+
+		If,
+		Else,
+
+		OpenBlock,
+		CloseBlock,
 		OpenBracket,
 		CloseBracket,
-		OpenTernary,
-		CloseTernary,
-		TernarySeparator,
 
 		EOF,
 	}
@@ -57,11 +62,14 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 				case TokenType.OpOr: return "\"or\"";
 				case TokenType.String: return "<string_literal>";
 				case TokenType.Variable: return "<variable>";
+				case TokenType.If: return "\"if\"";
+				case TokenType.Else: return "\"else\"";
+				case TokenType.OpenBlock: return "\"(\"";
+				case TokenType.CloseBlock: return "\")\"";
 				case TokenType.OpenBracket: return "\"(\"";
 				case TokenType.CloseBracket: return "\")\"";
-				case TokenType.OpenTernary: return "\"[\"";
-				case TokenType.CloseTernary: return "\"]\"";
-				case TokenType.TernarySeparator: return "\"|\"";
+				case TokenType.Ternary: return "\"?\"";
+				case TokenType.TernaryOperandSeparator: return "\":\"";
 				case TokenType.EOF: return "<EOF>";
 				default:
 					Debug.Assert(false, "Unhandled TokenType!");
@@ -140,16 +148,18 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 					return SetNextToken(TokenType.EOF);
 				case '+':
 					return SetNextToken(TokenType.OpConcat);
+				case '{':
+					return SetNextToken(TokenType.OpenBlock);
+				case '}':
+					return SetNextToken(TokenType.CloseBlock);
 				case '(':
 					return SetNextToken(TokenType.OpenBracket);
 				case ')':
 					return SetNextToken(TokenType.CloseBracket);
-				case '[':
-					return SetNextToken(TokenType.OpenTernary);
-				case ']':
-					return SetNextToken(TokenType.CloseTernary);
-				case '|':
-					return SetNextToken(TokenType.TernarySeparator);
+				case '?':
+					return SetNextToken(TokenType.Ternary);
+				case ':':
+					return SetNextToken(TokenType.TernaryOperandSeparator);
 				case '=':
 					++m_Pos;
 					switch (Lookahead())
@@ -238,6 +248,10 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 					return SetNextToken(TokenType.OpXor, variable, start_pos);
 				case "or":
 					return SetNextToken(TokenType.OpOr, variable, start_pos);
+				case "if":
+					return SetNextToken(TokenType.If, variable, start_pos);
+				case "else":
+					return SetNextToken(TokenType.Else, variable, start_pos);
 				default:
 					return SetNextToken(TokenType.Variable, variable, start_pos);
 			}

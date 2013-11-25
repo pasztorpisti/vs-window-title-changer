@@ -42,7 +42,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	//                               use double quotation marks: "a double quote in the string: "" <- here"
 	//
 	// Builtin variable names:
-	// sln_0, sln_1, ...             string: the captured groups of the solution pathname regex. an empty string if the group doesn't exist.
+	// $sln_0, $sln_1, ...           string: the captured groups of the solution pathname regex. an empty string if the group doesn't exist.
 	// sln_groupname                 string: a captured named group of the solution pathname regex. an empty string if the group doesn't exist.
 	// sln_open                      bool: true if we have a solution open
 	// sln_path                      string: the full pathname of the solution file
@@ -86,14 +86,18 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// OpXor ->			OpAnd ( "xor" OpAnd )*
 	// OpAnd ->			OpCompare ( "and" OpCompare )*
 	// OpCompare ->		OpConcat ( ( "==" | "!=" ) OpConcat )*
-	// OpConcat ->		OpUnary ( "+" OpUnary )*
-	// OpUnary ->		( "not" | "upcase" | "locase" | "lcap" ) OpUnary | OpRegex
-	// OpRegex ->		Value ( ( "=~" | "!~" ) ConstValue )
-	// Value ->			StringLiteral | Variable | "(" Expression ")" | Ternary
-	// Ternary ->		"[" Expression "|" Expression "]" | "[" Expression "|" Expression "|" Expression "]"
+	// OpConcat ->		OpRegex ( "+" OpRegex )*
+	// OpRegex ->		Ternary ( ( "=~" | "!~" ) Const-Ternary )
+	// Ternary ->		OpUnary "?" OpUnary ":" OpUnary
+	// OpUnary ->		( "not" | "upcase" | "locase" | "lcap" ) OpUnary | Value
+	// Value ->			StringLiteral | Variable | "(" Expression ")" | IfElse
+	// IfElse ->		"if" Expression IfBlock "else" IfBlock
+	// IfBlock ->		Expression | "{" Expression "}"
+
 	// StringLiteral ->	'"' ( UnicodeCharacter* ( EscapedQuote UnicodeCharacter* )* '"'
 	// EscapedQuote ->	'"' '"'
-	// ConstValue ->	<< A Value that doesn't contain any Variables >>
+
+	// Const- ->		<< Doesn't contain any Variables >>
 
 	using Private;
 	using Tokenizer;
@@ -229,11 +233,60 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 		private Expression Parse_OpConcat()
 		{
-			Expression expr = Parse_OpUnary();
+			Expression expr = Parse_OpRegex();
 			while (m_Tokenizer.PeekNextToken().type == TokenType.OpConcat)
 			{
 				m_Tokenizer.ConsumeNextToken();
-				expr = new OpConcat(expr, Parse_OpUnary());
+				expr = new OpConcat(expr, Parse_OpRegex());
+			}
+			return expr;
+		}
+
+		private Expression Parse_OpRegex()
+		{
+			Expression expr = Parse_Ternary();
+
+			for (;;)
+			{
+				TokenType op = m_Tokenizer.PeekNextToken().type;
+				if (op != TokenType.OpRegexMatch && op != TokenType.OpRegexNotMatch)
+					break;
+
+				m_Tokenizer.ConsumeNextToken();
+
+				Token token = m_Tokenizer.PeekNextToken();
+				Expression regex_expr = Parse_Ternary();
+				Value const_val = regex_expr.EliminateConstSubExpressions();
+				if (const_val == null)
+					throw new ParserException(m_Tokenizer.Text, token.pos, "Expected a constant expression that evaluates into a regex string. This expression isn't constant.");
+				if (!(const_val is StringValue))
+					throw new ParserException(m_Tokenizer.Text, token.pos, "Expected a constant expression that evaluates into a regex string. This expression evaluates to a bool constant.");
+
+				Regex regex;
+				try
+				{
+					regex = new Regex(const_val.ToString(), RegexOptions.IgnoreCase);
+				}
+				catch (System.Exception ex)
+				{
+					throw new ParserException(m_Tokenizer.Text, token.pos, "Invalid regex! " + ex.Message);
+				}
+
+				expr = new OpRegexMatch(expr, regex_expr, regex, op == TokenType.OpRegexNotMatch);
+			}
+			return expr;
+		}
+
+		private Expression Parse_Ternary()
+		{
+			Expression expr = Parse_OpUnary();
+			while (m_Tokenizer.PeekNextToken().type == TokenType.Ternary)
+			{
+				m_Tokenizer.ConsumeNextToken();
+				Expression true_expr = Parse_OpUnary();
+				Expect(TokenType.TernaryOperandSeparator);
+				Expression false_expr = Parse_OpUnary();
+				expr = new Ternary(expr, true_expr, false_expr);
 			}
 			return expr;
 		}
@@ -256,37 +309,8 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 					m_Tokenizer.ConsumeNextToken();
 					return new OpLeadingCapitalCase(Parse_OpUnary());
 				default:
-					return Parse_OpRegex();
+					return Parse_Value();
 			}
-		}
-
-		private Expression Parse_OpRegex()
-		{
-			Expression expr = Parse_Value();
-			TokenType op = m_Tokenizer.PeekNextToken().type;
-			if (op != TokenType.OpRegexMatch && op != TokenType.OpRegexNotMatch)
-				return expr;
-			m_Tokenizer.ConsumeNextToken();
-
-			Token token = m_Tokenizer.PeekNextToken();
-			Expression regex_expr = Parse_Value();
-			Value const_val = regex_expr.EliminateConstSubExpressions();
-			if (const_val == null)
-				throw new ParserException(m_Tokenizer.Text, token.pos, "Expected a constant expression that evaluates into a regex string. This expression isn't constant.");
-			if (!(const_val is StringValue))
-				throw new ParserException(m_Tokenizer.Text, token.pos, "Expected a constant expression that evaluates into a regex string. This expression evaluates to a bool constant.");
-
-			Regex regex;
-			try
-			{
-				regex = new Regex(const_val.ToString(), RegexOptions.IgnoreCase);
-			}
-			catch (System.Exception ex)
-			{
-				throw new ParserException(m_Tokenizer.Text, token.pos, "Invalid regex! " + ex.Message);
-			}
-
-			return new OpRegexMatch(expr, regex_expr, regex, op == TokenType.OpRegexNotMatch);
 		}
 
 		private Expression Parse_Value()
@@ -310,30 +334,35 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 						Expect(TokenType.CloseBracket);
 						return expr;
 					}
-				case TokenType.OpenTernary:
-					return Parse_Ternary();
+				case TokenType.If:
+					return Parse_IfElse();
 				default:
 					throw new ParserException(m_Tokenizer.Text, token.pos, "Expected a value here.");
 			}
 		}
 
-		private Expression Parse_Ternary()
+		private Expression Parse_IfElse()
 		{
 			Expression cond_expr = Parse_Expression();
-			Expect(TokenType.TernarySeparator);
-			Expression true_expr = Parse_Expression();
-			Expression false_expr;
-			TokenType token_type = Expect(TokenType.TernarySeparator, TokenType.CloseTernary);
-			if (token_type == TokenType.TernarySeparator)
+			Expression true_expr = Parse_IfBlock();
+			Expect(TokenType.Else);
+			Expression false_expr = Parse_IfBlock();
+			return new Ternary(cond_expr, true_expr, false_expr);
+		}
+
+		private Expression Parse_IfBlock()
+		{
+			if (m_Tokenizer.PeekNextToken().type == TokenType.OpenBlock)
 			{
-				false_expr = Parse_Expression();
-				Expect(TokenType.CloseTernary);
+				m_Tokenizer.ConsumeNextToken();
+				Expression expr = Parse_Expression();
+				Expect(TokenType.CloseBlock);
+				return expr;
 			}
 			else
 			{
-				false_expr = new StringValue("");
+				return Parse_Expression();
 			}
-			return new Ternary(cond_expr, true_expr, false_expr);
 		}
 
 		private TokenType Expect(params TokenType[] token_types)
