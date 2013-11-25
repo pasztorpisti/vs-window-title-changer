@@ -645,8 +645,9 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 		{
 			public const string REGEX_GROUP_VARNAME_PREFIX = "$";
 
-			public RegexMatchLocalContext(string[] group_names, GroupCollection group_collection)
+			public RegexMatchLocalContext(int[] group_numbers, string[] group_names, GroupCollection group_collection)
 			{
+				m_GroupNumbers = group_numbers;
 				m_GroupNames = group_names;
 				m_GroupCollection = group_collection;
 			}
@@ -663,13 +664,23 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 					try
 					{
 						int idx = Convert.ToInt32(name);
-						if (idx < 0 || idx >= m_GroupNames.Length)
-							return null;
-						group = m_GroupCollection[idx];
-						if (!group.Success)
-							// The group exists but it capturing it wasn't successful.
-							return m_UnsuccessfulGroupCaptureValue;
-						return new StringValue(group.Value);
+						if (idx < 0 || idx >= m_GroupNumbers.Length)
+						{
+							// someone might have used a group name like "30" when we have only 4 groups...
+							group = m_GroupCollection[name];
+						}
+						else
+						{
+							// someone might have used a group name like "30" when we have only 4 groups...
+							// In this case the item "30" is placed somewhere at the end of our m_GroupNumbers array.
+							if (m_GroupNumbers[idx] != idx)
+								return null;
+							group = m_GroupCollection[idx];
+							if (!group.Success)
+								// The group exists but capturing it wasn't successful.
+								return m_UnsuccessfulGroupCaptureValue;
+							return new StringValue(group.Value);
+						}
 					}
 					catch (System.Exception)
 					{
@@ -694,6 +705,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			private static Value m_UnsuccessfulGroupCaptureValue = new StringValue("");
 
 			private GroupCollection m_GroupCollection;
+			int[] m_GroupNumbers;
 			string[] m_GroupNames;
 
 
@@ -739,7 +751,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 					return new BoolValue(m_InvertResultValue);
 				}
 
-				m_LocalContext = new RegexMatchLocalContext(m_Regex.GetGroupNames(), match.Groups);
+				m_LocalContext = new RegexMatchLocalContext(m_Regex.GetGroupNumbers(), m_Regex.GetGroupNames(), match.Groups);
 				return new BoolValue(!m_InvertResultValue);
 			}
 
@@ -753,7 +765,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				SubExpressions[0].RecursiveCollectUnresolvedVariables(ctx);
 				SubExpressions[1].RecursiveCollectUnresolvedVariables(ctx);
 				Match m = m_Regex.Match("");
-				m_LocalContext = new RegexMatchLocalContext(m_Regex.GetGroupNames(), m.Groups);
+				m_LocalContext = new RegexMatchLocalContext(m_Regex.GetGroupNumbers(), m_Regex.GetGroupNames(), m.Groups);
 				return new BoolValue(!m_InvertResultValue);
 			}
 

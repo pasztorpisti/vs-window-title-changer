@@ -184,7 +184,7 @@ namespace VSWindowTitleChanger
 
 		[Category("Solution Specific Patterns")]
 		[DisplayName("Solution File Path Regex")]
-		[Description("A regex that is matched against the full pathname of the solution file. The captured groups will be available in the window title patterns as sln_0, sln_1, ...")]
+		[Description("A regex that is matched against the full pathname of the solution file. The captured groups will be available in the window title patterns as $sln_0, $sln_1, ...")]
 		public string Regex
 		{
 			get { return m_Regex; }
