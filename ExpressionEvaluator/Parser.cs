@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 namespace VSWindowTitleChanger.ExpressionEvaluator
 {
 	// Operators, higher precedence first (you can use parentheses to modify the evaluation order):
-	// ternary
+	// high precedence ternary (cond_value?true_operand)
 	// =~ !~                         string regex match and not match (case insensitive)
 	// not upcase locase lcap        logical not, convert string to uppercase, convert string to lowercase, convert string to have a leading capital
 	// +                             string concatenation
@@ -13,26 +13,23 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// and                           logical and
 	// xor                           logical xor
 	// or                            logical or
+	// low precedence ternary (if-else)
 	//
 	// If both operands of == or != have string type then these perform string comparison.
 	// If one of the operands is bool and the other is string then the string is automatically
 	// converted to bool before performing the comparison.
 	//
 	// Ternary operator:
-	// [ cond_expression | expression_0 | expression_1 ]
+	//   cond_value ? true_operand
+	//   expression_0 if cond_expression else expression_1
 	// cond_expression is evaluated and converted into bool (even if the type of the expression is string) and in case of
 	// a true cond_expression the value of expression_0 is used otherwise the value of expression_1.
 	//
-	// Simplified "Ternary operator":
-	// [ cond_expression | expression_0 ]
-	// cond_expression is evaluated and converted into bool (even if the type of the expression is string) and in case of
-	// a true cond_expression the value of expression_0 is used otherwise the value of the expression is an empty string
-	// (that can be converted to false if needed by the context).
-	//
-	// In case of ternary operators if cond_expression is a regex match (=~) then expression_0 of the ternary operator can
-	// access the captured groups of the regex as $0, $1, ... Named groups can be accessed as $group_name.
-	// In case of the long ternary operator if cond_expression is a regex not match (!~) then expression_1 of the ternary operator can
-	// access the captured groups of the regex as $0, $1, ... Named groups can be accessed as $group_name.
+	// In case of ternary operators if the condition expression is a regex match (=~) then expression_0 of 
+	// the ternary operator can access the captured groups of the regex as $0, $1, ... Named groups can be accessed as $group_name.
+	// In case of the regex not match (!~) the expression_1 of the ternary operator can access the captured groups of the regex as
+	// $0, $1, ... Named groups can be accessed as $group_name.
+	// The above statement holds for normal "if (cond_expr) [then] { true_expr } else { false_expr }" constructs as well.
 	//
 	// Operands/literals:
 	// builtin_var_name              refers to the value of the builtin variable with the specified name, for example solution_path, case insensitive
@@ -81,18 +78,19 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// multi_instances_same_ver      bool: true if at least one other Visual Studio instances is running with the same version number as our instance.
 
 	// Grammar:
-	// Expression ->	OpOr
-	// OpOr ->			OpXor ( "or" OpXor )*
-	// OpXor ->			OpAnd ( "xor" OpAnd )*
-	// OpAnd ->			OpCompare ( "and" OpCompare )*
-	// OpCompare ->		OpConcat ( ( "==" | "!=" ) OpConcat )*
-	// OpConcat ->		OpRegex ( "+" OpRegex )*
-	// OpRegex ->		Ternary ( ( "=~" | "!~" ) Const-Ternary )
-	// Ternary ->		OpUnary "?" OpUnary ":" OpUnary
-	// OpUnary ->		( "not" | "upcase" | "locase" | "lcap" ) OpUnary | Value
-	// Value ->			StringLiteral | Variable | "(" Expression ")" | IfElse
-	// IfElse ->		"if" Expression IfBlock "else" IfBlock
-	// IfBlock ->		Expression | "{" Expression "}"
+	// Expression ->				LowPrecedenceTernary
+	// LowPrecedenceTernary ->		OpOr "if" OpOr "else" OpOr | OpOr "if" OpOr
+	// OpOr ->						OpXor ( "or" OpXor )*
+	// OpXor ->						OpAnd ( "xor" OpAnd )*
+	// OpAnd ->						OpCompare ( "and" OpCompare )*
+	// OpCompare ->					OpConcat ( ( "==" | "!=" ) OpConcat )*
+	// OpConcat ->					OpRegex ( "+" OpRegex )*
+	// OpRegex ->					HighPrecedenceTernary ( ( "=~" | "!~" ) Const-HighPrecedenceTernary )
+	// HighPrecedenceTernary ->		OpUnary "?" HighPrecedenceTernary
+	// OpUnary ->					( "not" | "upcase" | "locase" | "lcap" ) OpUnary | Value
+	// Value ->						StringLiteral | Variable | "(" Expression ")" | IfElse
+	// IfElse ->					"if" Expression ( then )? IfBlock "else" IfBlock
+	// IfBlock ->					Expression | "{" Expression "}"
 
 	// StringLiteral ->	'"' ( UnicodeCharacter* ( EscapedQuote UnicodeCharacter* )* '"'
 	// EscapedQuote ->	'"' '"'
@@ -179,7 +177,32 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 		private Expression Parse_Expression()
 		{
-			return Parse_OpOr();
+			return Parse_LowPrecedenceTernary();
+		}
+
+
+		private Value m_DefaultValue = new StringValue("");
+
+		private Expression Parse_LowPrecedenceTernary()
+		{
+			Expression expr = Parse_OpOr();
+			while (m_Tokenizer.PeekNextToken().type == TokenType.If)
+			{
+				m_Tokenizer.ConsumeNextToken();
+				Expression cond_expr = Parse_OpOr();
+				Expression false_expr;
+				if (m_Tokenizer.PeekNextToken().type == TokenType.Else)
+				{
+					m_Tokenizer.ConsumeNextToken();
+					false_expr = Parse_OpOr();
+				}
+				else
+				{
+					false_expr = m_DefaultValue;
+				}
+				expr = new Ternary(cond_expr, expr, false_expr);
+			}
+			return expr;
 		}
 
 		private Expression Parse_OpOr()
@@ -244,7 +267,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 		private Expression Parse_OpRegex()
 		{
-			Expression expr = Parse_Ternary();
+			Expression expr = Parse_HighPrecedenceTernary();
 
 			for (;;)
 			{
@@ -255,7 +278,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				m_Tokenizer.ConsumeNextToken();
 
 				Token token = m_Tokenizer.PeekNextToken();
-				Expression regex_expr = Parse_Ternary();
+				Expression regex_expr = Parse_HighPrecedenceTernary();
 				Value const_val = regex_expr.EliminateConstSubExpressions();
 				if (const_val == null)
 					throw new ParserException(m_Tokenizer.Text, token.pos, "Expected a constant expression that evaluates into a regex string. This expression isn't constant.");
@@ -277,16 +300,13 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			return expr;
 		}
 
-		private Expression Parse_Ternary()
+		private Expression Parse_HighPrecedenceTernary()
 		{
 			Expression expr = Parse_OpUnary();
-			while (m_Tokenizer.PeekNextToken().type == TokenType.Ternary)
+			if (m_Tokenizer.PeekNextToken().type == TokenType.Ternary)
 			{
 				m_Tokenizer.ConsumeNextToken();
-				Expression true_expr = Parse_OpUnary();
-				Expect(TokenType.TernaryOperandSeparator);
-				Expression false_expr = Parse_OpUnary();
-				expr = new Ternary(expr, true_expr, false_expr);
+				return new Ternary(Parse_HighPrecedenceTernary(), expr, m_DefaultValue);
 			}
 			return expr;
 		}
@@ -344,6 +364,8 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 		private Expression Parse_IfElse()
 		{
 			Expression cond_expr = Parse_Expression();
+			if (m_Tokenizer.PeekNextToken().type == TokenType.Then)
+				m_Tokenizer.ConsumeNextToken();
 			Expression true_expr = Parse_IfBlock();
 			Expect(TokenType.Else);
 			Expression false_expr = Parse_IfBlock();
