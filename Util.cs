@@ -91,9 +91,6 @@ namespace VSWindowTitleChanger
 				parts.ext = parts.file.Substring(idx + 1);
 			}
 		}
-
-		VSWindowTitleChangerPackage m_Package;
-		VSMainWindow m_VSMainWindow;
 	}
 
 }
