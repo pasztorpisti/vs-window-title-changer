@@ -75,31 +75,6 @@ namespace VSWindowTitleChanger
 			options.SaveSettingsToStorage();
 		}
 
-		public int DTEMajorVersionNumber
-		{
-			get
-			{
-				DTE dte = (DTE)GetService(typeof(DTE));
-				if (dte == null)
-					return -1;
-				// Something like "10.0"
-				string version_string = dte.Version;
-				int idx = version_string.IndexOf('.');
-				if (idx < 0)
-					return -1;
-				string major_version_string = version_string.Substring(0, idx);
-				try
-				{
-					return Convert.ToInt32(major_version_string);
-				}
-				catch (System.Exception)
-				{
-					return -1;
-				}
-			}
-		}
-
-
 		private VSMainWindow m_VSMainWindow;
 		private Dispatcher m_UIThradDispatcher;
 		private DispatcherTimer m_DispatcherTimer;

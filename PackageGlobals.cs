@@ -95,9 +95,7 @@ namespace VSWindowTitleChanger
 			m_TitleSetupEditor.SaveEditedSetup += new TitleSetupEditor.SetupEditEvent(SaveEditedSetup);
 			m_TitleSetupEditor.RevertToOriginalSetup += new TitleSetupEditor.SetupEditEvent(RevertToOriginalSetup);
 
-			int dte_major_version = package.DTEMajorVersionNumber;
-			// VS2010 and later versions are WPF based.
-			m_TitleSetupEditor.CustomTabbingEnabled = dte_major_version >= 10;
+			m_TitleSetupEditor.CustomTabbingEnabled = true;
 
 			CreateCompileTimeConstants();
 			m_CompiledExpressionCache = new Cache<string, CompiledExpression>(CompileExpression);
