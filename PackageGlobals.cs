@@ -72,6 +72,14 @@ namespace VSWindowTitleChanger
 			m_TitleSetupEditor.Show();
 		}
 
+		internal VariableValueResolver CompileTimeConstants
+		{
+			get
+			{
+				return m_CompileTimeConstants;
+			}
+		}
+
 		VSWindowTitleChangerPackage m_Package;
 		TitleSetup m_TitleSetup;
 		TitleSetupEditor m_TitleSetupEditor;
