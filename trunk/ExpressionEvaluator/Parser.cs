@@ -9,6 +9,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// =~ !~                         string regex match and not match (case insensitive)
 	// not ! upcase locase lcap      logical not, convert string to uppercase, convert string to lowercase, convert string to have a leading capital
 	// +                             string concatenation
+	// contains startswith endswith  string: contains substring, starts with string, ends with string
 	// == !=                         binary/string equals and not equals (case insensitive)
 	// and && &                      logical and
 	// xor ^                         logical xor
@@ -83,7 +84,8 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// OpOr ->						OpXor ( "or" OpXor )*
 	// OpXor ->						OpAnd ( "xor" OpAnd )*
 	// OpAnd ->						OpCompare ( "and" OpCompare )*
-	// OpCompare ->					OpConcat ( ( "==" | "!=" ) OpConcat )*
+	// OpCompare ->					OpSubstring ( ( "==" | "!=" ) OpSubstring )*
+	// OpSubstring ->				OpConcat ( ( "contains" | "startswith" | "endswith" ) OpConcat )*
 	// OpConcat ->					OpRegex ( "+" OpRegex )*
 	// OpRegex ->					HighPrecedenceTernary ( ( "=~" | "!~" ) Const-HighPrecedenceTernary )
 	// HighPrecedenceTernary ->		OpUnary "?" HighPrecedenceTernary
@@ -240,7 +242,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 		private Expression Parse_OpCompare()
 		{
-			Expression expr = Parse_OpConcat();
+			Expression expr = Parse_OpSubstring();
 			for (;;)
 			{
 				TokenType op = m_Tokenizer.PeekNextToken().type;
@@ -248,9 +250,35 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 					return expr;
 				m_Tokenizer.ConsumeNextToken();
 				if (op == TokenType.OpEquals)
-					expr = new OpEquals(expr, Parse_OpConcat());
+					expr = new OpEquals(expr, Parse_OpSubstring());
 				else
-					expr = new OpNotEquals(expr, Parse_OpConcat());
+					expr = new OpNotEquals(expr, Parse_OpSubstring());
+			}
+		}
+
+		private Expression Parse_OpSubstring()
+		{
+			Expression expr = Parse_OpConcat();
+			for (;;)
+			{
+				TokenType op = m_Tokenizer.PeekNextToken().type;
+				switch (op)
+				{
+					case TokenType.OpContains:
+						m_Tokenizer.ConsumeNextToken();
+						expr = new OpContains(expr, Parse_OpConcat());
+						break;
+					case TokenType.OpStartsWith:
+						m_Tokenizer.ConsumeNextToken();
+						expr = new OpStartsWith(expr, Parse_OpConcat());
+						break;
+					case TokenType.OpEndsWith:
+						m_Tokenizer.ConsumeNextToken();
+						expr = new OpEndsWith(expr, Parse_OpConcat());
+						break;
+					default:
+						return expr;
+				}
 			}
 		}
 

@@ -529,6 +529,40 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			}
 		}
 
+		class OpContains : Expression
+		{
+			public OpContains(Expression operand0, Expression operand1) : base(operand0, operand1) { }
+			public override Value Evaluate(IEvalContext ctx)
+			{
+				string s0 = SubExpressions[0].Evaluate(ctx).ToString();
+				string s1 = SubExpressions[1].Evaluate(ctx).ToString();
+				int idx = s0.IndexOf(s1, StringComparison.OrdinalIgnoreCase);
+				return new BoolValue(idx >= 0);
+			}
+		}
+
+		class OpStartsWith : Expression
+		{
+			public OpStartsWith(Expression operand0, Expression operand1) : base(operand0, operand1) { }
+			public override Value Evaluate(IEvalContext ctx)
+			{
+				string s0 = SubExpressions[0].Evaluate(ctx).ToString();
+				string s1 = SubExpressions[1].Evaluate(ctx).ToString();
+				return new BoolValue(s0.StartsWith(s1, StringComparison.OrdinalIgnoreCase));
+			}
+		}
+
+		class OpEndsWith : Expression
+		{
+			public OpEndsWith(Expression operand0, Expression operand1) : base(operand0, operand1) { }
+			public override Value Evaluate(IEvalContext ctx)
+			{
+				string s0 = SubExpressions[0].Evaluate(ctx).ToString();
+				string s1 = SubExpressions[1].Evaluate(ctx).ToString();
+				return new BoolValue(s0.EndsWith(s1, StringComparison.OrdinalIgnoreCase));
+			}
+		}
+
 		class Ternary : Expression
 		{
 			public Ternary(Expression cond_expr, Expression true_expr, Expression false_expr) : base(cond_expr, true_expr, false_expr) {}
