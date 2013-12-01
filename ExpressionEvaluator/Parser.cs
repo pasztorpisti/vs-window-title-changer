@@ -306,7 +306,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			if (m_Tokenizer.PeekNextToken().type == TokenType.Ternary)
 			{
 				m_Tokenizer.ConsumeNextToken();
-				return new Ternary(Parse_HighPrecedenceTernary(), expr, m_DefaultValue);
+				return new Ternary(expr, Parse_HighPrecedenceTernary(), m_DefaultValue);
 			}
 			return expr;
 		}
