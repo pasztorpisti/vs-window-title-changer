@@ -7,6 +7,7 @@ using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using System.Windows.Forms;
 
 namespace VSWindowTitleChanger
 {
