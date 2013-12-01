@@ -57,8 +57,24 @@
     <Compile Include="ExpressionEvaluator\EvalTree.cs" />
     <Compile Include="ExpressionEvaluator\Parser.cs" />
     <Compile Include="ExpressionEvaluator\Tokenizer.cs" />
-    <Compile Include="TitleFormatter.cs" />
+    <Compile Include="Forms\Controls\ColoredRichTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Forms\TitleSetupEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TitleSetupEditor.designer.cs">
+      <DependentUpon>TitleSetupEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\TitleSetupEditorHelp.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TitleSetupEditorHelp.designer.cs">
+      <DependentUpon>TitleSetupEditorHelp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\TitleSetupEditorHelpResources.Designer.cs" />
     <Compile Include="Guids_2008.cs" />
+    <Compile Include="PackageGlobals.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -68,11 +84,23 @@
     <Compile Include="ToolOptions.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Util.cs" />
     <Compile Include="VSMainWindow.cs" />
     <Compile Include="VSWindowTitleChangerPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\TitleSetupEditor.resx">
+      <DependentUpon>TitleSetupEditor.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TitleSetupEditorHelp.resx">
+      <DependentUpon>TitleSetupEditorHelp.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TitleSetupEditorHelpResources.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -84,6 +112,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Forms\TitleSetupEditorHelp.html" />
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <PropertyGroup>

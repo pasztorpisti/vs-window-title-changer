@@ -128,13 +128,18 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 			m_NextTokenAvailable = false;
 		}
 
-		private bool SetNextToken(TokenType type)
+		private bool SetNextToken(TokenType type, int start_pos_offset)
 		{
 			m_NextToken.type = type;
 			m_NextToken.data = null;
-			m_NextToken.pos = m_Pos;
+			m_NextToken.pos = m_Pos + start_pos_offset;
 			++m_Pos;
 			return true;
+		}
+
+		private bool SetNextToken(TokenType type)
+		{
+			return SetNextToken(type, 0);
 		}
 
 		private bool ParseNextToken()
@@ -158,27 +163,44 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 					return SetNextToken(TokenType.CloseBracket);
 				case '?':
 					return SetNextToken(TokenType.Ternary);
+				case '&':
+					if (Lookahead(1) == '&')
+					{
+						++m_Pos;
+						return SetNextToken(TokenType.OpAnd, -1);
+					}
+					return SetNextToken(TokenType.OpAnd);
+				case '^':
+					return SetNextToken(TokenType.OpXor);
+				case '|':
+					if (Lookahead(1) == '|')
+					{
+						++m_Pos;
+						return SetNextToken(TokenType.OpOr, -1);
+					}
+					return SetNextToken(TokenType.OpOr);
 				case '=':
 					++m_Pos;
 					switch (Lookahead())
 					{
 						case '=':
-							return SetNextToken(TokenType.OpEquals);
+							return SetNextToken(TokenType.OpEquals, -1);
 						case '~':
-							return SetNextToken(TokenType.OpRegexMatch);
+							return SetNextToken(TokenType.OpRegexMatch, -1);
 						default:
 							throw new InvalidTokenException(m_Text, m_Pos - 1, "Invalid or incomplete operator: '='");
 					}
 				case '!':
-					++m_Pos;
 					switch (Lookahead())
 					{
 						case '=':
-							return SetNextToken(TokenType.OpNotEquals);
+							++m_Pos;
+							return SetNextToken(TokenType.OpNotEquals, -1);
 						case '~':
-							return SetNextToken(TokenType.OpRegexNotMatch);
+							++m_Pos;
+							return SetNextToken(TokenType.OpRegexNotMatch, -1);
 						default:
-							throw new InvalidTokenException(m_Text, m_Pos - 1, "Invalid or incomplete operator: '!'");
+							return SetNextToken(TokenType.OpNot);
 					}
 				case '"':
 					return ParseString();
@@ -262,10 +284,79 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 			return Char.IsLetterOrDigit(c) || (c == '_') || (c == '$');
 		}
 
+		private void SkipLine()
+		{
+			for (;;)
+			{
+				switch (Lookahead())
+				{
+					case '\0':
+						return;
+					case '\n':
+						++m_Pos;
+						return;
+					default:
+						++m_Pos;
+						break;
+				}
+			}
+		}
+
+		private void SkipMultilineComment()
+		{
+			char prev_char = ' ';
+			for (;;)
+			{
+				char c = Lookahead();
+				switch (c)
+				{
+					case '\0':
+						throw new TokenizerException(m_Text, m_Pos, "Unclosed multiline comment at the end of the expression.");
+					case '/':
+						++m_Pos;
+						if (prev_char == '*')
+							return;
+						prev_char = c;
+						break;
+					default:
+						++m_Pos;
+						prev_char = c;
+						break;
+				}
+			}
+		}
+
 		private void SkipSpaces()
 		{
-			while (Char.IsWhiteSpace(Lookahead()))
-				++m_Pos;
+			for (;;)
+			{
+				switch (Lookahead())
+				{
+					case ' ':
+					case '\t':
+					case '\r':
+					case '\n':
+						++m_Pos;
+						break;
+					case '/':
+						switch (Lookahead(1))
+						{
+							case '/':
+								m_Pos += 2;
+								SkipLine();
+								break;
+							case '*':
+								m_Pos += 2;
+								SkipMultilineComment();
+								break;
+							default:
+								return;
+						}
+						break;
+					default:
+						return;
+				}
+			}
 		}
 
 		private char Lookahead()

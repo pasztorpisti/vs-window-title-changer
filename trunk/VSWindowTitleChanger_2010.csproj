@@ -6,17 +6,16 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{EC80EF34-A0E1-4215-BDAF-60CC0FBEA833}</ProjectGuid>
     <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>VSWindowTitleChanger</RootNamespace>
     <AssemblyName>VSWindowTitleChanger</AssemblyName>
     <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>
-    </AssemblyOriginatorKeyFile>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile />
+    <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputType>Library</OutputType>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -28,6 +27,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputType>Library</OutputType>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin_2010\Release\</OutputPath>
@@ -37,6 +37,32 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug_GUI|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <OutputType>WinExe</OutputType>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin_2010\Debug_GUI\</OutputPath>
+    <IntermediateOutputPath>obj\obj_2010\Debug_GUI\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\obj_2010\Debug_GUI\</BaseIntermediateOutputPath>
+    <DefineConstants>TRACE;DEBUG;DEBUG_GUI</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_ExpressionEvaluator|x86'">
+    <PlatformTarget>x86</PlatformTarget>
+    <OutputType>Exe</OutputType>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin_2010\Debug_ExpressionEvaluator\</OutputPath>
+    <IntermediateOutputPath>obj\obj_2010\Debug_ExpressionEvaluator\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\obj_2010\Debug_ExpressionEvaluator\</BaseIntermediateOutputPath>
+    <DefineConstants>TRACE;DEBUG;DEBUG_EXPRESSION_EVALUATOR</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EnvDTE" />
@@ -63,23 +89,50 @@
     <Compile Include="Cache.cs" />
     <Compile Include="ExpressionEvaluator\EvalTree.cs" />
     <Compile Include="ExpressionEvaluator\Parser.cs" />
+    <Compile Include="ExpressionEvaluator\Test.cs" />
     <Compile Include="ExpressionEvaluator\Tokenizer.cs" />
+    <Compile Include="Forms\Controls\ColoredRichTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Forms\TitleSetupEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TitleSetupEditor.designer.cs">
+      <DependentUpon>TitleSetupEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\TitleSetupEditorHelp.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TitleSetupEditorHelp.designer.cs">
+      <DependentUpon>TitleSetupEditorHelp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\TitleSetupEditorHelpResources.Designer.cs" />
     <Compile Include="Guids_2010.cs" />
+    <Compile Include="PackageGlobals.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="TitleFormatter.cs" />
     <Compile Include="ToolOptions.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Util.cs" />
     <Compile Include="VSMainWindow.cs" />
     <Compile Include="VSWindowTitleChangerPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\TitleSetupEditor.resx">
+      <DependentUpon>TitleSetupEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TitleSetupEditorHelp.resx">
+      <DependentUpon>TitleSetupEditorHelp.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TitleSetupEditorHelpResources.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -96,6 +149,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Forms\TitleSetupEditorHelp.html" />
     <Content Include="License.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>

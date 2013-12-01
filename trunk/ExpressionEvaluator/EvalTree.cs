@@ -19,11 +19,12 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 		String,
 	}
 
-	abstract class Value : Expression
+	abstract class Value : Expression, IComparable<Value>
 	{
 		public Value() : base(null) { }
 		public abstract bool ToBool();
 		new public abstract Type GetType();
+		public abstract int CompareTo(Value other);
 	}
 
 	class BoolValue : Value
@@ -50,6 +51,16 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 		public override string ToString()
 		{
 			return m_Value ? "true" : "false";
+		}
+
+		public override int CompareTo(Value other)
+		{
+			BoolValue v = other as BoolValue;
+			if (v == null)
+				return -1;
+			if (m_Value == v.m_Value)
+				return 0;
+			return m_Value ? 1 : -1;
 		}
 
 		private bool m_Value;
@@ -80,6 +91,16 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 		public override string ToString()
 		{
 			return m_Value;
+		}
+
+		public override int CompareTo(Value other)
+		{
+			StringValue v = other as StringValue;
+			if (v == null)
+				return 1;
+			if (m_Value == v.m_Value)
+				return 0;
+			return string.Compare(m_Value, v.m_Value, true);
 		}
 
 		private string m_Value;
@@ -233,7 +254,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			m_VariableValues[variable_name.ToLower()] = new StringValue(val);
 		}
 
-		public Dictionary<string, Value> VariableValues { get { return m_VariableValues; } }
+		public Dictionary<string, Value> VariableValues { get { return m_VariableValues; } set { m_VariableValues = value; } }
 
 		private Stack<IVariableValueResolver> m_LocalContextStack = new Stack<IVariableValueResolver>();
 		private Dictionary<string, Value> m_VariableValues = new Dictionary<string, Value>();

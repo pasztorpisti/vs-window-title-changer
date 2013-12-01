@@ -10,4 +10,12 @@
     <StartProgram>C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe</StartProgram>
     <StartArguments>/rootsuffix Exp</StartArguments>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug_GUI|x86'">
+    <StartAction>Program</StartAction>
+    <StartProgram>$(SolutionDir)\bin_2010\Debug_GUI\VSWindowTitleChanger.exe</StartProgram>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DEBUG_ExpressionEvaluator|x86'">
+    <StartAction>Program</StartAction>
+    <StartProgram>$(SolutionDir)\bin_2010\Debug_ExpressionEvaluator\VSWindowTitleChanger.exe</StartProgram>
+  </PropertyGroup>
 </Project>
