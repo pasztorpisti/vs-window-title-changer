@@ -63,7 +63,7 @@ namespace VSWindowTitleChanger
 		CreateValueFromKey m_ValueCreator;
 		Dictionary<Key, CacheEntry> m_CacheEntries = new Dictionary<Key, CacheEntry>();
 		DateTime m_LastCleanupTime = DateTime.Now;
-		TimeSpan m_CleanupPeriod = new TimeSpan(0, 3, 0);
-		TimeSpan m_ExpirationPeriod = new TimeSpan(0, 10, 0);
+		TimeSpan m_CleanupPeriod = new TimeSpan(0, 0, 5);
+		TimeSpan m_ExpirationPeriod = new TimeSpan(0, 0, 20);
 	}
 }

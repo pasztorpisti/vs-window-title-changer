@@ -7,12 +7,12 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// Operators, higher precedence first (you can use parentheses to modify the evaluation order):
 	// high precedence ternary (cond_value?true_operand)
 	// =~ !~                         string regex match and not match (case insensitive)
-	// not upcase locase lcap        logical not, convert string to uppercase, convert string to lowercase, convert string to have a leading capital
+	// not ! upcase locase lcap      logical not, convert string to uppercase, convert string to lowercase, convert string to have a leading capital
 	// +                             string concatenation
 	// == !=                         binary/string equals and not equals (case insensitive)
-	// and                           logical and
-	// xor                           logical xor
-	// or                            logical or
+	// and && &                      logical and
+	// xor ^                         logical xor
+	// or || |                       logical or
 	// low precedence ternary (if-else)
 	//
 	// If both operands of == or != have string type then these perform string comparison.

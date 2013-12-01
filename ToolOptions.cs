@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.ComponentModel;
+using System.Drawing.Design;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
+using System.Windows.Forms.Design;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.Shell;
@@ -21,9 +22,8 @@ namespace VSWindowTitleChanger
 	public interface ISerializedOptions
 	{
 		bool Debug { get; set; }
-		bool SlashPathSeparator { get; set; }
 		EExtensionActivationRule ExtensionActivationRule { get; set; }
-		List<WindowTitlePattern> WindowTitlePatterns { get; set; }
+		TitleSetup TitleSetup { get; set; }
 	}
 
 	[ClassInterface(ClassInterfaceType.AutoDual)]
@@ -31,9 +31,8 @@ namespace VSWindowTitleChanger
 	public class ToolOptions : DialogPage, ISerializedOptions
 	{
 		private bool m_Debug;
-		private bool m_SlashPathSeparator;
 		private EExtensionActivationRule m_ExtensionActivationRule;
-		private List<WindowTitlePattern> m_WindowTitlePatterns;
+		private TitleSetup m_TitleSetup;
 
 		[Category("Debugging")]
 		[DisplayName("Debug Mode")]
@@ -42,22 +41,16 @@ namespace VSWindowTitleChanger
 		public bool Debug { get { return m_Debug; } set { m_Debug = value; } }
 
 		[Category("Window Title Changer Options")]
-		[DisplayName("Use '/' as Path Separator")]
-		[Description("Replaces every backslashes to forward slashes in the pathnames of solution files and documents because matching backslashes results in uglier regular expressions.")]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public bool SlashPathSeparator { get { return m_SlashPathSeparator; } set { m_SlashPathSeparator = value; } }
-
-		[Category("Window Title Changer Options")]
 		[DisplayName("Extension Activation")]
 		[Description("Turn on/off the extension. You can also ask it to be active only in case of multiple Visual Studio instances.")]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public EExtensionActivationRule ExtensionActivationRule { get { return m_ExtensionActivationRule; } set { m_ExtensionActivationRule = value; } }
 
 		[Category("Window Title Changer Options")]
-		[DisplayName("Solution Pathname and Window Title Patterns")]
-		[Description("This collection contains the rules and patterns that are used to format the titlebar of the Visual Studio main window based on the state of the IDE.")]
+		[DisplayName("Window Title Setup")]
+		[Description("A simple or complex expression that evaluates into the title text of the Visual Studio main window.")]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public List<WindowTitlePattern> WindowTitlePatterns { get { return m_WindowTitlePatterns; } set { m_WindowTitlePatterns = value; } }
+		public TitleSetup TitleSetup { get { return m_TitleSetup; } set { m_TitleSetup = value; } }
 
 
 		public override void ResetSettings()
@@ -69,14 +62,12 @@ namespace VSWindowTitleChanger
 		public class SerializedOptions : ISerializedOptions
 		{
 			private bool m_Debug;
-			private bool m_SlashPathSeparator = true;
 			private EExtensionActivationRule m_ExtensionActivationRule;
-			private List<WindowTitlePattern> m_WindowTitlePatterns;
+			private TitleSetup m_TitleSetup;
 
 			public bool Debug { get { return m_Debug; } set { m_Debug = value; } }
-			public bool SlashPathSeparator { get { return m_SlashPathSeparator; } set { m_SlashPathSeparator = value; } }
 			public EExtensionActivationRule ExtensionActivationRule { get { return m_ExtensionActivationRule; } set { m_ExtensionActivationRule = value; } }
-			public List<WindowTitlePattern> WindowTitlePatterns { get { return m_WindowTitlePatterns; } set { m_WindowTitlePatterns = value; } }
+			public TitleSetup TitleSetup { get { return m_TitleSetup; } set { m_TitleSetup = value; } }
 		}
 
 		private static void CopyOptions(ISerializedOptions src, ISerializedOptions dest)
@@ -86,7 +77,7 @@ namespace VSWindowTitleChanger
 		}
 
 		[Browsable(false)]
-		public string WindowTitlePatternsString
+		public string TitleSetupString
 		{
 			get
 			{
@@ -134,15 +125,10 @@ namespace VSWindowTitleChanger
 
 		private void Fixup()
 		{
-			if (WindowTitlePatterns == null)
-			{
-				WindowTitlePatterns = new List<WindowTitlePattern>();
-			}
+			if (m_TitleSetup == null)
+				m_TitleSetup = new TitleSetup();
 			else
-			{
-				foreach (WindowTitlePattern wtp in WindowTitlePatterns)
-					wtp.Fixup();
-			}
+				m_TitleSetup.Fixup();
 		}
 
 		public ToolOptions()
@@ -155,56 +141,59 @@ namespace VSWindowTitleChanger
 
 	//---------------------------------------------------------------------------------------------
 
-
-	public class WindowTitlePattern
+	[Editor(typeof(TitleSetupUITypeEditor), typeof(System.Drawing.Design.UITypeEditor))]
+	[Serializable]
+	public class TitleSetup : IComparable<TitleSetup>
 	{
-		private string m_Name;
-		private string m_Regex;
-		private string[] m_ConditionalPatterns;
-
+		string m_TitleExpression;
+		public string TitleExpression { get { return m_TitleExpression; } set { m_TitleExpression = value; } }
+		
 		public void Fixup()
 		{
-			if (m_Name == null)
-				m_Name = "New Pattern";
-			if (m_Regex == null)
-				m_Regex = "";
-			if (m_ConditionalPatterns == null)
-				m_ConditionalPatterns = new string[0];
+			if (TitleExpression == null)
+				TitleExpression = "orig_title";
 		}
 
-		public WindowTitlePattern()
+		public TitleSetup()
 		{
 			Fixup();
 		}
 
-		[Category("Organization")]
-		[DisplayName("Name")]
-		[Description("This is for here to make it easier for your to organize things. The extension doesn't use this.")]
-		public string Name { get { return m_Name; } set { m_Name = value; } }
-
-		[Category("Solution Specific Patterns")]
-		[DisplayName("Solution File Path Regex")]
-		[Description("A regex that is matched against the full pathname of the solution file. The captured groups will be available in the window title patterns as $sln_0, $sln_1, ...")]
-		public string Regex
-		{
-			get { return m_Regex; }
-			set
-			{
-				m_Regex = value == null ? "" : value;
-				// This throws an exception if the regex is invalid and the collection editor
-				// automatically shows a nice detailed error message (at least in VS2010).
-				new Regex(value, RegexOptions.IgnoreCase);
-			}
-		}
-
-		[Category("Solution Specific Patterns")]
-		[DisplayName("Window Title Patterns")]
-		[Description("A list of conditional and unconditional window title patterns. Conditional patters have the form 'IF condition_expr THEN window_title_expr'.")]
-		public string[] ConditionalPatterns { get { return m_ConditionalPatterns; } set { m_ConditionalPatterns = value; } }
-
 		public override string ToString()
 		{
-			return m_Name;
+			return GetType().Name;
+		}
+
+		public virtual int CompareTo(TitleSetup other)
+		{
+			return string.Compare(m_TitleExpression, other.m_TitleExpression, true);
 		}
 	}
+
+	//---------------------------------------------------------------------------------------------
+
+	public class TitleSetupUITypeEditor : UITypeEditor
+	{
+		public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+		{
+			if (context != null && context.Instance != null && provider != null)
+			{
+				IWindowsFormsEditorService edsvc = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
+				if (edsvc != null)
+				{
+					// Intentionally showing a non-modal dialog to allow the user to
+					// play around with the IDE/ while changing the plugin settings.
+					PackageGlobals.Instance().ShowTitleExpressionEditor();
+					return value;
+				}
+			}
+			return value;
+		}
+
+		public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
+		{
+			return UITypeEditorEditStyle.Modal;
+		}
+	}
+
 }

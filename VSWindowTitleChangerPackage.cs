@@ -10,6 +10,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace VSWindowTitleChanger
 {
+
+//warning CS0618: 'Microsoft.VisualStudio.Shell.InstalledProductRegistrationAttribute.InstalledProductRegistrationAttribute(bool, string, string, string)' is obsolete: 'This InstalledProductRegistrationAttribute constructor has been deprecated. Please use other constructor instead.'
+#pragma warning disable 618
+
 	/// <summary>
 	/// This is the class that implements the package exposed by this assembly.
 	///
@@ -50,7 +54,52 @@ namespace VSWindowTitleChanger
 			return GetService(interface_type);
 		}
 
-		private TitleFormatter m_TitleFormatter;
+		internal VSMainWindow VSMainWindow
+		{
+			get
+			{
+				return m_VSMainWindow;
+			}
+		}
+
+		public TitleSetup GetTitleSetupFromOptions()
+		{
+			ToolOptions options = (ToolOptions)GetDialogPage(typeof(ToolOptions));
+			return options.TitleSetup;
+		}
+
+		public void SaveTitleSetupToOptions(TitleSetup title_setup)
+		{
+			ToolOptions options = (ToolOptions)GetDialogPage(typeof(ToolOptions));
+			options.TitleSetup = title_setup;
+			options.SaveSettingsToStorage();
+		}
+
+		public int DTEMajorVersionNumber
+		{
+			get
+			{
+				DTE dte = (DTE)GetService(typeof(DTE));
+				if (dte == null)
+					return -1;
+				// Something like "10.0"
+				string version_string = dte.Version;
+				int idx = version_string.IndexOf('.');
+				if (idx < 0)
+					return -1;
+				string major_version_string = version_string.Substring(0, idx);
+				try
+				{
+					return Convert.ToInt32(major_version_string);
+				}
+				catch (System.Exception)
+				{
+					return -1;
+				}
+			}
+		}
+
+
 		private VSMainWindow m_VSMainWindow;
 		private Dispatcher m_UIThradDispatcher;
 		private DispatcherTimer m_DispatcherTimer;
@@ -70,7 +119,51 @@ namespace VSWindowTitleChanger
 				m_DispatcherTimer.Interval = new TimeSpan(0, 0, 0, update_millis/1000, update_millis%1000);
 			}
 
-			m_TitleFormatter.UpdateWindowTitle(options);
+			PackageGlobals globals = PackageGlobals.Instance();
+
+			PackageGlobals.VSMultiInstanceInfo multi_instance_info;
+			globals.GetVSMultiInstanceInfo(out multi_instance_info);
+
+			bool extension_active;
+			switch (options.ExtensionActivationRule)
+			{
+				case EExtensionActivationRule.ActiveWithMultipleVSInstances:
+					extension_active = multi_instance_info.multiple_instances;
+					break;
+				case EExtensionActivationRule.ActiveWithMultipleVSInstancesOfTheSameVersion:
+					extension_active = multi_instance_info.multiple_instances_same_version;
+					break;
+				case EExtensionActivationRule.AlwaysInactive:
+					extension_active = false;
+					break;
+				default:
+					extension_active = true;
+					break;
+			}
+
+			string title = null;
+
+			if (extension_active)
+			{
+				ExpressionEvaluator.EvalContext eval_ctx = new ExpressionEvaluator.EvalContext();
+				globals.SetVariableValuesFromIDEState(eval_ctx, multi_instance_info);
+				TitleSetup title_setup = globals.TitleSetup;
+				ExpressionEvaluator.Expression title_expr = globals.CompiledExpressionCache.GetEntry(title_setup.TitleExpression).expression;
+				if (title_expr != null)
+				{
+					ExpressionEvaluator.SafeEvalContext safe_eval_ctx = new ExpressionEvaluator.SafeEvalContext(eval_ctx);
+					ExpressionEvaluator.Value title_val = title_expr.Evaluate(safe_eval_ctx);
+					title = title_val.ToString();
+				}
+			}
+
+			if (title == null)
+				title = m_VSMainWindow.OriginalTitle;
+
+			if (options.Debug)
+				title += " [VSWindowTitleChanger_DebugMode]";
+
+			m_VSMainWindow.SetTitle(title);
 		}
 
 		private delegate void MyAction();
@@ -101,8 +194,6 @@ namespace VSWindowTitleChanger
 			m_VSMainWindow = new VSMainWindow();
 			m_VSMainWindow.Initialize((IntPtr)dte.MainWindow.HWnd);
 
-			m_TitleFormatter = new TitleFormatter(this, m_VSMainWindow);
-
 			m_DispatcherTimer = new DispatcherTimer();
 			m_DispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
 			// Update every X seconds to handle unexpected window title changes
@@ -115,6 +206,8 @@ namespace VSWindowTitleChanger
 
 			IVsDebugger debugger = (IVsDebugger)GetService(typeof(IVsDebugger));
 			debugger.AdviseDebuggerEvents(this, out m_DebuggerEventsCookie);
+
+			PackageGlobals.InitInstance(this);
 
 			UpdateWindowTitle();
 		}
@@ -132,6 +225,8 @@ namespace VSWindowTitleChanger
 		protected override void Dispose(bool disposing)
 		{
 			Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Dispose() of: {0}", this.ToString()));
+
+			PackageGlobals.DeinitInstance();
 
 			if (m_DispatcherTimer != null)
 				m_DispatcherTimer.Stop();
@@ -202,5 +297,32 @@ namespace VSWindowTitleChanger
 			return VSConstants.S_OK;
 		}
 		// ~IVsDebuggerEvents
+
+#if DEBUG_GUI
+
+		[STAThread]
+		static void Main(string[] args)
+		{
+			Application.EnableVisualStyles();
+			Application.Run(new TitleSetupEditor());
+		}
+
+#elif DEBUG_EXPRESSION_EVALUATOR
+
+		static void Main(string[] args)
+		{
+			try
+			{
+				new VSWindowTitleChanger.ExpressionEvaluator.ExpressionEvaluatorTest().Execute();
+			}
+			catch (System.Exception ex)
+			{
+				Console.WriteLine(ex.ToString());
+			}
+			Console.ReadLine();
+		}
+
+#endif
 	}
+
 }
