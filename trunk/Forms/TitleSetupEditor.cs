@@ -141,16 +141,22 @@ namespace VSWindowTitleChanger
 			if (CompareVariables(eval_ctx.VariableValues, m_Variables))
 				return;
 			m_Variables = eval_ctx.VariableValues;
-#endif
 
-			List<string> variable_names = new List<string>(m_Variables.Keys);
-			variable_names.Sort();
 			bool first_time = m_VariableNameToLVI.Count == 0;
+			List<string> variable_names = new List<string>(m_Variables.Keys);
+			if (first_time)
+				variable_names.AddRange(globals.CompileTimeConstants.VariableValues.Keys);
+			variable_names.Sort();
 			foreach (string name in variable_names)
 			{
-				Value val = m_Variables[name];
 				if (first_time)
 				{
+					// Skipping the "true" and "false" compile time constants.
+					if (name.Equals("true", StringComparison.OrdinalIgnoreCase) || name.Equals("false", StringComparison.OrdinalIgnoreCase))
+						continue;
+					Value val;
+					if (!m_Variables.TryGetValue(name, out val))
+						val = globals.CompileTimeConstants.VariableValues[name];
 					ListViewItem lvi = new ListViewItem(name);
 					lvi.Font = editTitleExpression.Font;
 					ListViewItem.ListViewSubItem lvsi = lvi.SubItems.Add(val.ToString());
@@ -162,11 +168,13 @@ namespace VSWindowTitleChanger
 				}
 				else
 				{
+					Value val = m_Variables[name];
 					ListViewItem lvi = m_VariableNameToLVI[name];
 					lvi.SubItems[1].Text = val.ToString();
 					lvi.SubItems[2].Text = val.GetType().ToString();
 				}
 			}
+#endif
 
 			ReEvaluate();
 		}
