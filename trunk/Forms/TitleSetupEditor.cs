@@ -234,6 +234,7 @@ namespace VSWindowTitleChanger
 			{
 				if (components != null)
 					components.Dispose();
+				m_DispatcherTimer_UpdateVariables.Stop();
 				if (m_HelpForm != null)
 					m_HelpForm.Dispose();
 			}
@@ -323,48 +324,53 @@ namespace VSWindowTitleChanger
 		private const int DLGC_WANTALLKEYS = 0x0004;
 
 
-		// We are using ProcessKeyPreview because this works with both Windows Forms (pre-VS2010) and WPF.
 		protected override bool ProcessKeyPreview(ref Message m)
 		{
 			if (m.Msg != WM_KEYDOWN && m.Msg != WM_KEYUP && m.Msg != WM_CHAR)
 				return false;
 
-			if (m_CustomTabbingEnabled && m_ConsumeTab && m.Msg == WM_CHAR)
+			if (m.Msg == WM_CHAR)
 			{
-				if (m.WParam == (IntPtr)9)
-					return true;
-				return false;
+				if (m_CustomTabbingEnabled && m_ConsumeTab)
+				{
+					if (m.WParam == (IntPtr)9)
+						return true;
+					return false;
+				}
+			}
+			else
+			{
+				bool key_down = m.Msg == WM_KEYDOWN;
+				Keys key = (Keys)m.WParam;
+				switch (key)
+				{
+					case Keys.F1:
+						if (key_down)
+							ShowHelp();
+						return true;
+					case Keys.Escape:
+						if (key_down)
+							Close();
+						return true;
+					case Keys.Tab:
+						if (m_CustomTabbingEnabled)
+						{
+							if (key_down)
+							{
+								int code = (int)SendMessage(m.HWnd, WM_GETDLGCODE, m.WParam, IntPtr.Zero);
+								m_ConsumeTab = 0 == (code & (DLGC_WANTALLKEYS | DLGC_WANTTAB));
+								if (m_ConsumeTab)
+								{
+									bool forward = GetKeyState(Keys.ShiftKey) >= 0;
+									ProcessTabKey(forward);
+								}
+							}
+							return m_ConsumeTab;
+						}
+						break;
+				}
 			}
 
-			bool key_down = m.Msg == WM_KEYDOWN;
-			Keys key = (Keys)m.WParam;
-			switch (key)
-			{
-				case Keys.F1:
-					if (key_down)
-						ShowHelp();
-					return true;
-				case Keys.Escape:
-					if (key_down)
-						Close();
-					return true;
-				case Keys.Tab:
-					if (m_CustomTabbingEnabled)
-					{
-						if (key_down)
-						{
-							int code = (int)SendMessage(m.HWnd, WM_GETDLGCODE, m.WParam, IntPtr.Zero);
-							m_ConsumeTab = 0 == (code & (DLGC_WANTALLKEYS | DLGC_WANTTAB));
-							if (m_ConsumeTab)
-							{
-								bool forward = GetKeyState(Keys.ShiftKey) >= 0;
-								ProcessTabKey(forward);
-							}
-						}
-						return m_ConsumeTab;
-					}
-					break;
-			}
 			return base.ProcessKeyPreview(ref m);
 		}
 	}
