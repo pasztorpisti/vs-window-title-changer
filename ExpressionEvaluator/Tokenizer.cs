@@ -39,6 +39,9 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 		OpenBracket,
 		CloseBracket,
 
+		SingleLineComment,
+		MultiLineComment,
+
 		EOF,
 	}
 
@@ -105,9 +108,14 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 
 	class Tokenizer
 	{
-		public Tokenizer(string text)
+		public Tokenizer(string text) : this(text, false)
+		{
+		}
+
+		public Tokenizer(string text, bool return_comment_tokens)
 		{
 			m_Text = text;
+			m_ReturnCommentTokens = return_comment_tokens;
 		}
 
 		public string Text { get { return m_Text; } }
@@ -160,11 +168,14 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 			return true;
 		}
 
+		// The return value is always true, in case of error an exception is thrown.
+		// The return value is there just to make the function body shorter.
 		private bool ParseNextToken()
 		{
 			m_NextTokenAvailable = true;
 
-			SkipSpaces();
+			if (SkipSpaces())
+				return true;
 			switch (Lookahead())
 			{
 				case '\0':
@@ -299,9 +310,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 				switch (Lookahead())
 				{
 					case '\0':
-						return;
 					case '\n':
-						++m_Pos;
 						return;
 					default:
 						++m_Pos;
@@ -334,7 +343,8 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 			}
 		}
 
-		private void SkipSpaces()
+		// Returns true if the next token has been set to a comment token.
+		bool SkipSpaces()
 		{
 			for (;;)
 			{
@@ -350,30 +360,52 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 						switch (Lookahead(1))
 						{
 							case '/':
-								m_Pos += 2;
-								SkipLine();
-								break;
+								if (m_ReturnCommentTokens)
+								{
+									int start_pos = m_Pos;
+									m_Pos += 2;
+									SkipLine();
+									SetNextToken(TokenType.SingleLineComment, null, start_pos, m_Pos - start_pos);
+									return true;
+								}
+								else
+								{
+									m_Pos += 2;
+									SkipLine();
+									break;
+								}
 							case '*':
-								m_Pos += 2;
-								SkipMultilineComment();
-								break;
+								if (m_ReturnCommentTokens)
+								{
+									int start_pos = m_Pos;
+									m_Pos += 2;
+									SkipMultilineComment();
+									SetNextToken(TokenType.MultiLineComment, null, start_pos, m_Pos - start_pos);
+									return true;
+								}
+								else
+								{
+									m_Pos += 2;
+									SkipMultilineComment();
+									break;
+								}
 							default:
-								return;
+								return false;
 						}
 						break;
 					default:
-						return;
+						return false;
 				}
 			}
 		}
 
-		private char Lookahead()
+		char Lookahead()
 		{
 			return Lookahead(0);
 		}
 
 		// returns '\0' if we reached the end of stream
-		private char Lookahead(int offset)
+		char Lookahead(int offset)
 		{
 			offset += m_Pos;
 			if (offset >= m_Text.Length)
@@ -383,7 +415,8 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 
 		bool m_NextTokenAvailable;
 		Token m_NextToken;
-		private string m_Text;
-		private int m_Pos;
+		bool m_ReturnCommentTokens;
+		string m_Text;
+		int m_Pos;
 	}
 }
