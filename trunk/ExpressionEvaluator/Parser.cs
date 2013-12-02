@@ -90,9 +90,10 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// OpRegex ->					HighPrecedenceTernary ( ( "=~" | "!~" ) Const-HighPrecedenceTernary )
 	// HighPrecedenceTernary ->		OpUnary "?" HighPrecedenceTernary
 	// OpUnary ->					( "not" | "upcase" | "locase" | "lcap" ) OpUnary | Value
-	// Value ->						StringLiteral | Variable | "(" Expression ")" | IfElse
-	// IfElse ->					"if" Expression ( then )? IfBlock "else" IfBlock
-	// IfBlock ->					Expression | "{" Expression "}"
+	// Value ->						StringLiteral | Variable | BracketExpression | IfElse
+	// IfElse ->					"if" BracketExpression BraceExpression "else" ( BraceExpression | IfElse )
+	// BracketExpression ->			"(" Expression ")"
+	// BraceExpression ->			"{" Expression "}"
 
 	// StringLiteral ->	'"' ( UnicodeCharacter* ( EscapedQuote UnicodeCharacter* )* '"'
 	// EscapedQuote ->	'"' '"'
@@ -363,13 +364,15 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 		private Expression Parse_Value()
 		{
-			Token token = m_Tokenizer.GetNextToken();
+			Token token = m_Tokenizer.PeekNextToken();
 			switch (token.type)
 			{
 				case TokenType.String:
+					m_Tokenizer.ConsumeNextToken();
 					return new StringValue(token.data);
 				case TokenType.Variable:
 					{
+						m_Tokenizer.ConsumeNextToken();
 						Variable variable = new Variable(token.data, token.pos);
 						Value v = m_CompileTimeConstants.GetVariableValue(variable);
 						if (v != null)
@@ -377,11 +380,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 						return variable;
 					}
 				case TokenType.OpenBracket:
-					{
-						Expression expr = Parse_Expression();
-						Expect(TokenType.CloseBracket);
-						return expr;
-					}
+					return Parse_BracketExpression();
 				case TokenType.If:
 					return Parse_IfElse();
 				default:
@@ -389,33 +388,45 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			}
 		}
 
-		private Expression Parse_IfElse()
+		Expression Parse_IfElse()
 		{
-			Expression cond_expr = Parse_Expression();
-			if (m_Tokenizer.PeekNextToken().type == TokenType.Then)
-				m_Tokenizer.ConsumeNextToken();
-			Expression true_expr = Parse_IfBlock();
+			Expect(TokenType.If);
+			Expression cond_expr = Parse_BracketExpression();
+			Expression true_expr = Parse_BraceExpression();
 			Expect(TokenType.Else);
-			Expression false_expr = Parse_IfBlock();
+			Token token = m_Tokenizer.PeekNextToken();
+			Expression false_expr;
+			switch (token.type)
+			{
+				case TokenType.If:
+					false_expr = Parse_IfElse();
+					break;
+				case TokenType.OpenBrace:
+					false_expr = Parse_BraceExpression();
+					break;
+				default:
+					throw new ParserException_ExpectedTokens(m_Tokenizer.Text, token.pos, new TokenType[] { TokenType.If, TokenType.OpenBrace });
+			}
 			return new Ternary(cond_expr, true_expr, false_expr);
 		}
 
-		private Expression Parse_IfBlock()
+		private Expression Parse_BracketExpression()
 		{
-			if (m_Tokenizer.PeekNextToken().type == TokenType.OpenBlock)
-			{
-				m_Tokenizer.ConsumeNextToken();
-				Expression expr = Parse_Expression();
-				Expect(TokenType.CloseBlock);
-				return expr;
-			}
-			else
-			{
-				return Parse_Expression();
-			}
+			Expect(TokenType.OpenBracket);
+			Expression expr = Parse_Expression();
+			Expect(TokenType.CloseBracket);
+			return expr;
 		}
 
-		private TokenType Expect(params TokenType[] token_types)
+		Expression Parse_BraceExpression()
+		{
+			Expect(TokenType.OpenBrace);
+			Expression expr = Parse_Expression();
+			Expect(TokenType.CloseBrace);
+			return expr;
+		}
+
+		TokenType Expect(params TokenType[] token_types)
 		{
 			Token token = m_Tokenizer.GetNextToken();
 			foreach (TokenType t in token_types)

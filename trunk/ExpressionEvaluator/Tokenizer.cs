@@ -31,11 +31,10 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 		Ternary,
 
 		If,
-		Then,
 		Else,
 
-		OpenBlock,
-		CloseBlock,
+		OpenBrace,
+		CloseBrace,
 		OpenBracket,
 		CloseBracket,
 
@@ -74,10 +73,9 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 				case TokenType.String: return "<string_literal>";
 				case TokenType.Variable: return "<variable>";
 				case TokenType.If: return "\"if\"";
-				case TokenType.Then: return "\"then\"";
 				case TokenType.Else: return "\"else\"";
-				case TokenType.OpenBlock: return "\"(\"";
-				case TokenType.CloseBlock: return "\")\"";
+				case TokenType.OpenBrace: return "\"{\"";
+				case TokenType.CloseBrace: return "\"}\"";
 				case TokenType.OpenBracket: return "\"(\"";
 				case TokenType.CloseBracket: return "\")\"";
 				case TokenType.Ternary: return "\"?\"";
@@ -183,9 +181,9 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 				case '+':
 					return SetNextToken(TokenType.OpConcat, 1);
 				case '{':
-					return SetNextToken(TokenType.OpenBlock, 1);
+					return SetNextToken(TokenType.OpenBrace, 1);
 				case '}':
-					return SetNextToken(TokenType.CloseBlock, 1);
+					return SetNextToken(TokenType.CloseBrace, 1);
 				case '(':
 					return SetNextToken(TokenType.OpenBracket, 1);
 				case ')':
@@ -289,8 +287,6 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 					return SetNextToken(TokenType.OpOr, variable, start_pos, variable.Length);
 				case "if":
 					return SetNextToken(TokenType.If, variable, start_pos, variable.Length);
-				case "then":
-					return SetNextToken(TokenType.Then, variable, start_pos, variable.Length);
 				case "else":
 					return SetNextToken(TokenType.Else, variable, start_pos, variable.Length);
 				default:

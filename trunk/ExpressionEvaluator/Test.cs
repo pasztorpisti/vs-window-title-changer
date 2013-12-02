@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using VSWindowTitleChanger.ExpressionEvaluator.Tokenizer;
 
 namespace VSWindowTitleChanger.ExpressionEvaluator
 {
+#if DEBUG_EXPRESSION_EVALUATOR
+
 	class ExpressionEvaluatorTest
 	{
 		Expression Parse(string s)
@@ -66,16 +69,19 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			//string expression = @" if ( ""true"" =~ ""^tr(u)e$"" ) then { (""DD"" + $1 ) if false ? ""0"" : ""1"" } else if true ""OtherIfTrue"" else ""OtherIfFalse"" ";
 			//string expression = @" ""0"" + ""1"" if false else ""2"" + false ? ""3"" ? ""4"" ? upcase  false ? true ";
 
-			string expression = " \"0\" + \"1\" if false else \"2\" + false ? \"3\" ? \"4\" ? upcase //vasnvoienve4\r\n" +
-				" false ? true /*fwioejf\r\n" +
+			/*
+			string expression = " \"0\" + \"1\" if false else \"2\" + True ? \"3\" ? \"4\" ? upcase //vasnvoienve4\r\n" +
+				" (true ? \"ddd\") /*fwioejf\r\n" +
 				" sdlfkjsdf \r\n" +
 				"dlkfnwe wefkw \n" +
 
-				"//asdfasdf*/\r\n";
+				"//asdfasdf*///\r\n";
+			/**/
 
 			//string expression = @" ""|"" + ""sf"" =~ ""^dsf$"" + ""|"" + not [true | true | false] =~ ""^tru$"" ";
 			//string expression = @" [ ""sf"" =~ ""^(s)(f)$"" | [ false | $1 | $2 ] | ""asdf"" ] ";
 			//string expression = @"true";
+			string expression = @"if (false) { ""S"" } else if (false) { ""D"" } else { ""E"" } ";
 
 			Expression expr = Parse(expression);
 			DebugPrint(expr, "Before ConstExprElim");
@@ -86,7 +92,6 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				expr = ev;
 			DebugPrint(expr, "After ConstExprElim");
 			Evaluate(expression, expr, "After ConstExprElim");
-
 
 			Regex regex = new Regex(@"a(?<myname>a(?<5>b))b(bb)$");
 			Match m = regex.Match("aaabbbb");
@@ -105,6 +110,27 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			for (int i = 0, e = m.Groups.Count; i < e; ++i)
 				Console.WriteLine("  {0}: {1} {2}", i, m.Groups[i].Success, m.Groups[i].Value);
 			Console.WriteLine("XX {0}", m.Groups[2].Value);
+
+			Console.WriteLine("---------------------------------------------");
+			Tokenizer.Tokenizer tokenizer = new Tokenizer.Tokenizer(expression);
+			for (; ; )
+			{
+				Token token = tokenizer.GetNextToken();
+				Console.WriteLine("{0} {1}", token.type.ToString(), expression.Substring(token.pos, token.length));
+				if (token.type == TokenType.EOF)
+					break;
+			}
+			Console.WriteLine("---------------------------------------------");
+			tokenizer = new Tokenizer.Tokenizer(expression, true);
+			for (; ; )
+			{
+				Token token = tokenizer.GetNextToken();
+				Console.WriteLine("{0} {1}", token.type.ToString(), expression.Substring(token.pos, token.length));
+				if (token.type == TokenType.EOF)
+					break;
+			}
 		}
 	}
+
+#endif
 }
