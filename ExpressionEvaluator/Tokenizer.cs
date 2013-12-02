@@ -47,6 +47,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 		public TokenType type;
 		public string data;
 		public int pos;
+		public int length;
 
 		public static string TokenTypeToLiteral(TokenType token_type)
 		{
@@ -135,18 +136,28 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 			m_NextTokenAvailable = false;
 		}
 
-		private bool SetNextToken(TokenType type, int start_pos_offset)
+		private bool SetNextToken(TokenType type, int pos, int length)
 		{
 			m_NextToken.type = type;
 			m_NextToken.data = null;
-			m_NextToken.pos = m_Pos + start_pos_offset;
-			++m_Pos;
+			m_NextToken.pos = pos;
+			m_NextToken.length = length;
+			m_Pos = pos + length;
 			return true;
 		}
 
-		private bool SetNextToken(TokenType type)
+		private bool SetNextToken(TokenType type, int length)
 		{
-			return SetNextToken(type, 0);
+			return SetNextToken(type, m_Pos, length);
+		}
+
+		private bool SetNextToken(TokenType type, string data, int pos, int length)
+		{
+			m_NextToken.type = type;
+			m_NextToken.data = data;
+			m_NextToken.pos = pos;
+			m_NextToken.length = length;
+			return true;
 		}
 
 		private bool ParseNextToken()
@@ -157,71 +168,54 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 			switch (Lookahead())
 			{
 				case '\0':
-					return SetNextToken(TokenType.EOF);
+					return SetNextToken(TokenType.EOF, 0);
 				case '+':
-					return SetNextToken(TokenType.OpConcat);
+					return SetNextToken(TokenType.OpConcat, 1);
 				case '{':
-					return SetNextToken(TokenType.OpenBlock);
+					return SetNextToken(TokenType.OpenBlock, 1);
 				case '}':
-					return SetNextToken(TokenType.CloseBlock);
+					return SetNextToken(TokenType.CloseBlock, 1);
 				case '(':
-					return SetNextToken(TokenType.OpenBracket);
+					return SetNextToken(TokenType.OpenBracket, 1);
 				case ')':
-					return SetNextToken(TokenType.CloseBracket);
+					return SetNextToken(TokenType.CloseBracket, 1);
 				case '?':
-					return SetNextToken(TokenType.Ternary);
+					return SetNextToken(TokenType.Ternary, 1);
 				case '&':
 					if (Lookahead(1) == '&')
-					{
-						++m_Pos;
-						return SetNextToken(TokenType.OpAnd, -1);
-					}
-					return SetNextToken(TokenType.OpAnd);
+						return SetNextToken(TokenType.OpAnd, 2);
+					return SetNextToken(TokenType.OpAnd, 1);
 				case '^':
-					return SetNextToken(TokenType.OpXor);
+					return SetNextToken(TokenType.OpXor, 1);
 				case '|':
 					if (Lookahead(1) == '|')
-					{
-						++m_Pos;
-						return SetNextToken(TokenType.OpOr, -1);
-					}
-					return SetNextToken(TokenType.OpOr);
+						return SetNextToken(TokenType.OpOr, 2);
+					return SetNextToken(TokenType.OpOr, 1);
 				case '=':
-					++m_Pos;
-					switch (Lookahead())
+					switch (Lookahead(1))
 					{
 						case '=':
-							return SetNextToken(TokenType.OpEquals, -1);
+							return SetNextToken(TokenType.OpEquals, 2);
 						case '~':
-							return SetNextToken(TokenType.OpRegexMatch, -1);
+							return SetNextToken(TokenType.OpRegexMatch, 2);
 						default:
-							throw new InvalidTokenException(m_Text, m_Pos - 1, "Invalid or incomplete operator: '='");
+							throw new InvalidTokenException(m_Text, m_Pos, "Invalid or incomplete operator: '='");
 					}
 				case '!':
-					switch (Lookahead())
+					switch (Lookahead(1))
 					{
 						case '=':
-							++m_Pos;
-							return SetNextToken(TokenType.OpNotEquals, -1);
+							return SetNextToken(TokenType.OpNotEquals, 2);
 						case '~':
-							++m_Pos;
-							return SetNextToken(TokenType.OpRegexNotMatch, -1);
+							return SetNextToken(TokenType.OpRegexNotMatch, 2);
 						default:
-							return SetNextToken(TokenType.OpNot);
+							return SetNextToken(TokenType.OpNot, 1);
 					}
 				case '"':
 					return ParseString();
 				default:
 					return ParseVariableOrOperator();
 			}
-		}
-
-		private bool SetNextToken(TokenType type, string data, int start_pos)
-		{
-			m_NextToken.type = type;
-			m_NextToken.data = data;
-			m_NextToken.pos = start_pos;
-			return true;
 		}
 
 		private bool ParseString()
@@ -246,7 +240,8 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 			if (c == '\0')
 				throw new TokenizerException(m_Text, start_pos, "Reached the end of the stream while parsing the quoted string.");
 			++m_Pos;
-			return SetNextToken(TokenType.String, sb.ToString(), start_pos);
+			string s = sb.ToString();
+			return SetNextToken(TokenType.String, s, start_pos, m_Pos-start_pos);
 		}
 
 		private bool ParseVariableOrOperator()
@@ -262,33 +257,33 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 			switch (variable.ToLower())
 			{
 				case "not":
-					return SetNextToken(TokenType.OpNot, variable, start_pos);
+					return SetNextToken(TokenType.OpNot, variable, start_pos, variable.Length);
 				case "upcase":
-					return SetNextToken(TokenType.OpUpcase, variable, start_pos);
+					return SetNextToken(TokenType.OpUpcase, variable, start_pos, variable.Length);
 				case "locase":
-					return SetNextToken(TokenType.OpLocase, variable, start_pos);
+					return SetNextToken(TokenType.OpLocase, variable, start_pos, variable.Length);
 				case "lcap":
-					return SetNextToken(TokenType.OpLcap, variable, start_pos);
+					return SetNextToken(TokenType.OpLcap, variable, start_pos, variable.Length);
 				case "contains":
-					return SetNextToken(TokenType.OpContains, variable, start_pos);
+					return SetNextToken(TokenType.OpContains, variable, start_pos, variable.Length);
 				case "startswith":
-					return SetNextToken(TokenType.OpStartsWith, variable, start_pos);
+					return SetNextToken(TokenType.OpStartsWith, variable, start_pos, variable.Length);
 				case "endswith":
-					return SetNextToken(TokenType.OpEndsWith, variable, start_pos);
+					return SetNextToken(TokenType.OpEndsWith, variable, start_pos, variable.Length);
 				case "and":
-					return SetNextToken(TokenType.OpAnd, variable, start_pos);
+					return SetNextToken(TokenType.OpAnd, variable, start_pos, variable.Length);
 				case "xor":
-					return SetNextToken(TokenType.OpXor, variable, start_pos);
+					return SetNextToken(TokenType.OpXor, variable, start_pos, variable.Length);
 				case "or":
-					return SetNextToken(TokenType.OpOr, variable, start_pos);
+					return SetNextToken(TokenType.OpOr, variable, start_pos, variable.Length);
 				case "if":
-					return SetNextToken(TokenType.If, variable, start_pos);
+					return SetNextToken(TokenType.If, variable, start_pos, variable.Length);
 				case "then":
-					return SetNextToken(TokenType.Then, variable, start_pos);
+					return SetNextToken(TokenType.Then, variable, start_pos, variable.Length);
 				case "else":
-					return SetNextToken(TokenType.Else, variable, start_pos);
+					return SetNextToken(TokenType.Else, variable, start_pos, variable.Length);
 				default:
-					return SetNextToken(TokenType.Variable, variable, start_pos);
+					return SetNextToken(TokenType.Variable, variable, start_pos, variable.Length);
 			}
 		}
 
