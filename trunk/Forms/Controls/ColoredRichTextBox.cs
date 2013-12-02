@@ -11,8 +11,39 @@ namespace VSWindowTitleChanger
 {
 	class ColoredRichTextBox : RichTextBox
 	{
+		const int WM_PAINT = 15;
+
+		public delegate void OnPostPaint(ColoredRichTextBox sender, Graphics g);
+		public event OnPostPaint PostPaint;
+
+		const int WM_MOUSEWHEEL = 0x20A;
+		const int WM_VSCROLL = 0x115;
+		const int SB_LINEUP = 0;
+		const int SB_LINEDOWN = 1;
+		const int SB_THUMBTRACK = 5;
+
 		protected override void WndProc(ref Message m)
 		{
+			switch (m.Msg)
+			{
+				case WM_MOUSEWHEEL:
+					{
+						int delta = (int)m.WParam >> 16 & 0xFF;
+						if ((delta >> 7) == 1)
+							SendMessage(m.HWnd, WM_VSCROLL, (IntPtr)SB_LINEDOWN, IntPtr.Zero);
+						else
+							SendMessage(m.HWnd, WM_VSCROLL, (IntPtr)SB_LINEUP, IntPtr.Zero);
+						m.Result = IntPtr.Zero;
+						return;
+					}
+				case WM_PAINT:
+					if (PostPaint == null)
+						break;
+					base.WndProc(ref m);
+					using (Graphics g = CreateGraphics())
+						PostPaint(this, g);
+					return;
+			}
 			base.WndProc(ref m);
 		}
 
@@ -41,7 +72,7 @@ namespace VSWindowTitleChanger
 			{
 				if (reset_colors_first)
 				{
-					ColoredRange full_range = new ColoredRange(0, Text.Length, DefaultBackColor, DefaultForeColor);
+					ColoredRange full_range = new ColoredRange(0, Text.Length, BackColor, ForeColor);
 					ApplyRange(full_range);
 				}
 				foreach (ColoredRange range in ranges)
@@ -68,6 +99,8 @@ namespace VSWindowTitleChanger
 		static extern IntPtr SendMessage(IntPtr hWnd, int wMsg, int wParam, ref Point lParam);
 		[DllImport("user32.dll")]
 		static extern IntPtr SendMessage(IntPtr hWnd, int wMsg, int wParam, IntPtr lParam);
+		[DllImport("user32.dll")]
+		static extern IntPtr SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
 		[DllImport("user32.dll")]
 		static extern IntPtr SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, ref int lParam);
 

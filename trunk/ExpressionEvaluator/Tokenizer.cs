@@ -110,9 +110,14 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 		{
 		}
 
-		public Tokenizer(string text, bool return_comment_tokens)
+		public Tokenizer(string text, bool return_comment_tokens) : this(text, return_comment_tokens, 0)
+		{
+		}
+
+		public Tokenizer(string text, bool return_comment_tokens, int start_pos)
 		{
 			m_Text = text;
+			m_Pos = start_pos;
 			m_ReturnCommentTokens = return_comment_tokens;
 		}
 

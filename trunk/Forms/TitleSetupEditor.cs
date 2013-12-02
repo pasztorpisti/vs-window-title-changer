@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using VSWindowTitleChanger.ExpressionEvaluator;
+using VSWindowTitleChanger.ExpressionEvaluator.Tokenizer;
+using System.Drawing;
 
 namespace VSWindowTitleChanger
 {
@@ -81,6 +83,7 @@ namespace VSWindowTitleChanger
 
 		void ReEvaluate()
 		{
+#if !DEBUG_GUI
 			PackageGlobals.CompiledExpression compiled_expression = PackageGlobals.Instance().CompiledExpressionCache.GetEntry(editTitleExpression.Text);
 			if (compiled_expression.expression == null)
 			{
@@ -101,6 +104,92 @@ namespace VSWindowTitleChanger
 				Value title_value = compiled_expression.expression.Evaluate(safe_eval_ctx);
 				titleOrCompileError.Text = title_value.ToString();
 			}
+#endif
+			UpdateSyntaxHighlight();
+		}
+
+		void UpdateSyntaxHighlight()
+		{
+			List<ColoredRichTextBox.ColoredRange> highlight_info = CreateSyntaxHighlightInfo(editTitleExpression.Text);
+			editTitleExpression.Colorize(highlight_info, true);
+		}
+
+		Color m_ColorKeyWord = Color.Blue;
+		Color m_ColorOperator = Color.Black;
+		Color m_ColorStringLiteral = Color.Purple;
+		Color m_ColorConstantOrVariable = Color.FromArgb(96, 96, 96);
+		Color m_ColorBrackets = Color.Black;
+		Color m_ColorComment = Color.Green;
+
+		List<ColoredRichTextBox.ColoredRange> CreateSyntaxHighlightInfo(string expression_str)
+		{
+			List<ColoredRichTextBox.ColoredRange> highlight_info = new List<ColoredRichTextBox.ColoredRange>();
+			Tokenizer tokenizer = new Tokenizer(expression_str, true);
+			for (;;)
+			{
+				try
+				{
+					Token token = tokenizer.GetNextToken();
+					if (token.type == TokenType.EOF)
+						break;
+					Color color;
+					switch (token.type)
+					{
+						case TokenType.OpNot:
+						case TokenType.OpUpcase:
+						case TokenType.OpLocase:
+						case TokenType.OpLcap:
+						case TokenType.OpContains:
+						case TokenType.OpStartsWith:
+						case TokenType.OpEndsWith:
+						case TokenType.OpConcat:
+						case TokenType.OpEquals:
+						case TokenType.OpNotEquals:
+						case TokenType.OpRegexMatch:
+						case TokenType.OpRegexNotMatch:
+						case TokenType.OpAnd:
+						case TokenType.OpXor:
+						case TokenType.OpOr:
+						case TokenType.Ternary:
+							color = m_ColorOperator;
+							break;
+						case TokenType.String:
+							color = m_ColorStringLiteral;
+							break;
+						case TokenType.Variable:
+							color = m_ColorConstantOrVariable;
+							break;
+						case TokenType.If:
+						case TokenType.Else:
+							color = m_ColorKeyWord;
+							break;
+						case TokenType.OpenBrace:
+						case TokenType.CloseBrace:
+						case TokenType.OpenBracket:
+						case TokenType.CloseBracket:
+							color = m_ColorBrackets;
+							break;
+						case TokenType.SingleLineComment:
+						case TokenType.MultiLineComment:
+							color = m_ColorComment;
+							break;
+						default:
+							color = Color.Empty;
+							break;
+					}
+					if (!color.IsEmpty)
+						highlight_info.Add(new ColoredRichTextBox.ColoredRange(token.pos, token.length, Color.Empty, color));
+				}
+				catch (TokenizerException ex)
+				{
+					int pos = ex.ErrorPos;
+					pos = expression_str.IndexOf('\n', pos);
+					if (pos < 0)
+						break;
+					tokenizer = new Tokenizer(expression_str, true, pos + 1);
+				}
+			}
+			return highlight_info;
 		}
 
 		public TitleSetupEditor()
