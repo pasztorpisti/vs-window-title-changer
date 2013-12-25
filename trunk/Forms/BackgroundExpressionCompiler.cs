@@ -16,7 +16,7 @@ namespace VSWindowTitleChanger
 	{
 		ExpressionTextBox m_ExpressionTextBox;
 		Label m_WarningsLabel;
-		ExpressionCompilerThread.Job m_PrevFinishedJob;
+		ExpressionCompilerJob m_PrevFinishedJob;
 
 		IVariableValueResolver m_CompileTimeConstants;
 
@@ -182,14 +182,14 @@ namespace VSWindowTitleChanger
 			}
 
 			Parser parser = new Parser(m_ExpressionTextBox.Text, m_CompileTimeConstants);
-			ExpressionCompilerThread.Job job = new ExpressionCompilerThread.Job(parser, PackageGlobals.Instance().CreateFreshEvalContext());
+			ExpressionCompilerJob job = new ExpressionCompilerJob(parser, PackageGlobals.Instance().CreateFreshEvalContext(), true);
 			job.OnCompileFinished += OnCompileFinished;
 			job.UserData = (IntPtr)m_MostRecentUndoEntryId;
 			m_CompilerThread.RemoveAllJobs();
 			m_CompilerThread.AddJob(job);
 		}
 
-		void OnCompileFinished(ExpressionCompilerThread.Job job)
+		void OnCompileFinished(ExpressionCompilerJob job)
 		{
 			if (!Enabled || job.UserData != (IntPtr)m_MostRecentUndoEntryId)
 				return;

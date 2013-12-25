@@ -8,7 +8,6 @@ namespace VSWindowTitleChanger
 {
 	public partial class TitleSetupEditor : Form
 	{
-		System.Windows.Forms.Timer m_Timer_UpdateVariables;
 		TitleSetupEditorHelp m_HelpForm;
 
 		TitleSetup m_TitleSetup = new TitleSetup();
@@ -27,10 +26,6 @@ namespace VSWindowTitleChanger
 		public TitleSetupEditor()
 		{
 			InitializeComponent();
-
-			m_Timer_UpdateVariables = new System.Windows.Forms.Timer();
-			m_Timer_UpdateVariables.Interval = 1000;
-			m_Timer_UpdateVariables.Tick += new EventHandler(UpdateVariables_Tick);
 
 			VisibleChanged += new EventHandler(TitleSetupEditor_VisibleChanged);
 			Shown += new EventHandler(TitleSetupEditor_Shown);
@@ -75,21 +70,18 @@ namespace VSWindowTitleChanger
 			}
 		}
 
-		static bool CompareVariables(Dictionary<string, Value> vars0, Dictionary<string, Value> vars1)
+		internal Dictionary<string, Value> Variables
 		{
-			if (vars0.Count != vars1.Count)
-				return false;
-			foreach (KeyValuePair<string, Value> kv in vars0)
+			get
 			{
-				Value val1;
-				if (!vars1.TryGetValue(kv.Key, out val1))
-					return false;
-				if (0 != kv.Value.CompareTo(val1))
-					return false;
+				return m_Variables;
 			}
-			return true;
+			set
+			{
+				m_Variables = value;
+				VariablesChanged();
+			}
 		}
-
 
 		bool IsSetupModified()
 		{
@@ -142,14 +134,10 @@ namespace VSWindowTitleChanger
 
 		Dictionary<string, ListViewItem> m_VariableNameToLVI = new Dictionary<string, ListViewItem>();
 
-		void UpdateVariables()
+		void VariablesChanged()
 		{
 #if !DEBUG_GUI
 			PackageGlobals globals = PackageGlobals.Instance();
-			EvalContext eval_ctx = globals.CreateFreshEvalContext();
-			if (CompareVariables(eval_ctx.VariableValues, m_Variables))
-				return;
-			m_Variables = eval_ctx.VariableValues;
 
 			bool first_time = m_VariableNameToLVI.Count == 0;
 			List<string> variable_names = new List<string>(m_Variables.Keys);
@@ -196,11 +184,6 @@ namespace VSWindowTitleChanger
 			labelColumn.Text = (column + 1).ToString();
 		}
 
-		void UpdateVariables_Tick(object sender, EventArgs e)
-		{
-			UpdateVariables();
-		}
-
 		void TitleSetupEditor_VisibleChanged(object sender, EventArgs e)
 		{
 			if (Visible)
@@ -211,14 +194,10 @@ namespace VSWindowTitleChanger
 				m_BackgroundExpressionCompiler.CompileTimeConstants = PackageGlobals.Instance().CompileTimeConstants;
 #endif
 				m_BackgroundExpressionCompiler.Enabled = true;
-
-				m_Timer_UpdateVariables.Start();
-				UpdateVariables();
 			}
 			else
 			{
 				m_BackgroundExpressionCompiler.Enabled = false;
-				m_Timer_UpdateVariables.Stop();
 
 				TitleSetup = new TitleSetup();
 				// Don't fill an empty string into editTitleExpression.Text because its a know bug that
@@ -258,7 +237,6 @@ namespace VSWindowTitleChanger
 			{
 				if (components != null)
 					components.Dispose();
-				m_Timer_UpdateVariables.Stop();
 				if (m_HelpForm != null)
 					m_HelpForm.Dispose();
 				if (m_BackgroundExpressionCompiler != null)

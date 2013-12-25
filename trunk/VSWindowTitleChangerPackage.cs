@@ -7,6 +7,8 @@ using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using System.Collections.Generic;
+using VSWindowTitleChanger.ExpressionEvaluator;
 
 namespace VSWindowTitleChanger
 {
@@ -49,7 +51,7 @@ namespace VSWindowTitleChanger
 			Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
 		}
 
-		public object GetInterface(Type interface_type)
+		public object GetInterface(System.Type interface_type)
 		{
 			return GetService(interface_type);
 		}
@@ -75,25 +77,47 @@ namespace VSWindowTitleChanger
 			options.SaveSettingsToStorage();
 		}
 
+
+		ExpressionCompilerThread m_ExpressionCompilerThread;
+
 		VSMainWindow m_VSMainWindow;
 		System.Windows.Forms.Timer m_UpdateTimer;
-		bool m_Debug = false;
 
 		// Some property changes are detected only through updates...
 		const int UPDATE_PERIOD_MILLISECS = 1000;
-		const int DEBUG_UPDATE_PERIOD_MILLISECS = 200;
+
+		static bool CompareVariables(Dictionary<string, Value> vars0, Dictionary<string, Value> vars1)
+		{
+			if (vars0.Count != vars1.Count)
+				return false;
+			foreach (KeyValuePair<string, Value> kv in vars0)
+			{
+				Value val1;
+				if (!vars1.TryGetValue(kv.Key, out val1))
+					return false;
+				if (0 != kv.Value.CompareTo(val1))
+					return false;
+			}
+			return true;
+		}
+
+		string m_PrevTitleExpressionStr = "";
+		Dictionary<string, Value> m_PrevVariableValues = new Dictionary<string, Value>();
+		EExtensionActivationRule m_PrevExtensionActivationRule = EExtensionActivationRule.AlwaysInactive;
 
 		private void UpdateWindowTitle()
 		{
-			ToolOptions options = (ToolOptions)GetDialogPage(typeof(ToolOptions));
-			if (m_Debug != options.Debug)
-			{
-				m_Debug = options.Debug;
-				int update_millis = m_Debug ? DEBUG_UPDATE_PERIOD_MILLISECS : UPDATE_PERIOD_MILLISECS;
-				m_UpdateTimer.Interval = update_millis;
-			}
-
 			PackageGlobals globals = PackageGlobals.Instance();
+			EvalContext eval_ctx = globals.CreateFreshEvalContext();
+			bool variables_changed = !CompareVariables(eval_ctx.VariableValues, m_PrevVariableValues);
+
+			if (variables_changed)
+			{
+				m_PrevVariableValues = eval_ctx.VariableValues;
+				globals.TitleSetupEditor.Variables = eval_ctx.VariableValues;
+			}
+	
+			ToolOptions options = (ToolOptions)GetDialogPage(typeof(ToolOptions));
 
 			PackageGlobals.VSMultiInstanceInfo multi_instance_info;
 			globals.GetVSMultiInstanceInfo(out multi_instance_info);
@@ -115,29 +139,43 @@ namespace VSWindowTitleChanger
 					break;
 			}
 
-			string title = null;
-
 			if (extension_active)
 			{
-				ExpressionEvaluator.EvalContext eval_ctx = new ExpressionEvaluator.EvalContext();
-				globals.SetVariableValuesFromIDEState(eval_ctx, multi_instance_info);
 				TitleSetup title_setup = globals.TitleSetup;
-				ExpressionEvaluator.Expression title_expr = globals.CompiledExpressionCache.GetEntry(title_setup.TitleExpression).expression;
-				if (title_expr != null)
+				if (variables_changed || m_PrevExtensionActivationRule != options.ExtensionActivationRule ||
+					title_setup.TitleExpression != m_PrevTitleExpressionStr)
 				{
-					ExpressionEvaluator.SafeEvalContext safe_eval_ctx = new ExpressionEvaluator.SafeEvalContext(eval_ctx);
-					ExpressionEvaluator.Value title_val = title_expr.Evaluate(safe_eval_ctx);
-					title = title_val.ToString();
+					Parser parser = new Parser(title_setup.TitleExpression, globals.CompileTimeConstants); ;
+					ExpressionCompilerJob job = new ExpressionCompilerJob(parser,  globals.CreateFreshEvalContext(), false);
+					job.OnCompileFinished += OnCompileFinished;
+					m_ExpressionCompilerThread.RemoveAllJobs();
+					m_ExpressionCompilerThread.AddJob(job);
 				}
+				m_PrevTitleExpressionStr = title_setup.TitleExpression;
+			}
+			else
+			{
+				m_VSMainWindow.SetTitle(m_VSMainWindow.OriginalTitle);
 			}
 
-			if (title == null)
-				title = m_VSMainWindow.OriginalTitle;
+			m_PrevExtensionActivationRule = options.ExtensionActivationRule;
+		}
 
-			if (options.Debug)
-				title += " [VSWindowTitleChanger_DebugMode]";
-
-			m_VSMainWindow.SetTitle(title);
+		void OnCompileFinished(ExpressionCompilerJob job)
+		{
+			if (m_VSMainWindow == null)
+				return;
+			Value title_value = job.EvalResult;
+			if (title_value != null)
+			{
+				string title = title_value.ToString();
+				m_VSMainWindow.SetTitle(title);
+				Debug.WriteLine("Updating the titlebar");
+			}
+			else
+			{
+				m_VSMainWindow.SetTitle(m_VSMainWindow.OriginalTitle);
+			}
 		}
 
 		void Schedule_UpdateWindowTitle()
@@ -174,9 +212,7 @@ namespace VSWindowTitleChanger
 
 			m_UpdateTimer = new System.Windows.Forms.Timer();
 			m_UpdateTimer.Tick += new EventHandler(UpdateTimer_Tick);
-			// Update every X seconds to handle unexpected window title changes
-			int update_millis = m_Debug ? DEBUG_UPDATE_PERIOD_MILLISECS : UPDATE_PERIOD_MILLISECS;
-			m_UpdateTimer.Interval = update_millis;
+			m_UpdateTimer.Interval = UPDATE_PERIOD_MILLISECS;
 			m_UpdateTimer.Start();
 
 			IVsSolution vs_solution = (IVsSolution)GetService(typeof(IVsSolution));
@@ -186,6 +222,10 @@ namespace VSWindowTitleChanger
 			debugger.AdviseDebuggerEvents(this, out m_DebuggerEventsCookie);
 
 			PackageGlobals.InitInstance(this);
+
+			m_PrevVariableValues = PackageGlobals.Instance().CreateFreshEvalContext().VariableValues;
+
+			m_ExpressionCompilerThread = new ExpressionCompilerThread();
 
 			UpdateWindowTitle();
 		}
@@ -202,6 +242,13 @@ namespace VSWindowTitleChanger
 		protected override void Dispose(bool disposing)
 		{
 			Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Dispose() of: {0}", this.ToString()));
+			Debug.Assert(disposing);
+
+			if (m_ExpressionCompilerThread != null)
+			{
+				m_ExpressionCompilerThread.Dispose();
+				m_ExpressionCompilerThread = null;
+			}
 
 			PackageGlobals.DeinitInstance();
 
@@ -217,7 +264,12 @@ namespace VSWindowTitleChanger
 				debugger.UnadviseDebuggerEvents(m_DebuggerEventsCookie);
 
 			if (m_VSMainWindow != null)
+			{
 				m_VSMainWindow.Deinitialize();
+				m_VSMainWindow = null;
+			}
+
+			base.Dispose(disposing);
 		}
 
 		// IVsSolutionEvents
@@ -290,7 +342,7 @@ namespace VSWindowTitleChanger
 		{
 			try
 			{
-				new VSWindowTitleChanger.ExpressionEvaluator.ExpressionEvaluatorTest().Execute();
+				new ExpressionEvaluatorTest().Execute();
 			}
 			catch (System.Exception ex)
 			{

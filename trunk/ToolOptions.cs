@@ -21,7 +21,6 @@ namespace VSWindowTitleChanger
 
 	public interface ISerializedOptions
 	{
-		bool Debug { get; set; }
 		EExtensionActivationRule ExtensionActivationRule { get; set; }
 		TitleSetup TitleSetup { get; set; }
 	}
@@ -30,15 +29,8 @@ namespace VSWindowTitleChanger
 	[ComVisible(true)]
 	public class ToolOptions : DialogPage, ISerializedOptions
 	{
-		private bool m_Debug;
 		private EExtensionActivationRule m_ExtensionActivationRule;
 		private TitleSetup m_TitleSetup;
-
-		[Category("Debugging")]
-		[DisplayName("Debug Mode")]
-		[Description("Shows additional debug info on the titlebar and the output window of Visual Studio.")]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public bool Debug { get { return m_Debug; } set { m_Debug = value; } }
 
 		[Category("Window Title Changer Options")]
 		[DisplayName("Extension Activation")]
@@ -61,11 +53,9 @@ namespace VSWindowTitleChanger
 
 		public class SerializedOptions : ISerializedOptions
 		{
-			private bool m_Debug;
 			private EExtensionActivationRule m_ExtensionActivationRule;
 			private TitleSetup m_TitleSetup;
 
-			public bool Debug { get { return m_Debug; } set { m_Debug = value; } }
 			public EExtensionActivationRule ExtensionActivationRule { get { return m_ExtensionActivationRule; } set { m_ExtensionActivationRule = value; } }
 			public TitleSetup TitleSetup { get { return m_TitleSetup; } set { m_TitleSetup = value; } }
 		}
