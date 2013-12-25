@@ -81,14 +81,12 @@ namespace VSWindowTitleChanger
 					m_TextBox.AfterUndo -= m_TextBox_AfterUndoRedo;
 					m_TextBox.UndoEntryAdded -= m_TextBox_AfterUndoRedo;
 					m_TextBox.VerticalScrollPosChanged -= text_box_VerticalScrollPosChanged;
-					// TODO: remove event handlers
 				}
 
 				m_TextBox = value;
 
 				if (m_TextBox != null)
 				{
-					// HACK!!!! remove these handlers later!!!!
 					m_TextBox.AfterRedo += m_TextBox_AfterUndoRedo;
 					m_TextBox.AfterUndo += m_TextBox_AfterUndoRedo;
 					m_TextBox.UndoEntryAdded += m_TextBox_AfterUndoRedo;
