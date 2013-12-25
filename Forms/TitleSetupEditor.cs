@@ -224,7 +224,9 @@ namespace VSWindowTitleChanger
 				m_Timer_UpdateVariables.Stop();
 
 				TitleSetup = new TitleSetup();
-				editTitleExpression.Text = "";
+				// Don't fill an empty string into editTitleExpression.Text because its a know bug that
+				// it resets the tabsize we previously set with SetTabStopChars().
+				editTitleExpression.Text = " ";
 				editTitleExpression.ClearUndo();
 			}
 		}
