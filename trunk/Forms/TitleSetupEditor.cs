@@ -277,8 +277,7 @@ namespace VSWindowTitleChanger
 		private void buttonOK_Click(object sender, EventArgs e)
 		{
 			m_ClosingWithOK = true;
-			if (IsSetupModified() && SaveEditedSetup != null)
-				SaveEditedSetup(m_TitleSetup);
+			SaveTitleSetup();
 			Close();
 		}
 
@@ -294,6 +293,11 @@ namespace VSWindowTitleChanger
 
 		void buttonRevert_Click(object sender, EventArgs e)
 		{
+			DialogResult res = MessageBox.Show(this, "Do you really want to revert to the last saved expression?",
+				"Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+			if (res == DialogResult.No)
+				return;
+
 			m_TitleSetup = Util.Clone(m_OrigTitleSetup);
 			if (RevertToOriginalSetup != null)
 				RevertToOriginalSetup(m_TitleSetup);
@@ -303,6 +307,13 @@ namespace VSWindowTitleChanger
 
 		void buttonSave_Click(object sender, EventArgs e)
 		{
+			SaveTitleSetup();
+		}
+
+		void SaveTitleSetup()
+		{
+			if (!IsSetupModified())
+				return;
 			m_OrigTitleSetup = Util.Clone(m_TitleSetup);
 			SetupModifiedChanged();
 			if (SaveEditedSetup != null)
