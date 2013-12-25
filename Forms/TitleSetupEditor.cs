@@ -214,6 +214,17 @@ namespace VSWindowTitleChanger
 
 		void TitleSetupEditor_FormClosing(object sender, FormClosingEventArgs e)
 		{
+			if (IsSetupModified())
+			{
+				DialogResult res = MessageBox.Show(this, "You haven't saved your modifications.\nDo you really want to close the Title Setup window?",
+					"Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+				if (res == DialogResult.No)
+				{
+					e.Cancel = true;
+					return;
+				}
+			}
+
 			if (m_HelpForm != null)
 				m_HelpForm.Close();
 			if (!m_ClosingWithOK && RevertToOriginalSetup != null)
