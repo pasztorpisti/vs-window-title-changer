@@ -209,10 +209,10 @@ namespace VSWindowTitleChanger
 
 			m_VSMainWindow = new VSMainWindow();
 			m_VSMainWindow.Initialize((IntPtr)dte.MainWindow.HWnd);
-			m_VSMainWindow.OnWindowTitleUpdateNeeded += new VSWindowTitleChanger.VSMainWindow.WindowTitleUpdateNeededHandler(m_VSMainWindow_OnWindowTitleUpdateNeeded);
+			m_VSMainWindow.OnWindowTitleUpdateNeeded += m_VSMainWindow_OnWindowTitleUpdateNeeded;
 
 			m_UpdateTimer = new System.Windows.Forms.Timer();
-			m_UpdateTimer.Tick += new EventHandler(UpdateTimer_Tick);
+			m_UpdateTimer.Tick += UpdateTimer_Tick;
 			m_UpdateTimer.Interval = UPDATE_PERIOD_MILLISECS;
 			m_UpdateTimer.Start();
 

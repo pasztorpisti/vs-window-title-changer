@@ -14,9 +14,9 @@ namespace VSWindowTitleChanger
 		{
 			m_TextBox = textbox;
 
-			m_TextBox.AfterUndo += new ColorizedPlainTextBox.UndoHandler(m_TextBox_AfterUndo);
-			m_TextBox.AfterRedo += new ColorizedPlainTextBox.UndoHandler(m_TextBox_AfterRedo);
-			m_TextBox.UndoEntryAdded += new ColorizedPlainTextBox.UndoHandler(m_TextBox_UndoEntryAdded);
+			m_TextBox.AfterUndo += m_TextBox_AfterUndo;
+			m_TextBox.AfterRedo += m_TextBox_AfterRedo;
+			m_TextBox.UndoEntryAdded += m_TextBox_UndoEntryAdded;
 			
 			m_ColorInfo = new ColorInfo(m_TextBox.BackColor);
 		}

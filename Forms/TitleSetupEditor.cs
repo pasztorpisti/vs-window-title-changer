@@ -27,23 +27,23 @@ namespace VSWindowTitleChanger
 		{
 			InitializeComponent();
 
-			VisibleChanged += new EventHandler(TitleSetupEditor_VisibleChanged);
-			Shown += new EventHandler(TitleSetupEditor_Shown);
-			FormClosing += new FormClosingEventHandler(TitleSetupEditor_FormClosing);
-			FormClosed += new FormClosedEventHandler(TitleSetupEditor_FormClosed);
+			VisibleChanged += TitleSetupEditor_VisibleChanged;
+			Shown += TitleSetupEditor_Shown;
+			FormClosing += TitleSetupEditor_FormClosing;
+			FormClosed += TitleSetupEditor_FormClosed;
 
-			buttonOK.Click += new EventHandler(buttonOK_Click);
-			buttonCancel.Click += new EventHandler(buttonCancel_Click);
-			buttonHelp.Click += new EventHandler(buttonHelp_Click);
-			buttonSave.Click += new EventHandler(buttonSave_Click);
-			buttonRevert.Click += new EventHandler(buttonRevert_Click);
+			buttonOK.Click += buttonOK_Click;
+			buttonCancel.Click += buttonCancel_Click;
+			buttonHelp.Click += buttonHelp_Click;
+			buttonSave.Click += buttonSave_Click;
+			buttonRevert.Click += buttonRevert_Click;
 
 			editTitleExpression.SetTabStopChars(ExpressionTextBox.TAB_SIZE);
 
-			editTitleExpression.SelectionChanged += new EventHandler(editTitleExpression_SelectionChanged);
-			editTitleExpression.AfterUndo += new ColorizedPlainTextBox.UndoHandler(editTitleExpression_AfterUndo);
-			editTitleExpression.AfterRedo += new ColorizedPlainTextBox.UndoHandler(editTitleExpression_AfterRedo);
-			editTitleExpression.UndoEntryAdded += new ColorizedPlainTextBox.UndoHandler(editTitleExpression_UndoEntryAdded);
+			editTitleExpression.SelectionChanged += editTitleExpression_SelectionChanged;
+			editTitleExpression.AfterUndo += editTitleExpression_AfterUndo;
+			editTitleExpression.AfterRedo += editTitleExpression_AfterRedo;
+			editTitleExpression.UndoEntryAdded += editTitleExpression_UndoEntryAdded;
 
 			m_BackgroundExpressionCompiler = new BackgroundExpressionCompiler();
 			m_BackgroundExpressionCompiler.ExpressionTextBox = editTitleExpression;

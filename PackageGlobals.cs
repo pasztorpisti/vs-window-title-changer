@@ -109,8 +109,8 @@ namespace VSWindowTitleChanger
 
 			m_TitleSetup = package.GetTitleSetupFromOptions();
 			m_TitleSetupEditor = new TitleSetupEditor();
-			m_TitleSetupEditor.SaveEditedSetup += new TitleSetupEditor.SetupEditEvent(SaveEditedSetup);
-			m_TitleSetupEditor.RevertToOriginalSetup += new TitleSetupEditor.SetupEditEvent(RevertToOriginalSetup);
+			m_TitleSetupEditor.SaveEditedSetup += SaveEditedSetup;
+			m_TitleSetupEditor.RevertToOriginalSetup += RevertToOriginalSetup;
 
 			m_TitleSetupEditor.CustomTabbingEnabled = true;
 		}

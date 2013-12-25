@@ -10,9 +10,9 @@ namespace VSWindowTitleChanger
 			InitializeComponent();
 
 			helpBrowser.DocumentText = TitleSetupEditorHelpResources.TitleSetupEditorHelp;
-			helpBrowser.Navigating += new WebBrowserNavigatingEventHandler(helpBrowser_Navigating);
+			helpBrowser.Navigating += helpBrowser_Navigating;
 
-			FormClosing += new FormClosingEventHandler(TitleSetupEditorHelp_FormClosing);
+			FormClosing += TitleSetupEditorHelp_FormClosing;
 		}
 
 		void TitleSetupEditorHelp_FormClosing(object sender, FormClosingEventArgs e)
