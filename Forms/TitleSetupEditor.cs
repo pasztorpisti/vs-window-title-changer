@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.Windows.Threading;
 using VSWindowTitleChanger.ExpressionEvaluator;
-using VSWindowTitleChanger.ExpressionEvaluator.Tokenizer;
 
 namespace VSWindowTitleChanger
 {

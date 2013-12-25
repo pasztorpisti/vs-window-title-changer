@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics;
 using System.Threading;
 using VSWindowTitleChanger.ExpressionEvaluator;
-using System.Diagnostics;
 
 namespace VSWindowTitleChanger
 {

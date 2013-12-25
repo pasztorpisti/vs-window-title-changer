@@ -1,9 +1,7 @@
 using System;
-using System.Drawing;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using System.Diagnostics;
-using System.Text;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace VSWindowTitleChanger
 {
