@@ -350,6 +350,8 @@ namespace VSWindowTitleChanger
 		}
 
 
+		static char[] m_WhiteSpaces = new char[] { ' ', '\t', '\r', '\n' };
+
 		void UndoEntryAdded(ColorizedPlainTextBox.UndoEntry undo_entry)
 		{
 			UpdateDelayedCompileErrorDeadline();
@@ -357,7 +359,7 @@ namespace VSWindowTitleChanger
 			if (undo_entry.CutText.Length > 0)
 				UnderlineData.TextCut(undo_entry.Pos, undo_entry.CutText.Length);
 			if (undo_entry.PastedText.Length > 0)
-				UnderlineData.TextPasted(undo_entry.Pos, undo_entry.PastedText.Length, undo_entry.PastedText.Contains("\n"));
+				UnderlineData.TextPasted(undo_entry.Pos, undo_entry.PastedText.Length, undo_entry.PastedText.IndexOfAny(m_WhiteSpaces) >= 0);
 		}
 
 		void AfterUndo(ColorizedPlainTextBox.UndoEntry undo_entry)
@@ -367,7 +369,7 @@ namespace VSWindowTitleChanger
 			if (undo_entry.PastedText.Length > 0)
 				UnderlineData.TextCut(undo_entry.Pos, undo_entry.PastedText.Length);
 			if (undo_entry.CutText.Length > 0)
-				UnderlineData.TextPasted(undo_entry.Pos, undo_entry.CutText.Length, undo_entry.CutText.Contains("\n"));
+				UnderlineData.TextPasted(undo_entry.Pos, undo_entry.CutText.Length, undo_entry.CutText.IndexOfAny(m_WhiteSpaces) >= 0);
 		}
 
 		void AfterRedo(ColorizedPlainTextBox.UndoEntry undo_entry)
@@ -377,7 +379,7 @@ namespace VSWindowTitleChanger
 			if (undo_entry.CutText.Length > 0)
 				UnderlineData.TextCut(undo_entry.Pos, undo_entry.CutText.Length);
 			if (undo_entry.PastedText.Length > 0)
-				UnderlineData.TextPasted(undo_entry.Pos, undo_entry.PastedText.Length, undo_entry.PastedText.Contains("\n"));
+				UnderlineData.TextPasted(undo_entry.Pos, undo_entry.PastedText.Length, undo_entry.PastedText.IndexOfAny(m_WhiteSpaces) >= 0);
 		}
 
 		void ExpressionTextBox_SelectionChanged(object sender, EventArgs e)
@@ -435,7 +437,7 @@ namespace VSWindowTitleChanger
 				}
 			}
 
-			public void TextPasted(int pos, int length, bool contains_newline)
+			public void TextPasted(int pos, int length, bool contains_whitespace)
 			{
 				Debug.Assert(length > 0);
 				int idx;
@@ -446,7 +448,7 @@ namespace VSWindowTitleChanger
 						break;
 					if (u.End > pos)
 					{
-						if (contains_newline)
+						if (contains_whitespace)
 							u.End = pos;
 						else
 							u.End += length;
