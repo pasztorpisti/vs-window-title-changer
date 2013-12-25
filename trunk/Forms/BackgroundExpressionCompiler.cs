@@ -224,7 +224,6 @@ namespace VSWindowTitleChanger
 
 		void SetPrevFinishedJob(ExpressionCompilerJob job)
 		{
-			Debug.WriteLine("SetPrevFinishedJob({0})", (int)job.UserData);
 			m_PrevFinishedJob = job;
 			UpdateWarningUnderlineData();
 			UpdateCompileResultTextBox();
