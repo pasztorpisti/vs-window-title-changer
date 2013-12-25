@@ -69,20 +69,6 @@ namespace VSWindowTitleChanger
 			}
 		}
 
-		public struct CompiledExpression
-		{
-			public ExpressionEvaluator.Expression expression;
-			public ExpressionEvaluatorException compile_error;
-		}
-
-		public Cache<string, CompiledExpression> CompiledExpressionCache
-		{
-			get
-			{
-				return m_CompiledExpressionCache;
-			}
-		}
-
 		public void ShowTitleExpressionEditor()
 		{
 			if (m_TitleSetupEditor.Visible)
@@ -99,25 +85,31 @@ namespace VSWindowTitleChanger
 			}
 		}
 
+		public TitleSetupEditor TitleSetupEditor
+		{
+			get
+			{
+				return m_TitleSetupEditor;
+			}
+		}
+
 		VSWindowTitleChangerPackage m_Package;
 		TitleSetup m_TitleSetup;
 		TitleSetupEditor m_TitleSetupEditor;
 
 		VariableValueResolver m_CompileTimeConstants;
-		Cache<string, CompiledExpression> m_CompiledExpressionCache;
 
 		PackageGlobals(VSWindowTitleChangerPackage package)
 		{
 			m_Package = package;
+			CreateCompileTimeConstants();
+
 			m_TitleSetup = package.GetTitleSetupFromOptions();
 			m_TitleSetupEditor = new TitleSetupEditor();
 			m_TitleSetupEditor.SaveEditedSetup += new TitleSetupEditor.SetupEditEvent(SaveEditedSetup);
 			m_TitleSetupEditor.RevertToOriginalSetup += new TitleSetupEditor.SetupEditEvent(RevertToOriginalSetup);
 
 			m_TitleSetupEditor.CustomTabbingEnabled = true;
-
-			CreateCompileTimeConstants();
-			m_CompiledExpressionCache = new Cache<string, CompiledExpression>(CompileExpression);
 		}
 
 		void SaveEditedSetup(TitleSetup title_setup)
@@ -148,21 +140,6 @@ namespace VSWindowTitleChanger
 			m_CompileTimeConstants.SetVariable("vs_edition", dte.Edition);
 		}
 
-		CompiledExpression CompileExpression(string expression_string)
-		{
-			CompiledExpression compiled = new CompiledExpression();
-			try
-			{
-				Parser expression_parser = new Parser(expression_string, m_CompileTimeConstants);
-				compiled.expression = expression_parser.Parse();
-			}
-			catch (ExpressionEvaluatorException ex)
-			{
-				compiled.compile_error = ex;
-			}
-			return compiled;
-		}
-
 		static string DTEVersionToVSYear(string dte_version)
 		{
 			switch (dte_version)
@@ -176,7 +153,7 @@ namespace VSWindowTitleChanger
 			}
 		}
 
-		public void SetVariableValuesFromIDEState(IVariableValueSetter var_value_setter, VSMultiInstanceInfo multi_instance_info)
+		void SetVariableValuesFromIDEState(IVariableValueSetter var_value_setter, VSMultiInstanceInfo multi_instance_info)
 		{
 			DTE2 dte = (DTE2)m_Package.GetInterface(typeof(DTE));
 			IVsSolution vs_solution = (IVsSolution)m_Package.GetInterface(typeof(IVsSolution));

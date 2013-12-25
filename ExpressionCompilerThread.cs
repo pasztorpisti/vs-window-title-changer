@@ -6,11 +6,13 @@ using VSWindowTitleChanger.ExpressionEvaluator;
 
 namespace VSWindowTitleChanger
 {
+	// A simple job executor thread. Its queue can be cleared anytime and it can be
+	// stopped without processing all jobs in the queue.
 	class ExpressionCompilerThread : IDisposable
 	{
 		Thread m_Thread;
 		AutoResetEvent m_WakeUpEvent = new AutoResetEvent(false);
-		LinkedList<Job> m_Jobs = new LinkedList<Job>();
+		LinkedList<IJob> m_Jobs = new LinkedList<IJob>();
 		bool m_StopRequest;
 
 		public ExpressionCompilerThread()
@@ -29,7 +31,7 @@ namespace VSWindowTitleChanger
 			m_Thread.Join();
 		}
 
-		public void AddJob(Job job)
+		public void AddJob(IJob job)
 		{
 			lock (this)
 			{
@@ -51,7 +53,7 @@ namespace VSWindowTitleChanger
 			for (;;)
 			{
 				m_WakeUpEvent.WaitOne();
-				Job job;
+				IJob job;
 				lock (this)
 				{
 					if (m_StopRequest)
@@ -59,78 +61,89 @@ namespace VSWindowTitleChanger
 					job = m_Jobs.First.Value;
 					m_Jobs.RemoveFirst();
 				}
-				job.Compile();
+				job.Execute();
 			}
 		}
 
-		public class Job
+		public interface IJob
 		{
-			Parser m_Parser;
-			IEvalContext m_EvalContext;
+			void Execute();
+		}
+	}
 
-			// The variable_value_resolver is used only to find the unused variables, the variable values aren't used.
-			// variable_value_resolver can be null, in that case unused variables arent explored.
-			public Job(Parser parser, IEvalContext eval_ctx)
+
+
+
+	class ExpressionCompilerJob : ExpressionCompilerThread.IJob
+	{
+		Parser m_Parser;
+		IEvalContext m_EvalContext;
+		bool m_CollectUnresolvedVariables;
+
+		// The variable_value_resolver is used only to find the unused variables, the variable values aren't used.
+		// variable_value_resolver can be null, in that case unused variables aren't explored.
+		public ExpressionCompilerJob(Parser parser, IEvalContext eval_ctx, bool collect_unresolved_variables)
+		{
+			m_Parser = parser;
+			m_EvalContext = eval_ctx;
+			m_CollectUnresolvedVariables = collect_unresolved_variables;
+		}
+
+		public delegate void CompileFinishedHandler(ExpressionCompilerJob job);
+		public event CompileFinishedHandler OnCompileFinished;
+
+		IntPtr m_UserData;
+		public IntPtr UserData { get { return m_UserData; } set { m_UserData = value; } }
+
+		Exception m_Error;
+		Expression m_Expression;
+		Value m_EvalResult;
+		List<Variable> m_SortedUnresolvedVariables;
+
+		public Exception Error { get { return m_Error; } }
+		// Only if there is no error:
+		public Expression Expession { get { return m_Expression; } }
+		public Value EvalResult { get { return m_EvalResult; } }
+		public List<Variable> SortedUnresolvedVariables { get { return m_SortedUnresolvedVariables; } }
+
+		class VariablePosComparer : IComparer<Variable>
+		{
+			public virtual int Compare(Variable a, Variable b)
 			{
-				m_Parser = parser;
-				m_EvalContext = eval_ctx;
+				return a.Position - b.Position;
 			}
+		}
 
-			public Job(Parser parser)
-				: this(parser, null)
-			{ }
-
-			public delegate void CompileFinishedHandler(Job job);
-			public event CompileFinishedHandler OnCompileFinished;
-
-			IntPtr m_UserData;
-			public IntPtr UserData { get { return m_UserData; } set { m_UserData = value; } }
-
-			Exception m_Error;
-			Expression m_Expression;
-			Value m_EvalResult;
-			List<Variable> m_SortedUnresolvedVariables;
-
-			public Exception Error { get { return m_Error; } }
-			// Only if there is no error:
-			public Expression Expession { get { return m_Expression; } }
-			public Value EvalResult { get { return m_EvalResult; } }
-			public List<Variable> SortedUnresolvedVariables { get { return m_SortedUnresolvedVariables; } }
-
-			class VariablePosComparer : IComparer<Variable>
+		public virtual void Execute()
+		{
+			Debug.Assert(m_Error == null && m_Expression == null);
+			try
 			{
-				public virtual int Compare(Variable a, Variable b)
+				m_Expression = m_Parser.Parse();
+				if (m_Expression != null && m_EvalContext != null)
 				{
-					return a.Position - b.Position;
-				}
-			}
-
-			public void Compile()
-			{
-				Debug.Assert(m_Error == null && m_Expression == null);
-				try
-				{
-					m_Expression = m_Parser.Parse();
-					if (m_Expression != null && m_EvalContext != null)
+					m_EvalResult = m_Expression.Evaluate(new SafeEvalContext(m_EvalContext));
+					if (m_CollectUnresolvedVariables)
 					{
-						m_EvalResult = m_Expression.Evaluate(new SafeEvalContext(m_EvalContext));
 						m_SortedUnresolvedVariables = m_Expression.CollectUnresolvedVariables(m_EvalContext);
 						m_SortedUnresolvedVariables.Sort(new VariablePosComparer());
 					}
 				}
-				catch (Exception ex)
-				{
-					m_Error = ex;
-				}
-
-				PackageGlobals.BeginInvokeOnUIThread(delegate()
-				{
-					if (OnCompileFinished != null)
-					{
-						OnCompileFinished(this);
-					}
-				});
 			}
+			catch (Exception ex)
+			{
+				m_Error = ex;
+			}
+
+			PackageGlobals.BeginInvokeOnUIThread(delegate()
+			{
+				if (OnCompileFinished != null)
+				{
+					OnCompileFinished(this);
+				}
+			});
 		}
 	}
+
+
 }
