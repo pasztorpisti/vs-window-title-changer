@@ -169,7 +169,7 @@ namespace VSWindowTitleChanger
 			}
 
 			m_VSMainWindow = new VSMainWindow();
-			m_VSMainWindow.Initialize((IntPtr)dte.MainWindow.HWnd, dte.Version);
+			m_VSMainWindow.Initialize((IntPtr)dte.MainWindow.HWnd);
 			m_VSMainWindow.OnWindowTitleUpdateNeeded += new VSWindowTitleChanger.VSMainWindow.WindowTitleUpdateNeededHandler(m_VSMainWindow_OnWindowTitleUpdateNeeded);
 
 			m_UpdateTimer = new System.Windows.Forms.Timer();

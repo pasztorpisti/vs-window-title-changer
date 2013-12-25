@@ -43,27 +43,14 @@ namespace VSWindowTitleChanger
 		[DllImport("user32.dll")]
 		static extern IntPtr GetActiveWindow();
 
-		public void Initialize(IntPtr main_hwnd, string dte_version)
+		public void Initialize(IntPtr main_hwnd)
 		{
 			m_MainHWND = main_hwnd;
 			m_OriginalTitle = GetWindowText(main_hwnd);
 			m_IsAppActive = GetActiveWindow() != IntPtr.Zero;
-
 #if VS2010_AND_LATER
-			// We shouldn't try to set the WPF title label control for VS2010, only for later versions.
-			int dot_idx = dte_version.IndexOf('.');
-			Debug.Assert(dot_idx >= 0);
-			dot_idx = dot_idx < 0 ? dte_version.Length : dot_idx;
-			try
-			{
-				m_TrySetWPFTitle = 10 < Convert.ToInt32(dte_version.Substring(0, dot_idx));
-			}
-			catch
-			{
-				m_TrySetWPFTitle = false;
-			}
+			TryfindTitleTextBlock();
 #endif
-
 			AssignHandle(main_hwnd);
 		}
 
@@ -109,8 +96,8 @@ namespace VSWindowTitleChanger
 			{
 				SetWindowText(m_MainHWND, title);
 #if VS2010_AND_LATER
-				if (m_TrySetWPFTitle)
-					TrySetTitleTextBlock(title);
+				if (m_TitleTextBlock != null)
+					m_TitleTextBlock.Text = title;
 #endif
 			}
 			finally
@@ -164,9 +151,9 @@ namespace VSWindowTitleChanger
 		}
 
 #if VS2010_AND_LATER
-		bool m_TrySetWPFTitle;
+		TextBlock m_TitleTextBlock;
 
-		void TrySetTitleTextBlock(string title)
+		void TryfindTitleTextBlock()
 		{
 			DependencyObject root = HwndSource.FromHwnd(m_MainHWND).RootVisual as DependencyObject;
 			if (root != null)
@@ -177,11 +164,7 @@ namespace VSWindowTitleChanger
 					DependencyObject dock_panel = FindChildByClassNamePostfix(titlebar, ".DockPanel");
 					if (dock_panel != null)
 					{
-						TextBlock title_textblock = FindChildByClassNamePostfix(dock_panel, ".TextBlock") as TextBlock;
-						if (title_textblock != null)
-						{
-							title_textblock.Text = title;
-						}
+						m_TitleTextBlock = FindChildByClassNamePostfix(dock_panel, ".TextBlock") as TextBlock;
 					}
 				}
 			}
