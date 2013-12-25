@@ -16,7 +16,19 @@ namespace VSWindowTitleChanger
 	{
 		ExpressionTextBox m_ExpressionTextBox;
 		Label m_WarningsLabel;
+
 		ExpressionCompilerJob m_PrevFinishedJob;
+		ExpressionCompilerJob m_DelayedCompileErrorJob;
+		DateTime m_DelayedCompileErrorDeadline;
+
+		enum ECompileResultHandling
+		{
+			Success,
+			DelayedError,
+			Error,
+		}
+		ECompileResultHandling m_CompileResultHandling = ECompileResultHandling.Success;
+
 
 		IVariableValueResolver m_CompileTimeConstants;
 
@@ -37,6 +49,7 @@ namespace VSWindowTitleChanger
 					m_ExpressionTextBox.AfterUndo -= AfterUndo;
 					m_ExpressionTextBox.AfterRedo -= AfterRedo;
 					m_ExpressionTextBox.UndoEntryAdded -= UndoEntryAdded;
+					m_ExpressionTextBox.SelectionChanged -= ExpressionTextBox_SelectionChanged;
 					m_ExpressionTextBox.PostPaint -= ExpressionTextBox_PostPaint;
 				}
 				m_ExpressionTextBox = value;
@@ -45,6 +58,7 @@ namespace VSWindowTitleChanger
 					m_ExpressionTextBox.AfterUndo += AfterUndo;
 					m_ExpressionTextBox.AfterRedo += AfterRedo;
 					m_ExpressionTextBox.UndoEntryAdded += UndoEntryAdded;
+					m_ExpressionTextBox.SelectionChanged += ExpressionTextBox_SelectionChanged;
 					m_ExpressionTextBox.PostPaint += ExpressionTextBox_PostPaint;
 				}
 			}
@@ -103,8 +117,7 @@ namespace VSWindowTitleChanger
 		{
 			if (!Enabled)
 				return;
-			m_PrevChangeTime = new DateTime(0);
-			StartCompilationIfNeeded(m_MostRecentUndoEntryId);
+			StartCompilation(m_MostRecentUndoEntryId);
 		}
 
 		public bool Enabled
@@ -128,7 +141,10 @@ namespace VSWindowTitleChanger
 				return;
 			m_CompilerThread = new ExpressionCompilerThread();
 			m_ErrorRecompileTimer.Start();
-			StartCompilationIfNeeded(-1);
+
+			m_PrevFinishedJob = null;
+			m_CompileResultHandling = ECompileResultHandling.Success;
+			StartCompilation(-1);
 		}
 
 		void Disable()
@@ -144,42 +160,21 @@ namespace VSWindowTitleChanger
 
 		void ErrorRecompileTimer_Tick(object sender, EventArgs e)
 		{
-			if (!Enabled || m_PrevFinishedJob == null)
+			if (!Enabled || m_CompileResultHandling != ECompileResultHandling.DelayedError)
 				return;
-			if (m_PrevFinishedJob.Error == null || m_PrevFinishedJob.UserData == (IntPtr)m_MostRecentUndoEntryId)
+			if (DateTime.Now < m_DelayedCompileErrorDeadline)
 				return;
-			DateTime now = DateTime.Now;
-			TimeSpan elapsed = now - m_PrevChangeTime;
-			if (elapsed < m_CompileDelayInCaseOfCompileError)
-				return;
-			StartCompilationIfNeeded(m_MostRecentUndoEntryId);
+			SetPrevFinishedJob(m_DelayedCompileErrorJob);
+			m_CompileResultHandling = ECompileResultHandling.Error;
 		}
 
-		DateTime m_PrevChangeTime = DateTime.Now;
 		int m_MostRecentUndoEntryId = -1;
 
-		const int m_CompileDelayMilliSecsInCaseOfCompileError = 500;
-		TimeSpan m_CompileDelayInCaseOfCompileError = new TimeSpan(0, 0, 0, m_CompileDelayMilliSecsInCaseOfCompileError / 1000, m_CompileDelayMilliSecsInCaseOfCompileError%1000);
-
-		void StartCompilationIfNeeded(int undo_entry_id)
+		void StartCompilation(int undo_entry_id)
 		{
 			m_MostRecentUndoEntryId = undo_entry_id;
-			DateTime now = DateTime.Now;
-			DateTime prev_change_time = m_PrevChangeTime;
-			m_PrevChangeTime = now;
-
 			if (m_CompilerThread == null || m_ExpressionTextBox == null || m_CompileTimeConstants == null)
 				return;
-
-			if (m_PrevFinishedJob != null)
-			{
-				if (m_PrevFinishedJob.Error != null)
-				{
-					TimeSpan elapsed = now - prev_change_time;
-					if (elapsed < m_CompileDelayInCaseOfCompileError)
-						return;
-				}
-			}
 
 			Parser parser = new Parser(m_ExpressionTextBox.Text, m_CompileTimeConstants);
 			ExpressionCompilerJob job = new ExpressionCompilerJob(parser, PackageGlobals.Instance().CreateFreshEvalContext(), true, null);
@@ -189,12 +184,48 @@ namespace VSWindowTitleChanger
 			m_CompilerThread.AddJob(job);
 		}
 
+		const int m_CompileErrorShowDelayMilliSecs = 1500;
+		TimeSpan m_CompileErrorShowDelay = TimeSpan.FromMilliseconds(m_CompileErrorShowDelayMilliSecs);
+
+		void UpdateDelayedCompileErrorDeadline()
+		{
+			if (m_CompileResultHandling == ECompileResultHandling.DelayedError)
+				m_DelayedCompileErrorDeadline = DateTime.Now.Add(m_CompileErrorShowDelay);
+		}
+
 		void OnCompileFinished(ExpressionCompilerJob job)
 		{
 			if (!Enabled || job.UserData != (IntPtr)m_MostRecentUndoEntryId)
 				return;
-			m_PrevFinishedJob = job;
 
+			if (job.Error == null)
+			{
+				SetPrevFinishedJob(job);
+				m_CompileResultHandling = ECompileResultHandling.Success;
+			}
+			else
+			{
+				switch (m_CompileResultHandling)
+				{
+					case ECompileResultHandling.Success:
+						m_DelayedCompileErrorJob = job;
+						m_CompileResultHandling = ECompileResultHandling.DelayedError;
+						UpdateDelayedCompileErrorDeadline();
+						break;
+					case ECompileResultHandling.DelayedError:
+						m_DelayedCompileErrorJob = job;
+						break;
+					case ECompileResultHandling.Error:
+						SetPrevFinishedJob(job);
+						break;
+				}
+			}
+		}
+
+		void SetPrevFinishedJob(ExpressionCompilerJob job)
+		{
+			Debug.WriteLine("SetPrevFinishedJob({0})", (int)job.UserData);
+			m_PrevFinishedJob = job;
 			UpdateWarningUnderlineData();
 			UpdateCompileResultTextBox();
 		}
@@ -321,7 +352,8 @@ namespace VSWindowTitleChanger
 
 		void UndoEntryAdded(ColorizedPlainTextBox.UndoEntry undo_entry)
 		{
-			StartCompilationIfNeeded(undo_entry.Id);
+			UpdateDelayedCompileErrorDeadline();
+			StartCompilation(undo_entry.Id);
 			if (undo_entry.CutText.Length > 0)
 				UnderlineData.TextCut(undo_entry.Pos, undo_entry.CutText.Length);
 			if (undo_entry.PastedText.Length > 0)
@@ -330,7 +362,8 @@ namespace VSWindowTitleChanger
 
 		void AfterUndo(ColorizedPlainTextBox.UndoEntry undo_entry)
 		{
-			StartCompilationIfNeeded(undo_entry.Id);
+			UpdateDelayedCompileErrorDeadline();
+			StartCompilation(undo_entry.Id);
 			if (undo_entry.PastedText.Length > 0)
 				UnderlineData.TextCut(undo_entry.Pos, undo_entry.PastedText.Length);
 			if (undo_entry.CutText.Length > 0)
@@ -339,11 +372,17 @@ namespace VSWindowTitleChanger
 
 		void AfterRedo(ColorizedPlainTextBox.UndoEntry undo_entry)
 		{
-			StartCompilationIfNeeded(undo_entry.Id);
+			UpdateDelayedCompileErrorDeadline();
+			StartCompilation(undo_entry.Id);
 			if (undo_entry.CutText.Length > 0)
 				UnderlineData.TextCut(undo_entry.Pos, undo_entry.CutText.Length);
 			if (undo_entry.PastedText.Length > 0)
 				UnderlineData.TextPasted(undo_entry.Pos, undo_entry.PastedText.Length, undo_entry.PastedText.Contains("\n"));
+		}
+
+		void ExpressionTextBox_SelectionChanged(object sender, EventArgs e)
+		{
+			UpdateDelayedCompileErrorDeadline();
 		}
 
 		UnderlineDataContainer UnderlineData
