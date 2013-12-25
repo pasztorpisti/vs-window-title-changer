@@ -124,7 +124,7 @@
     <value>Visual Studio Window Title Changer</value>
   </data>
   <data name="112" xml:space="preserve">
-    <value>An extension that changes the Visual Studio Window Title by applying regex based rules on the full pathname of the solution file.
+    <value>Changes the Visual Studio Window Title by evaluating a user defined expression.
 
 Copyright (c) 2013 István Pásztor
 

@@ -4,7 +4,7 @@
     <Name>Visual Studio Window Title Changer</Name>
     <Author>István Pásztor</Author>
     <Version>2.0</Version>
-    <Description xml:space="preserve">This extension changes the Visual Studio main window title based on the full pathname of the currently opened solution. You setup a list of regex+title_pattern pairs and the first regex that matches the full pathname of the solution file will select the actual pattern. The pattern can contain caputred groups from the regex.</Description>
+    <Description xml:space="preserve">Changes the Visual Studio Window Title by evaluating a user defined expression. Extremely helpful when working with multiple branches of the same project.</Description>
     <Locale>1033</Locale>
     <License>License.txt</License>
     <Icon>VSWindowTitleChanger.png</Icon>
