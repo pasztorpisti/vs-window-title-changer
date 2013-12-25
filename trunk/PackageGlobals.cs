@@ -72,7 +72,10 @@ namespace VSWindowTitleChanger
 		public void ShowTitleExpressionEditor()
 		{
 			if (m_TitleSetupEditor.Visible)
+			{
+				m_TitleSetupEditor.BringToFront();
 				return;
+			}
 			m_TitleSetupEditor.TitleSetup = m_TitleSetup;
 			m_TitleSetupEditor.Show();
 		}
