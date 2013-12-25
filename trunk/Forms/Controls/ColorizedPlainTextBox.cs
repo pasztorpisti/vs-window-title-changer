@@ -448,6 +448,8 @@ namespace VSWindowTitleChanger
 				base.ClearUndo();
 		}
 
+		// Known bug: Filling an empty string into this property resets the
+		// tab size we previously set with SetTabStopChars().
 		public override string Text
 		{
 			get
