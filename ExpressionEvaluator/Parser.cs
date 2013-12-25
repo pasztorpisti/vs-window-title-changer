@@ -40,7 +40,6 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	//                               use double quotation marks: "a double quote in the string: "" <- here"
 	//
 	// Builtin variable names:
-	// $sln_0, $sln_1, ...           string: the captured groups of the solution pathname regex. an empty string if the group doesn't exist.
 	// sln_groupname                 string: a captured named group of the solution pathname regex. an empty string if the group doesn't exist.
 	// sln_open                      bool: true if we have a solution open
 	// sln_path                      string: the full pathname of the solution file
@@ -64,8 +63,9 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// startup_proj_filename         string: the name of the startup project file without directory and extension
 	// startup_proj_ext              string: the extension of the startup project file
 	// startup_proj_dirty            bool
-	// wnd_minimized                 bool: true if VS is minimized
-	// wnd_foreground                bool: true if this instance of VS is in the foreground
+	// wnd_minimized                 bool: true if the main window of VS is minimized
+	// wnd_foreground                bool: true if the main window of VS is in the foreground
+	// app_active                    bool: true if one of the windows of this VS instance is the foreground window.
 	// debugging                     bool
 	// debug_mode                    string: "" or "Running" or "Debugging". Can be used as a bool because it is empty string when not debugging.
 	// configuration                 string: Configuration name or an empty string (false) if there is no active platform. e.g.: "Release"
@@ -95,10 +95,10 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// BracketExpression ->			"(" Expression ")"
 	// BraceExpression ->			"{" Expression "}"
 
-	// StringLiteral ->	'"' ( UnicodeCharacter* ( EscapedQuote UnicodeCharacter* )* '"'
-	// EscapedQuote ->	'"' '"'
+	// StringLiteral ->				'"' ( UnicodeCharacter* ( EscapedQuote UnicodeCharacter* )* '"'
+	// EscapedQuote ->				'"' '"'
 
-	// Const- ->		<< Doesn't contain any Variables >>
+	// Const- ->					<< Doesn't contain any Variables >>
 
 	using Private;
 	using Tokenizer;
@@ -373,7 +373,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				case TokenType.Variable:
 					{
 						m_Tokenizer.ConsumeNextToken();
-						Variable variable = new Variable(token.data, token.pos);
+						Variable variable = new Variable(token.data, token.pos, token.length);
 						Value v = m_CompileTimeConstants.GetVariableValue(variable);
 						if (v != null)
 							return v;
@@ -384,7 +384,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				case TokenType.If:
 					return Parse_IfElse();
 				default:
-					throw new ParserException(m_Tokenizer.Text, token.pos, "Expected a value here.");
+					throw new ParserException(m_Tokenizer.Text, token.pos, "Expected a const literal, variable, bracketed expression or if-else construct here.");
 			}
 		}
 

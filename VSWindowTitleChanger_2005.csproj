@@ -52,11 +52,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cache.cs" />
+    <Compile Include="ExpressionCompilerThread.cs" />
     <Compile Include="ExpressionEvaluator\EvalTree.cs" />
     <Compile Include="ExpressionEvaluator\Parser.cs" />
     <Compile Include="ExpressionEvaluator\Tokenizer.cs" />
-    <Compile Include="Forms\Controls\ColoredRichTextBox.cs">
+    <Compile Include="Forms\BackgroundExpressionCompiler.cs" />
+    <Compile Include="Forms\Controls\ColorizedPlainTextBox.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Forms\Controls\ExpressionTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Forms\Controls\SyntaxHighlighter.cs" />
+    <Compile Include="Forms\Controls\TextBoxLineNumbers.cs">
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Forms\TitleSetupEditor.cs">
       <SubType>Form</SubType>

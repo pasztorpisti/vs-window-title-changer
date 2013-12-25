@@ -76,14 +76,13 @@ namespace VSWindowTitleChanger
 			options.SaveSettingsToStorage();
 		}
 
-		private VSMainWindow m_VSMainWindow;
-		private Dispatcher m_UIThradDispatcher;
-		private DispatcherTimer m_DispatcherTimer;
-		private bool m_Debug = false;
+		VSMainWindow m_VSMainWindow;
+		System.Windows.Forms.Timer m_UpdateTimer;
+		bool m_Debug = false;
 
 		// Some property changes are detected only through updates...
-		private const int UPDATE_PERIOD_MILLISECS = 1000;
-		private const int DEBUG_UPDATE_PERIOD_MILLISECS = 200;
+		const int UPDATE_PERIOD_MILLISECS = 1000;
+		const int DEBUG_UPDATE_PERIOD_MILLISECS = 200;
 
 		private void UpdateWindowTitle()
 		{
@@ -92,7 +91,7 @@ namespace VSWindowTitleChanger
 			{
 				m_Debug = options.Debug;
 				int update_millis = m_Debug ? DEBUG_UPDATE_PERIOD_MILLISECS : UPDATE_PERIOD_MILLISECS;
-				m_DispatcherTimer.Interval = new TimeSpan(0, 0, 0, update_millis/1000, update_millis%1000);
+				m_UpdateTimer.Interval = update_millis;
 			}
 
 			PackageGlobals globals = PackageGlobals.Instance();
@@ -142,16 +141,19 @@ namespace VSWindowTitleChanger
 			m_VSMainWindow.SetTitle(title);
 		}
 
-		private delegate void MyAction();
-
 		void Schedule_UpdateWindowTitle()
 		{
-			m_UIThradDispatcher.BeginInvoke(new MyAction(delegate() { UpdateWindowTitle(); }));
+			PackageGlobals.BeginInvokeOnUIThread(UpdateWindowTitle);
 		}
 
-		private void dispatcherTimer_Tick(object sender, EventArgs e)
+		private void UpdateTimer_Tick(object sender, EventArgs e)
 		{
 			UpdateWindowTitle();
+		}
+
+		void m_VSMainWindow_OnWindowTitleUpdateNeeded()
+		{
+			Schedule_UpdateWindowTitle();
 		}
 
 		private uint m_SolutionEventsCookie;
@@ -163,19 +165,20 @@ namespace VSWindowTitleChanger
 			if (dte == null)
 			{
 				// Usually this branch never executes but I want to make sure...
-				m_UIThradDispatcher.BeginInvoke(new MyAction(delegate() { DelayedInit(); }));
+				PackageGlobals.BeginInvokeOnUIThread(DelayedInit);
 				return;
 			}
 
 			m_VSMainWindow = new VSMainWindow();
 			m_VSMainWindow.Initialize((IntPtr)dte.MainWindow.HWnd);
+			m_VSMainWindow.OnWindowTitleUpdateNeeded += new VSWindowTitleChanger.VSMainWindow.WindowTitleUpdateNeededHandler(m_VSMainWindow_OnWindowTitleUpdateNeeded);
 
-			m_DispatcherTimer = new DispatcherTimer();
-			m_DispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
+			m_UpdateTimer = new System.Windows.Forms.Timer();
+			m_UpdateTimer.Tick += new EventHandler(UpdateTimer_Tick);
 			// Update every X seconds to handle unexpected window title changes
 			int update_millis = m_Debug ? DEBUG_UPDATE_PERIOD_MILLISECS : UPDATE_PERIOD_MILLISECS;
-			m_DispatcherTimer.Interval = new TimeSpan(0, 0, 0, update_millis / 1000, update_millis % 1000);
-			m_DispatcherTimer.Start();
+			m_UpdateTimer.Interval = update_millis;
+			m_UpdateTimer.Start();
 
 			IVsSolution vs_solution = (IVsSolution)GetService(typeof(IVsSolution));
 			vs_solution.AdviseSolutionEvents(this, out m_SolutionEventsCookie);
@@ -193,9 +196,8 @@ namespace VSWindowTitleChanger
 			Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
 			base.Initialize();
 
-			m_UIThradDispatcher = Dispatcher.CurrentDispatcher;
 			// We do delayed initialization because DTE is currently null...
-			m_UIThradDispatcher.BeginInvoke(new MyAction(delegate() { DelayedInit(); }));
+			PackageGlobals.BeginInvokeOnUIThread(DelayedInit);
 		}
 
 		protected override void Dispose(bool disposing)
@@ -204,8 +206,8 @@ namespace VSWindowTitleChanger
 
 			PackageGlobals.DeinitInstance();
 
-			if (m_DispatcherTimer != null)
-				m_DispatcherTimer.Stop();
+			if (m_UpdateTimer != null)
+				m_UpdateTimer.Stop();
 
 			IVsSolution vs_solution = (IVsSolution)GetService(typeof(IVsSolution));
 			if (vs_solution != null)

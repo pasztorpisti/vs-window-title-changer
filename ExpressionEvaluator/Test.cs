@@ -111,6 +111,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				Console.WriteLine("  {0}: {1} {2}", i, m.Groups[i].Success, m.Groups[i].Value);
 			Console.WriteLine("XX {0}", m.Groups[2].Value);
 
+			/*
 			Console.WriteLine("---------------------------------------------");
 			Tokenizer.Tokenizer tokenizer = new Tokenizer.Tokenizer(expression);
 			for (; ; )
@@ -129,6 +130,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				if (token.type == TokenType.EOF)
 					break;
 			}
+			/**/
 		}
 	}
 

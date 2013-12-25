@@ -1,19 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using VSWindowTitleChanger.ExpressionEvaluator;
 using VSWindowTitleChanger.ExpressionEvaluator.Tokenizer;
-using System.Drawing;
 
 namespace VSWindowTitleChanger
 {
 	public partial class TitleSetupEditor : Form
 	{
-		Dispatcher m_UIThradDispatcher;
-		private DispatcherTimer m_DispatcherTimer_UpdateVariables;
-
+		System.Windows.Forms.Timer m_Timer_UpdateVariables;
 		TitleSetupEditorHelp m_HelpForm;
 
 		TitleSetup m_TitleSetup = new TitleSetup();
@@ -26,6 +24,45 @@ namespace VSWindowTitleChanger
 		public delegate void SetupEditEvent(TitleSetup original);
 		public event SetupEditEvent SaveEditedSetup;
 		public event SetupEditEvent RevertToOriginalSetup;
+
+		BackgroundExpressionCompiler m_BackgroundExpressionCompiler;
+
+		public TitleSetupEditor()
+		{
+			InitializeComponent();
+
+			m_Timer_UpdateVariables = new System.Windows.Forms.Timer();
+			m_Timer_UpdateVariables.Interval = 1000;
+			m_Timer_UpdateVariables.Tick += new EventHandler(UpdateVariables_Tick);
+
+			VisibleChanged += new EventHandler(TitleSetupEditor_VisibleChanged);
+			Shown += new EventHandler(TitleSetupEditor_Shown);
+			FormClosing += new FormClosingEventHandler(TitleSetupEditor_FormClosing);
+			FormClosed += new FormClosedEventHandler(TitleSetupEditor_FormClosed);
+
+			buttonOK.Click += new EventHandler(buttonOK_Click);
+			buttonCancel.Click += new EventHandler(buttonCancel_Click);
+			buttonHelp.Click += new EventHandler(buttonHelp_Click);
+			buttonSave.Click += new EventHandler(buttonSave_Click);
+			buttonRevert.Click += new EventHandler(buttonRevert_Click);
+
+			editTitleExpression.SetTabStopChars(ExpressionTextBox.TAB_SIZE);
+
+			editTitleExpression.SelectionChanged += new EventHandler(editTitleExpression_SelectionChanged);
+			editTitleExpression.AfterUndo += new ColorizedPlainTextBox.UndoHandler(editTitleExpression_AfterUndo);
+			editTitleExpression.AfterRedo += new ColorizedPlainTextBox.UndoHandler(editTitleExpression_AfterRedo);
+			editTitleExpression.UndoEntryAdded += new ColorizedPlainTextBox.UndoHandler(editTitleExpression_UndoEntryAdded);
+
+			m_BackgroundExpressionCompiler = new BackgroundExpressionCompiler();
+			m_BackgroundExpressionCompiler.ExpressionTextBox = editTitleExpression;
+			m_BackgroundExpressionCompiler.WarningsLabel = labelWarnings;
+			m_BackgroundExpressionCompiler.CompileResultTextBox = titleOrCompileError;
+
+#if DEBUG_GUI
+			editTitleExpression.Text = "if (true)\t\ta\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\n{\n\t\"this\"\n}\nelse\n{\n\t\"that\"\n}\nXXXXXXXXXWWWWXXXXXIIIIIIIII\u8a9e\u65e0\n";
+#endif
+		}
+
 
 		public TitleSetup TitleSetup
 		{
@@ -78,144 +115,33 @@ namespace VSWindowTitleChanger
 		void TitleExpressionChanged()
 		{
 			SetupModifiedChanged();
-			ReEvaluate();
+			UpdateLineAndColumnLabels();
+			m_BackgroundExpressionCompiler.ForceRecompile();
 		}
 
-		void ReEvaluate()
+		void editTitleExpression_SelectionChanged(object sender, EventArgs e)
 		{
-#if !DEBUG_GUI
-			PackageGlobals.CompiledExpression compiled_expression = PackageGlobals.Instance().CompiledExpressionCache.GetEntry(editTitleExpression.Text);
-			if (compiled_expression.expression == null)
-			{
-				if (compiled_expression.compile_error == null)
-				{
-					titleOrCompileError.Text = "";
-				}
-				else
-				{
-					titleOrCompileError.Text = compiled_expression.compile_error.Message;
-				}
-			}
-			else
-			{
-				EvalContext eval_ctx = new EvalContext();
-				SafeEvalContext safe_eval_ctx = new SafeEvalContext(eval_ctx);
-				eval_ctx.VariableValues = m_Variables;
-				Value title_value = compiled_expression.expression.Evaluate(safe_eval_ctx);
-				titleOrCompileError.Text = title_value.ToString();
-			}
-#endif
-			UpdateSyntaxHighlight();
+			UpdateLineAndColumnLabels();
 		}
 
-		void UpdateSyntaxHighlight()
+		void editTitleExpression_UndoEntryAdded(ColorizedPlainTextBox.UndoEntry undo_entry)
 		{
-			List<ColoredRichTextBox.ColoredRange> highlight_info = CreateSyntaxHighlightInfo(editTitleExpression.Text);
-			editTitleExpression.Colorize(highlight_info, true);
+			m_TitleSetup.TitleExpression = editTitleExpression.Text;
+			TitleExpressionChanged();
 		}
 
-		Color m_ColorKeyWord = Color.Blue;
-		Color m_ColorOperator = Color.Black;
-		Color m_ColorStringLiteral = Color.Purple;
-		Color m_ColorConstantOrVariable = Color.FromArgb(96, 96, 96);
-		Color m_ColorBrackets = Color.Black;
-		Color m_ColorComment = Color.Green;
-
-		List<ColoredRichTextBox.ColoredRange> CreateSyntaxHighlightInfo(string expression_str)
+		void editTitleExpression_AfterRedo(ColorizedPlainTextBox.UndoEntry undo_entry)
 		{
-			List<ColoredRichTextBox.ColoredRange> highlight_info = new List<ColoredRichTextBox.ColoredRange>();
-			Tokenizer tokenizer = new Tokenizer(expression_str, true);
-			for (;;)
-			{
-				try
-				{
-					Token token = tokenizer.GetNextToken();
-					if (token.type == TokenType.EOF)
-						break;
-					Color color;
-					switch (token.type)
-					{
-						case TokenType.OpNot:
-						case TokenType.OpUpcase:
-						case TokenType.OpLocase:
-						case TokenType.OpLcap:
-						case TokenType.OpContains:
-						case TokenType.OpStartsWith:
-						case TokenType.OpEndsWith:
-						case TokenType.OpConcat:
-						case TokenType.OpEquals:
-						case TokenType.OpNotEquals:
-						case TokenType.OpRegexMatch:
-						case TokenType.OpRegexNotMatch:
-						case TokenType.OpAnd:
-						case TokenType.OpXor:
-						case TokenType.OpOr:
-						case TokenType.Ternary:
-							color = m_ColorOperator;
-							break;
-						case TokenType.String:
-							color = m_ColorStringLiteral;
-							break;
-						case TokenType.Variable:
-							color = m_ColorConstantOrVariable;
-							break;
-						case TokenType.If:
-						case TokenType.Else:
-							color = m_ColorKeyWord;
-							break;
-						case TokenType.OpenBrace:
-						case TokenType.CloseBrace:
-						case TokenType.OpenBracket:
-						case TokenType.CloseBracket:
-							color = m_ColorBrackets;
-							break;
-						case TokenType.SingleLineComment:
-						case TokenType.MultiLineComment:
-							color = m_ColorComment;
-							break;
-						default:
-							color = Color.Empty;
-							break;
-					}
-					if (!color.IsEmpty)
-						highlight_info.Add(new ColoredRichTextBox.ColoredRange(token.pos, token.length, Color.Empty, color));
-				}
-				catch (TokenizerException ex)
-				{
-					int pos = ex.ErrorPos;
-					pos = expression_str.IndexOf('\n', pos);
-					if (pos < 0)
-						break;
-					tokenizer = new Tokenizer(expression_str, true, pos + 1);
-				}
-			}
-			return highlight_info;
+			m_TitleSetup.TitleExpression = editTitleExpression.Text;
+			TitleExpressionChanged();
 		}
 
-		public TitleSetupEditor()
+		void editTitleExpression_AfterUndo(ColorizedPlainTextBox.UndoEntry undo_entry)
 		{
-			InitializeComponent();
-
-			m_UIThradDispatcher = Dispatcher.CurrentDispatcher;
-			m_DispatcherTimer_UpdateVariables = new DispatcherTimer();
-			m_DispatcherTimer_UpdateVariables.Interval = new TimeSpan(0, 0, 1);
-			m_DispatcherTimer_UpdateVariables.Tick += new EventHandler(UpdateVariables_Tick);
-
-			editTitleExpression.TabStopChars = 4;
-
-			VisibleChanged += new EventHandler(TitleSetupEditor_VisibleChanged);
-			Shown += new EventHandler(TitleSetupEditor_Shown);
-			FormClosing += new FormClosingEventHandler(TitleSetupEditor_FormClosing);
-			FormClosed += new FormClosedEventHandler(TitleSetupEditor_FormClosed);
-
-			buttonOK.Click += new EventHandler(buttonOK_Click);
-			buttonCancel.Click += new EventHandler(buttonCancel_Click);
-			buttonHelp.Click += new EventHandler(buttonHelp_Click);
-			buttonSave.Click += new EventHandler(buttonSave_Click);
-			buttonRevert.Click += new EventHandler(buttonRevert_Click);
-
-			editTitleExpression.TextChanged += new EventHandler(editTitleExpression_TextChanged);
+			m_TitleSetup.TitleExpression = editTitleExpression.Text;
+			TitleExpressionChanged();
 		}
+
 
 		Dictionary<string, ListViewItem> m_VariableNameToLVI = new Dictionary<string, ListViewItem>();
 
@@ -223,10 +149,7 @@ namespace VSWindowTitleChanger
 		{
 #if !DEBUG_GUI
 			PackageGlobals globals = PackageGlobals.Instance();
-			EvalContext eval_ctx = new EvalContext();
-			PackageGlobals.VSMultiInstanceInfo multi_instance_info;
-			globals.GetVSMultiInstanceInfo(out multi_instance_info);
-			globals.SetVariableValuesFromIDEState(eval_ctx, multi_instance_info);
+			EvalContext eval_ctx = globals.CreateFreshEvalContext();
 			if (CompareVariables(eval_ctx.VariableValues, m_Variables))
 				return;
 			m_Variables = eval_ctx.VariableValues;
@@ -265,7 +188,15 @@ namespace VSWindowTitleChanger
 			}
 #endif
 
-			ReEvaluate();
+			m_BackgroundExpressionCompiler.ForceRecompile();
+		}
+
+		void UpdateLineAndColumnLabels()
+		{
+			int line, column;
+			editTitleExpression.CharIdxToLineAndColumn(editTitleExpression.SelectionStart, out line, out column);
+			labelLine.Text = (line + 1).ToString();
+			labelColumn.Text = (column + 1).ToString();
 		}
 
 		void UpdateVariables_Tick(object sender, EventArgs e)
@@ -273,23 +204,28 @@ namespace VSWindowTitleChanger
 			UpdateVariables();
 		}
 
-		void editTitleExpression_TextChanged(object sender, EventArgs e)
-		{
-			m_TitleSetup.TitleExpression = editTitleExpression.Text;
-			TitleExpressionChanged();
-		}
-
 		void TitleSetupEditor_VisibleChanged(object sender, EventArgs e)
 		{
 			if (Visible)
 			{
 				m_ClosingWithOK = false;
-				m_DispatcherTimer_UpdateVariables.Start();
+
+#if !DEBUG_GUI
+				m_BackgroundExpressionCompiler.CompileTimeConstants = PackageGlobals.Instance().CompileTimeConstants;
+#endif
+				m_BackgroundExpressionCompiler.Enabled = true;
+
+				m_Timer_UpdateVariables.Start();
 				UpdateVariables();
 			}
 			else
 			{
-				m_DispatcherTimer_UpdateVariables.Stop();
+				m_BackgroundExpressionCompiler.Enabled = false;
+				m_Timer_UpdateVariables.Stop();
+
+				TitleSetup = new TitleSetup();
+				editTitleExpression.Text = "";
+				editTitleExpression.ClearUndo();
 			}
 		}
 
@@ -304,9 +240,9 @@ namespace VSWindowTitleChanger
 				m_HelpForm.Close();
 			if (!m_ClosingWithOK && RevertToOriginalSetup != null)
 				RevertToOriginalSetup(m_OrigTitleSetup);
+			Visible = false;
 #if !DEBUG_GUI
 			e.Cancel = true;
-			Visible = false;
 #endif
 		}
 
@@ -323,9 +259,14 @@ namespace VSWindowTitleChanger
 			{
 				if (components != null)
 					components.Dispose();
-				m_DispatcherTimer_UpdateVariables.Stop();
+				m_Timer_UpdateVariables.Stop();
 				if (m_HelpForm != null)
 					m_HelpForm.Dispose();
+				if (m_BackgroundExpressionCompiler != null)
+				{
+					m_BackgroundExpressionCompiler.Dispose();
+					m_BackgroundExpressionCompiler = null;
+				}
 			}
 			base.Dispose(disposing);
 		}
@@ -369,6 +310,7 @@ namespace VSWindowTitleChanger
 			if (RevertToOriginalSetup != null)
 				RevertToOriginalSetup(m_TitleSetup);
 			SetupChanged();
+			editTitleExpression.Focus();
 		}
 
 		void buttonSave_Click(object sender, EventArgs e)
@@ -377,6 +319,7 @@ namespace VSWindowTitleChanger
 			SetupModifiedChanged();
 			if (SaveEditedSetup != null)
 				SaveEditedSetup(m_TitleSetup);
+			editTitleExpression.Focus();
 		}
 
 
@@ -405,7 +348,7 @@ namespace VSWindowTitleChanger
 		bool m_ConsumeTab;
 
 
-		[DllImport("user32.dll", CharSet = CharSet.Auto)]
+		[DllImport("user32.dll", CharSet = CharSet.Unicode)]
 		static extern IntPtr SendMessage(IntPtr hWnd, Int32 Msg, IntPtr wParam, IntPtr lParam);
 
 		private const int WM_GETDLGCODE = 0x0087;
@@ -436,6 +379,10 @@ namespace VSWindowTitleChanger
 					case Keys.F1:
 						if (key_down)
 							ShowHelp();
+						return true;
+					case Keys.F4:
+						if (key_down)
+							m_BackgroundExpressionCompiler.JumpToErrorLocation();
 						return true;
 					case Keys.Escape:
 						if (key_down)
