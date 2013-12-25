@@ -859,5 +859,35 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				return new StringValue(Char.ToUpper(s[0]) + s.Substring(1).ToLower());
 			}
 		}
+
+		class OpBool : Expression
+		{
+			public OpBool(Expression operand) : base(operand) { }
+			public override Value Evaluate(IEvalContext ctx)
+			{
+				Value v = SubExpressions[0].Evaluate(ctx);
+				return v.GetType() == Type.Bool ? (BoolValue)v : new BoolValue(v.ToBool());
+			}
+		}
+
+		class OpString : Expression
+		{
+			public OpString(Expression operand) : base(operand) { }
+			public override Value Evaluate(IEvalContext ctx)
+			{
+				Value v = SubExpressions[0].Evaluate(ctx);
+				return v.GetType() == Type.String ? (StringValue)v : new StringValue(v.ToString());
+			}
+		}
+
+		class OpBackslashize : Expression
+		{
+			public OpBackslashize(Expression operand) : base(operand) { }
+			public override Value Evaluate(IEvalContext ctx)
+			{
+				Value v = SubExpressions[0].Evaluate(ctx);
+				return new StringValue(v.ToString().Replace('/', '\\'));
+			}
+		}
 	}
 }

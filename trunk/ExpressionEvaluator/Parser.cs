@@ -6,14 +6,15 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 {
 	// Operators, higher precedence first (you can use parentheses to modify the evaluation order):
 	// high precedence ternary (cond_value?true_operand)
-	// =~ !~                         string regex match and not match (case insensitive)
-	// not ! upcase locase lcap      logical not, convert string to uppercase, convert string to lowercase, convert string to have a leading capital
-	// +                             string concatenation
-	// contains startswith endswith  string: contains substring, starts with string, ends with string
-	// == !=                         binary/string equals and not equals (case insensitive)
-	// and && &                      logical and
-	// xor ^                         logical xor
-	// or || |                       logical or
+	// =~ !~                                            string regex match and not match (case insensitive)
+	// not ! upcase locase lcap bool str backslashize   logical not, convert string to uppercase, convert string to lowercase, convert string to have a leading capital
+	//                                                  convert to bool, convert to string, convert to string if needed and replace all '/' chars to '\' chars.
+	// +                                                string concatenation
+	// contains startswith endswith                     string: contains substring, starts with string, ends with string
+	// == !=                                            binary/string equals and not equals (case insensitive)
+	// and && &                                         logical and
+	// xor ^                                            logical xor
+	// or || |                                          logical or
 	// low precedence ternary (if-else)
 	//
 	// If both operands of == or != have string type then these perform string comparison.
@@ -91,7 +92,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// HighPrecedenceTernary ->		OpUnary "?" HighPrecedenceTernary
 	// OpUnary ->					( "not" | "upcase" | "locase" | "lcap" ) OpUnary | Value
 	// Value ->						StringLiteral | Variable | BracketExpression | IfElse
-	// IfElse ->					"if" BracketExpression BraceExpression "else" ( BraceExpression | IfElse )
+	// IfElse ->					"if" BracketExpression BraceExpression | "if" BracketExpression BraceExpression "else" ( BraceExpression | IfElse )
 	// BracketExpression ->			"(" Expression ")"
 	// BraceExpression ->			"{" Expression "}"
 
@@ -357,6 +358,15 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				case TokenType.OpLcap:
 					m_Tokenizer.ConsumeNextToken();
 					return new OpLeadingCapitalCase(Parse_OpUnary());
+				case TokenType.OpBool:
+					m_Tokenizer.ConsumeNextToken();
+					return new OpBool(Parse_OpUnary());
+				case TokenType.OpString:
+					m_Tokenizer.ConsumeNextToken();
+					return new OpString(Parse_OpUnary());
+				case TokenType.OpBackslashize:
+					m_Tokenizer.ConsumeNextToken();
+					return new OpBackslashize(Parse_OpUnary());
 				default:
 					return Parse_Value();
 			}
@@ -393,20 +403,29 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			Expect(TokenType.If);
 			Expression cond_expr = Parse_BracketExpression();
 			Expression true_expr = Parse_BraceExpression();
-			Expect(TokenType.Else);
 			Token token = m_Tokenizer.PeekNextToken();
 			Expression false_expr;
-			switch (token.type)
+			if (token.type == TokenType.Else)
 			{
-				case TokenType.If:
-					false_expr = Parse_IfElse();
-					break;
-				case TokenType.OpenBrace:
-					false_expr = Parse_BraceExpression();
-					break;
-				default:
-					throw new ParserException_ExpectedTokens(m_Tokenizer.Text, token.pos, new TokenType[] { TokenType.If, TokenType.OpenBrace });
+				m_Tokenizer.ConsumeNextToken();
+				token = m_Tokenizer.PeekNextToken();
+				switch (token.type)
+				{
+					case TokenType.If:
+						false_expr = Parse_IfElse();
+						break;
+					case TokenType.OpenBrace:
+						false_expr = Parse_BraceExpression();
+						break;
+					default:
+						throw new ParserException_ExpectedTokens(m_Tokenizer.Text, token.pos, new TokenType[] { TokenType.If, TokenType.OpenBrace });
+				}
 			}
+			else
+			{
+				false_expr = m_DefaultValue;
+			}
+
 			return new Ternary(cond_expr, true_expr, false_expr);
 		}
 
