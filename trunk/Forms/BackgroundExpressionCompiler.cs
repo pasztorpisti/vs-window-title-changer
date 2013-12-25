@@ -182,7 +182,7 @@ namespace VSWindowTitleChanger
 			}
 
 			Parser parser = new Parser(m_ExpressionTextBox.Text, m_CompileTimeConstants);
-			ExpressionCompilerJob job = new ExpressionCompilerJob(parser, PackageGlobals.Instance().CreateFreshEvalContext(), true);
+			ExpressionCompilerJob job = new ExpressionCompilerJob(parser, PackageGlobals.Instance().CreateFreshEvalContext(), true, null);
 			job.OnCompileFinished += OnCompileFinished;
 			job.UserData = (IntPtr)m_MostRecentUndoEntryId;
 			m_CompilerThread.RemoveAllJobs();
