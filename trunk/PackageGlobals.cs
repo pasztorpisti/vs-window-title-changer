@@ -191,17 +191,42 @@ namespace VSWindowTitleChanger
 
 			AddFilePathVars(var_value_setter, ref solution_path, SlashPathSeparator, "sln_");
 			var_value_setter.SetVariable("sln_open", solution_path.Length > 0);
-			var_value_setter.SetVariable("sln_dirty", !dte.Solution.Saved);
+			bool sln_dirty = !dte.Solution.Saved;
+			var_value_setter.SetVariable("sln_dirty", sln_dirty);
 
 			string active_document_path = active_document == null ? "" : active_document.FullName;
 			AddFilePathVars(var_value_setter, ref active_document_path, SlashPathSeparator, "doc_");
 			var_value_setter.SetVariable("doc_open", active_document_path.Length > 0);
 			var_value_setter.SetVariable("doc_dirty", active_document != null && !active_document.Saved);
 
+			bool any_doc_dirty = false;
+			foreach (Document doc in dte.Documents)
+			{
+				if (!doc.Saved)
+				{
+					any_doc_dirty = true;
+					break;
+				}
+			}
+			var_value_setter.SetVariable("any_doc_dirty", any_doc_dirty);
+
 			string startup_project_path = startup_project == null ? "" : startup_project.FullName;
 			AddFilePathVars(var_value_setter, ref startup_project_path, SlashPathSeparator, "startup_proj_");
 			var_value_setter.SetVariable("startup_proj", startup_project == null ? "" : startup_project.Name);
 			var_value_setter.SetVariable("startup_proj_dirty", startup_project != null && !startup_project.Saved);
+
+			bool any_proj_dirty = false;
+			foreach (Project proj in dte.Solution.Projects)
+			{
+				if (!proj.Saved)
+				{
+					any_proj_dirty = true;
+					break;
+				}
+			}
+			var_value_setter.SetVariable("any_proj_dirty", any_proj_dirty);
+
+			var_value_setter.SetVariable("anything_dirty", sln_dirty || any_proj_dirty || any_doc_dirty);
 
 			var_value_setter.SetVariable("wnd_minimized", m_Package.VSMainWindow.Minimized);
 			var_value_setter.SetVariable("wnd_foreground", m_Package.VSMainWindow.IsForegroundWindow());

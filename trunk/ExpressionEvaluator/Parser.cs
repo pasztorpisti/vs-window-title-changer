@@ -64,6 +64,9 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// startup_proj_filename         string: the name of the startup project file without directory and extension
 	// startup_proj_ext              string: the extension of the startup project file
 	// startup_proj_dirty            bool
+	// any_proj_dirty                bool: true if any of the project files is modified
+	// any_doc_dirty                 bool: true if any of the open documents/files is modified
+	// anything_dirty                bool: true if the solution file or any of the project files or any of the open documents is modified
 	// wnd_minimized                 bool: true if the main window of VS is minimized
 	// wnd_foreground                bool: true if the main window of VS is in the foreground
 	// app_active                    bool: true if one of the windows of this VS instance is the foreground window.
