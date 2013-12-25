@@ -370,7 +370,10 @@ namespace VSWindowTitleChanger
 						return true;
 					case Keys.F4:
 						if (key_down)
+						{
+							editTitleExpression.Focus();
 							m_BackgroundExpressionCompiler.JumpToErrorLocation();
+						}
 						return true;
 					case Keys.Escape:
 						if (key_down)
