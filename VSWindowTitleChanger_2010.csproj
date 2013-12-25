@@ -168,7 +168,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="Resources\Package.ico" />
-    <Content Include="works-on-my-machine-starburst_150.png">
+    <Content Include="VSWindowTitleChanger.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
