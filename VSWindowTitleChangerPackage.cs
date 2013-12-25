@@ -79,6 +79,7 @@ namespace VSWindowTitleChanger
 
 
 		ExpressionCompilerThread m_ExpressionCompilerThread;
+		CompiledExpressionCache m_CompiledExpressionCache;
 
 		VSMainWindow m_VSMainWindow;
 		System.Windows.Forms.Timer m_UpdateTimer;
@@ -146,7 +147,7 @@ namespace VSWindowTitleChanger
 					title_setup.TitleExpression != m_PrevTitleExpressionStr)
 				{
 					Parser parser = new Parser(title_setup.TitleExpression, globals.CompileTimeConstants); ;
-					ExpressionCompilerJob job = new ExpressionCompilerJob(parser,  globals.CreateFreshEvalContext(), false);
+					ExpressionCompilerJob job = new ExpressionCompilerJob(parser,  globals.CreateFreshEvalContext(), false, m_CompiledExpressionCache);
 					job.OnCompileFinished += OnCompileFinished;
 					m_ExpressionCompilerThread.RemoveAllJobs();
 					m_ExpressionCompilerThread.AddJob(job);
@@ -226,6 +227,9 @@ namespace VSWindowTitleChanger
 			m_PrevVariableValues = PackageGlobals.Instance().CreateFreshEvalContext().VariableValues;
 
 			m_ExpressionCompilerThread = new ExpressionCompilerThread();
+			// During normal use the expression doesn't change except when configuring so a cache size of 1 does the job quite well.
+			// Usually what changes is the variables.
+			m_CompiledExpressionCache = new CompiledExpressionCache(PackageGlobals.Instance().CompileTimeConstants, 1);
 
 			UpdateWindowTitle();
 		}

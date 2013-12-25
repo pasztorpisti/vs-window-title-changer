@@ -79,14 +79,17 @@ namespace VSWindowTitleChanger
 		Parser m_Parser;
 		IEvalContext m_EvalContext;
 		bool m_CollectUnresolvedVariables;
+		CompiledExpressionCache m_Cache;
 
 		// The variable_value_resolver is used only to find the unused variables, the variable values aren't used.
 		// variable_value_resolver can be null, in that case unused variables aren't explored.
-		public ExpressionCompilerJob(Parser parser, IEvalContext eval_ctx, bool collect_unresolved_variables)
+		// cache can be null.
+		public ExpressionCompilerJob(Parser parser, IEvalContext eval_ctx, bool collect_unresolved_variables, CompiledExpressionCache cache)
 		{
 			m_Parser = parser;
 			m_EvalContext = eval_ctx;
 			m_CollectUnresolvedVariables = collect_unresolved_variables;
+			m_Cache = cache;
 		}
 
 		public delegate void CompileFinishedHandler(ExpressionCompilerJob job);
@@ -119,7 +122,17 @@ namespace VSWindowTitleChanger
 			Debug.Assert(m_Error == null && m_Expression == null);
 			try
 			{
-				m_Expression = m_Parser.Parse();
+				if (m_Cache != null)
+				{
+					CompiledExpression compiled_expression = m_Cache.GetEntry(m_Parser.Text);
+					m_Expression = compiled_expression.expression;
+					m_Error = compiled_expression.compile_error;
+				}
+				else
+				{
+					m_Expression = m_Parser.Parse();
+				}
+
 				if (m_Expression != null && m_EvalContext != null)
 				{
 					m_EvalResult = m_Expression.Evaluate(new SafeEvalContext(m_EvalContext));

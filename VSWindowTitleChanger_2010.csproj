@@ -90,6 +90,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cache.cs" />
+    <Compile Include="CompiledExpressionCache.cs" />
     <Compile Include="ExpressionEvaluator\EvalTree.cs" />
     <Compile Include="ExpressionEvaluator\Parser.cs" />
     <Compile Include="ExpressionEvaluator\Test.cs" />

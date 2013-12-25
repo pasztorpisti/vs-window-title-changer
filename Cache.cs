@@ -1,69 +1,59 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace VSWindowTitleChanger
 {
+	// A cache that keeps at most N items and drops the oldest unused item if necessary.
 	class Cache<Key,Value>
 	{
 		public delegate Value CreateValueFromKey(Key key);
 
-		public Cache(CreateValueFromKey value_creator)
+		public Cache(CreateValueFromKey value_creator, int max_size)
 		{
+			Debug.Assert(max_size > 0);
 			m_ValueCreator = value_creator;
+			m_MaxSize = max_size;
 		}
 
-		// Returns compile_error_default_value in case of a compile error.
 		public Value GetEntry(Key key)
 		{
-			DateTime now = DateTime.Now;
-
 			CacheEntry entry;
 			if (m_CacheEntries.TryGetValue(key, out entry))
 			{
-				entry.last_access_time = now;
-				DropExpiredEntries(now);
+				m_EntryKeys.Remove(entry.list_node);
+				m_EntryKeys.AddLast(entry.list_node);
 				return entry.val;
 			}
 
-			Value val = m_ValueCreator(key);
-			m_CacheEntries[key] = new CacheEntry(val, now);
-			DropExpiredEntries(now);
-			return val;
-		}
-
-		private void DropExpiredEntries(DateTime now)
-		{
-			if (now - m_LastCleanupTime < m_CleanupPeriod)
-				return;
-			m_LastCleanupTime = now;
-
-			List<Key> expired_keys = new List<Key>();
-			foreach (KeyValuePair<Key, CacheEntry> entry in m_CacheEntries)
+			Debug.Assert(m_CacheEntries.Count <= m_MaxSize);
+			if (m_CacheEntries.Count >= m_MaxSize)
 			{
-				if (now - entry.Value.last_access_time >= m_ExpirationPeriod)
-					expired_keys.Add(entry.Key);
+				m_CacheEntries.Remove(m_EntryKeys.First.Value);
+				m_EntryKeys.RemoveFirst();
 			}
-
-			foreach (Key key in expired_keys)
-				m_CacheEntries.Remove(key);
+			LinkedListNode<Key> list_node = new LinkedListNode<Key>(key);
+			Value val = m_ValueCreator(key);
+			m_CacheEntries[key] = new CacheEntry(val, list_node);
+			m_EntryKeys.AddLast(list_node);
+			return val;
 		}
 
 		class CacheEntry
 		{
 			public Value val;
-			public DateTime last_access_time;
+			public LinkedListNode<Key> list_node;
 
-			public CacheEntry(Value val, DateTime last_access_time)
+			public CacheEntry(Value val, LinkedListNode<Key> list_node)
 			{
 				this.val = val;
-				this.last_access_time = last_access_time;
+				this.list_node = list_node;
 			}
 		}
 
 		CreateValueFromKey m_ValueCreator;
+		int m_MaxSize;
 		Dictionary<Key, CacheEntry> m_CacheEntries = new Dictionary<Key, CacheEntry>();
-		DateTime m_LastCleanupTime = DateTime.Now;
-		TimeSpan m_CleanupPeriod = new TimeSpan(0, 0, 5);
-		TimeSpan m_ExpirationPeriod = new TimeSpan(0, 0, 20);
+		LinkedList<Key> m_EntryKeys = new LinkedList<Key>();
 	}
 }

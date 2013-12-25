@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Cache.cs" />
+    <Compile Include="CompiledExpressionCache.cs" />
     <Compile Include="ExpressionCompilerThread.cs" />
     <Compile Include="ExpressionEvaluator\EvalTree.cs" />
     <Compile Include="ExpressionEvaluator\Parser.cs" />
