@@ -2,6 +2,14 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using System.Diagnostics;
+
+#if VS2010_AND_LATER
+using System.Windows;
+using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Controls;
+#endif
 
 namespace VSWindowTitleChanger
 {
@@ -35,11 +43,27 @@ namespace VSWindowTitleChanger
 		[DllImport("user32.dll")]
 		static extern IntPtr GetActiveWindow();
 
-		public void Initialize(IntPtr main_hwnd)
+		public void Initialize(IntPtr main_hwnd, string dte_version)
 		{
 			m_MainHWND = main_hwnd;
 			m_OriginalTitle = GetWindowText(main_hwnd);
 			m_IsAppActive = GetActiveWindow() != IntPtr.Zero;
+
+#if VS2010_AND_LATER
+			// We shouldn't try to set the WPF title label control for VS2010, only for later versions.
+			int dot_idx = dte_version.IndexOf('.');
+			Debug.Assert(dot_idx >= 0);
+			dot_idx = dot_idx < 0 ? dte_version.Length : dot_idx;
+			try
+			{
+				m_TrySetWPFTitle = 10 < Convert.ToInt32(dte_version.Substring(0, dot_idx));
+			}
+			catch
+			{
+				m_TrySetWPFTitle = false;
+			}
+#endif
+
 			AssignHandle(main_hwnd);
 		}
 
@@ -84,6 +108,10 @@ namespace VSWindowTitleChanger
 			try
 			{
 				SetWindowText(m_MainHWND, title);
+#if VS2010_AND_LATER
+				if (m_TrySetWPFTitle)
+					TrySetTitleTextBlock(title);
+#endif
 			}
 			finally
 			{
@@ -134,5 +162,63 @@ namespace VSWindowTitleChanger
 				base.WndProc(ref m);
 			}
 		}
+
+#if VS2010_AND_LATER
+		bool m_TrySetWPFTitle;
+
+		void TrySetTitleTextBlock(string title)
+		{
+			DependencyObject root = HwndSource.FromHwnd(m_MainHWND).RootVisual as DependencyObject;
+			if (root != null)
+			{
+				DependencyObject titlebar = FindInSubtreeByClassNamePostfix(root, ".MainWindowTitleBar") as DependencyObject;
+				if (titlebar != null)
+				{
+					DependencyObject dock_panel = FindChildByClassNamePostfix(titlebar, ".DockPanel");
+					if (dock_panel != null)
+					{
+						TextBlock title_textblock = FindChildByClassNamePostfix(dock_panel, ".TextBlock") as TextBlock;
+						if (title_textblock != null)
+						{
+							title_textblock.Text = title;
+						}
+					}
+				}
+			}
+		}
+
+		DependencyObject FindChildByClassNamePostfix(DependencyObject parent, string postfix)
+		{
+			for (int i = 0, e = VisualTreeHelper.GetChildrenCount(parent); i < e; ++i)
+			{
+				DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+				if (child != null)
+				{
+					string type_name = child.GetType().FullName;
+					if (type_name.EndsWith(postfix))
+						return child;
+				}
+			}
+			return null;
+		}
+
+		DependencyObject FindInSubtreeByClassNamePostfix(DependencyObject root, string postfix)
+		{
+			for (int i = 0, e = VisualTreeHelper.GetChildrenCount(root); i < e; ++i)
+			{
+				DependencyObject child = VisualTreeHelper.GetChild(root, i);
+				if (child != null)
+				{
+					string type_name = child.GetType().FullName;
+					if (type_name.EndsWith(postfix))
+						return child;
+					DependencyObject res = FindInSubtreeByClassNamePostfix(child, postfix);
+					if (res != null)
+						return res;
+				}
+			}
+			return null;
+		}
+#endif
 	}
 }
