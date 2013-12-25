@@ -2,12 +2,11 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Windows.Threading;
+using System.Windows.Forms;
 using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using System.Windows.Forms;
 
 namespace VSWindowTitleChanger
 {
@@ -170,7 +169,7 @@ namespace VSWindowTitleChanger
 			}
 
 			m_VSMainWindow = new VSMainWindow();
-			m_VSMainWindow.Initialize((IntPtr)dte.MainWindow.HWnd);
+			m_VSMainWindow.Initialize((IntPtr)dte.MainWindow.HWnd, dte.Version);
 			m_VSMainWindow.OnWindowTitleUpdateNeeded += new VSWindowTitleChanger.VSMainWindow.WindowTitleUpdateNeededHandler(m_VSMainWindow_OnWindowTitleUpdateNeeded);
 
 			m_UpdateTimer = new System.Windows.Forms.Timer();
