@@ -16,6 +16,13 @@ namespace VSWindowTitleChanger
 		private void InitializeComponent()
 		{
 			this.splitMain = new System.Windows.Forms.SplitContainer();
+			this.labelColumn = new System.Windows.Forms.Label();
+			this.labelLine = new System.Windows.Forms.Label();
+			this.label4 = new System.Windows.Forms.Label();
+			this.label3 = new System.Windows.Forms.Label();
+			this.panelExpressionEditor = new System.Windows.Forms.Panel();
+			this.lineNumbers = new VSWindowTitleChanger.RichTextBoxLineNumbers();
+			this.editTitleExpression = new VSWindowTitleChanger.ExpressionTextBox();
 			this.buttonSave = new System.Windows.Forms.Button();
 			this.buttonRevert = new System.Windows.Forms.Button();
 			this.label1 = new System.Windows.Forms.Label();
@@ -23,16 +30,18 @@ namespace VSWindowTitleChanger
 			this.titleOrCompileError = new System.Windows.Forms.TextBox();
 			this.label2 = new System.Windows.Forms.Label();
 			this.listVariables = new System.Windows.Forms.ListView();
-			this.columnVariableName = new System.Windows.Forms.ColumnHeader();
-			this.columnVariableValue = new System.Windows.Forms.ColumnHeader();
-			this.columnVariableType = new System.Windows.Forms.ColumnHeader();
+			this.columnVariableName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnVariableValue = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnVariableType = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.buttonHelp = new System.Windows.Forms.Button();
 			this.buttonCancel = new System.Windows.Forms.Button();
 			this.buttonOK = new System.Windows.Forms.Button();
-			this.editTitleExpression = new VSWindowTitleChanger.ColoredRichTextBox();
+			this.label5 = new System.Windows.Forms.Label();
+			this.labelWarnings = new System.Windows.Forms.Label();
 			this.splitMain.Panel1.SuspendLayout();
 			this.splitMain.Panel2.SuspendLayout();
 			this.splitMain.SuspendLayout();
+			this.panelExpressionEditor.SuspendLayout();
 			this.splitVariables.Panel1.SuspendLayout();
 			this.splitVariables.Panel2.SuspendLayout();
 			this.splitVariables.SuspendLayout();
@@ -40,19 +49,25 @@ namespace VSWindowTitleChanger
 			// 
 			// splitMain
 			// 
-			this.splitMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-						| System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.splitMain.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+			this.splitMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.splitMain.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
 			this.splitMain.Location = new System.Drawing.Point(12, 12);
 			this.splitMain.Name = "splitMain";
 			this.splitMain.Orientation = System.Windows.Forms.Orientation.Horizontal;
 			// 
 			// splitMain.Panel1
 			// 
+			this.splitMain.Panel1.Controls.Add(this.labelWarnings);
+			this.splitMain.Panel1.Controls.Add(this.label5);
+			this.splitMain.Panel1.Controls.Add(this.labelColumn);
+			this.splitMain.Panel1.Controls.Add(this.labelLine);
+			this.splitMain.Panel1.Controls.Add(this.label4);
+			this.splitMain.Panel1.Controls.Add(this.label3);
+			this.splitMain.Panel1.Controls.Add(this.panelExpressionEditor);
 			this.splitMain.Panel1.Controls.Add(this.buttonSave);
 			this.splitMain.Panel1.Controls.Add(this.buttonRevert);
-			this.splitMain.Panel1.Controls.Add(this.editTitleExpression);
 			this.splitMain.Panel1.Controls.Add(this.label1);
 			// 
 			// splitMain.Panel2
@@ -60,7 +75,91 @@ namespace VSWindowTitleChanger
 			this.splitMain.Panel2.Controls.Add(this.splitVariables);
 			this.splitMain.Size = new System.Drawing.Size(960, 606);
 			this.splitMain.SplitterDistance = 193;
-			this.splitMain.TabIndex = 17;
+			this.splitMain.TabIndex = 0;
+			// 
+			// labelColumn
+			// 
+			this.labelColumn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.labelColumn.AutoSize = true;
+			this.labelColumn.Location = new System.Drawing.Point(758, 4);
+			this.labelColumn.Name = "labelColumn";
+			this.labelColumn.Size = new System.Drawing.Size(13, 13);
+			this.labelColumn.TabIndex = 12;
+			this.labelColumn.Text = "1";
+			// 
+			// labelLine
+			// 
+			this.labelLine.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.labelLine.AutoSize = true;
+			this.labelLine.Location = new System.Drawing.Point(684, 4);
+			this.labelLine.Name = "labelLine";
+			this.labelLine.Size = new System.Drawing.Size(13, 13);
+			this.labelLine.TabIndex = 11;
+			this.labelLine.Text = "1";
+			// 
+			// label4
+			// 
+			this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.label4.AutoSize = true;
+			this.label4.Location = new System.Drawing.Point(648, 4);
+			this.label4.Name = "label4";
+			this.label4.Size = new System.Drawing.Size(30, 13);
+			this.label4.TabIndex = 10;
+			this.label4.Text = "Line:";
+			// 
+			// label3
+			// 
+			this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.label3.AutoSize = true;
+			this.label3.Location = new System.Drawing.Point(727, 4);
+			this.label3.Name = "label3";
+			this.label3.Size = new System.Drawing.Size(25, 13);
+			this.label3.TabIndex = 9;
+			this.label3.Text = "Col:";
+			// 
+			// panelExpressionEditor
+			// 
+			this.panelExpressionEditor.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.panelExpressionEditor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+			this.panelExpressionEditor.Controls.Add(this.lineNumbers);
+			this.panelExpressionEditor.Controls.Add(this.editTitleExpression);
+			this.panelExpressionEditor.Location = new System.Drawing.Point(0, 23);
+			this.panelExpressionEditor.Name = "panelExpressionEditor";
+			this.panelExpressionEditor.Size = new System.Drawing.Size(960, 168);
+			this.panelExpressionEditor.TabIndex = 0;
+			// 
+			// lineNumbers
+			// 
+			this.lineNumbers.BackColor = System.Drawing.SystemColors.Control;
+			this.lineNumbers.Dock = System.Windows.Forms.DockStyle.Left;
+			this.lineNumbers.ForeColor = System.Drawing.Color.Gray;
+			this.lineNumbers.Location = new System.Drawing.Point(0, 0);
+			this.lineNumbers.Name = "lineNumbers";
+			this.lineNumbers.RightLineColor = System.Drawing.Color.LightGray;
+			this.lineNumbers.Size = new System.Drawing.Size(51, 166);
+			this.lineNumbers.TabIndex = 2;
+			this.lineNumbers.TextBox = this.editTitleExpression;
+			// 
+			// editTitleExpression
+			// 
+			this.editTitleExpression.AcceptsTab = true;
+			this.editTitleExpression.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.editTitleExpression.AutoWordSelection = true;
+			this.editTitleExpression.BorderStyle = System.Windows.Forms.BorderStyle.None;
+			this.editTitleExpression.DetectUrls = false;
+			this.editTitleExpression.Font = new System.Drawing.Font("Consolas", 9F);
+			this.editTitleExpression.Location = new System.Drawing.Point(51, 0);
+			this.editTitleExpression.MaxLength = 65536;
+			this.editTitleExpression.Name = "editTitleExpression";
+			this.editTitleExpression.Size = new System.Drawing.Size(907, 167);
+			this.editTitleExpression.SmoothScroll = false;
+			this.editTitleExpression.TabIndex = 1;
+			this.editTitleExpression.Text = "";
+			this.editTitleExpression.WordWrap = false;
 			// 
 			// buttonSave
 			// 
@@ -69,7 +168,7 @@ namespace VSWindowTitleChanger
 			this.buttonSave.Location = new System.Drawing.Point(804, 0);
 			this.buttonSave.Name = "buttonSave";
 			this.buttonSave.Size = new System.Drawing.Size(75, 20);
-			this.buttonSave.TabIndex = 6;
+			this.buttonSave.TabIndex = 1;
 			this.buttonSave.Text = "Save";
 			this.buttonSave.UseVisualStyleBackColor = true;
 			// 
@@ -80,7 +179,7 @@ namespace VSWindowTitleChanger
 			this.buttonRevert.Location = new System.Drawing.Point(885, 0);
 			this.buttonRevert.Name = "buttonRevert";
 			this.buttonRevert.Size = new System.Drawing.Size(75, 20);
-			this.buttonRevert.TabIndex = 7;
+			this.buttonRevert.TabIndex = 2;
 			this.buttonRevert.Text = "Revert";
 			this.buttonRevert.UseVisualStyleBackColor = true;
 			// 
@@ -123,7 +222,7 @@ namespace VSWindowTitleChanger
 			this.titleOrCompileError.ReadOnly = true;
 			this.titleOrCompileError.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
 			this.titleOrCompileError.Size = new System.Drawing.Size(960, 69);
-			this.titleOrCompileError.TabIndex = 1;
+			this.titleOrCompileError.TabIndex = 0;
 			this.titleOrCompileError.Text = "Window Title";
 			// 
 			// label2
@@ -137,9 +236,9 @@ namespace VSWindowTitleChanger
 			// 
 			// listVariables
 			// 
-			this.listVariables.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-						| System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
+			this.listVariables.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.listVariables.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnVariableName,
             this.columnVariableValue,
@@ -152,7 +251,7 @@ namespace VSWindowTitleChanger
 			this.listVariables.Name = "listVariables";
 			this.listVariables.ShowItemToolTips = true;
 			this.listVariables.Size = new System.Drawing.Size(960, 313);
-			this.listVariables.TabIndex = 2;
+			this.listVariables.TabIndex = 0;
 			this.listVariables.UseCompatibleStateImageBehavior = false;
 			this.listVariables.View = System.Windows.Forms.View.Details;
 			// 
@@ -176,7 +275,7 @@ namespace VSWindowTitleChanger
 			this.buttonHelp.Location = new System.Drawing.Point(12, 627);
 			this.buttonHelp.Name = "buttonHelp";
 			this.buttonHelp.Size = new System.Drawing.Size(75, 23);
-			this.buttonHelp.TabIndex = 5;
+			this.buttonHelp.TabIndex = 3;
 			this.buttonHelp.Text = "Help";
 			this.buttonHelp.UseVisualStyleBackColor = true;
 			// 
@@ -186,7 +285,7 @@ namespace VSWindowTitleChanger
 			this.buttonCancel.Location = new System.Drawing.Point(897, 627);
 			this.buttonCancel.Name = "buttonCancel";
 			this.buttonCancel.Size = new System.Drawing.Size(75, 23);
-			this.buttonCancel.TabIndex = 4;
+			this.buttonCancel.TabIndex = 2;
 			this.buttonCancel.Text = "Cancel";
 			this.buttonCancel.UseVisualStyleBackColor = true;
 			// 
@@ -196,25 +295,29 @@ namespace VSWindowTitleChanger
 			this.buttonOK.Location = new System.Drawing.Point(816, 627);
 			this.buttonOK.Name = "buttonOK";
 			this.buttonOK.Size = new System.Drawing.Size(75, 23);
-			this.buttonOK.TabIndex = 3;
+			this.buttonOK.TabIndex = 1;
 			this.buttonOK.Text = "OK";
 			this.buttonOK.UseVisualStyleBackColor = true;
 			// 
-			// editTitleExpression
+			// label5
 			// 
-			this.editTitleExpression.AcceptsTab = true;
-			this.editTitleExpression.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-						| System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
-			this.editTitleExpression.DetectUrls = false;
-			this.editTitleExpression.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.editTitleExpression.Location = new System.Drawing.Point(0, 22);
-			this.editTitleExpression.MaxLength = 65535;
-			this.editTitleExpression.Name = "editTitleExpression";
-			this.editTitleExpression.Size = new System.Drawing.Size(960, 169);
-			this.editTitleExpression.TabIndex = 0;
-			this.editTitleExpression.TabStopChars = 16;
-			this.editTitleExpression.Text = "";
+			this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.label5.AutoSize = true;
+			this.label5.Location = new System.Drawing.Point(444, 4);
+			this.label5.Name = "label5";
+			this.label5.Size = new System.Drawing.Size(149, 13);
+			this.label5.TabIndex = 13;
+			this.label5.Text = "Warnings/unknown variables:";
+			// 
+			// labelWarnings
+			// 
+			this.labelWarnings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.labelWarnings.AutoSize = true;
+			this.labelWarnings.Location = new System.Drawing.Point(599, 4);
+			this.labelWarnings.Name = "labelWarnings";
+			this.labelWarnings.Size = new System.Drawing.Size(13, 13);
+			this.labelWarnings.TabIndex = 14;
+			this.labelWarnings.Text = "0";
 			// 
 			// TitleSetupEditor
 			// 
@@ -232,6 +335,7 @@ namespace VSWindowTitleChanger
 			this.splitMain.Panel1.PerformLayout();
 			this.splitMain.Panel2.ResumeLayout(false);
 			this.splitMain.ResumeLayout(false);
+			this.panelExpressionEditor.ResumeLayout(false);
 			this.splitVariables.Panel1.ResumeLayout(false);
 			this.splitVariables.Panel1.PerformLayout();
 			this.splitVariables.Panel2.ResumeLayout(false);
@@ -244,7 +348,6 @@ namespace VSWindowTitleChanger
 		#endregion
 
 		private System.Windows.Forms.SplitContainer splitMain;
-		private ColoredRichTextBox editTitleExpression;
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.SplitContainer splitVariables;
 		private System.Windows.Forms.TextBox titleOrCompileError;
@@ -258,6 +361,15 @@ namespace VSWindowTitleChanger
 		private System.Windows.Forms.Button buttonOK;
 		private System.Windows.Forms.Button buttonSave;
 		private System.Windows.Forms.ColumnHeader columnVariableType;
+		private System.Windows.Forms.Panel panelExpressionEditor;
+		private ExpressionTextBox editTitleExpression;
+		private RichTextBoxLineNumbers lineNumbers;
+		private System.Windows.Forms.Label label3;
+		private System.Windows.Forms.Label label4;
+		private System.Windows.Forms.Label labelColumn;
+		private System.Windows.Forms.Label labelLine;
+		private System.Windows.Forms.Label labelWarnings;
+		private System.Windows.Forms.Label label5;
 
 
 	}

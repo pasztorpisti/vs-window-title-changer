@@ -109,11 +109,12 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 	class Variable : Expression
 	{
-		public Variable(string name, int position)
+		public Variable(string name, int position, int length)
 			: base(null)
 		{
 			m_Name = name.ToLower();
 			m_Position = position;
+			m_Length = length;
 		}
 
 		public override Value Evaluate(IEvalContext ctx)
@@ -136,9 +137,11 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 		public string Name { get { return m_Name; } }
 		public int Position { get { return m_Position; } }
+		public int Length { get { return m_Length; } }
 
-		private string m_Name;
-		private int m_Position;
+		string m_Name;
+		int m_Position;
+		int m_Length;
 	}
 
 

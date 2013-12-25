@@ -8,6 +8,7 @@ using EnvDTE80;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using VSWindowTitleChanger.ExpressionEvaluator;
+using System.Windows.Forms;
 
 namespace VSWindowTitleChanger
 {
@@ -40,6 +41,24 @@ namespace VSWindowTitleChanger
 		{
 			Debug.Assert(m_Globals != null);
 			return m_Globals;
+		}
+
+		public delegate void Job();
+
+
+		class UIThreadDispatcher : UserControl
+		{
+			public UIThreadDispatcher()
+			{
+				CreateHandle();
+			}
+		}
+		static Control m_UIThreadDispatcher = new UIThreadDispatcher();
+
+		// Poor man's UI Thread Dispatcher for framework v2
+		public static void BeginInvokeOnUIThread(Job action)
+		{
+			m_UIThreadDispatcher.BeginInvoke(action);
 		}
 
 		public TitleSetup TitleSetup
@@ -206,6 +225,7 @@ namespace VSWindowTitleChanger
 
 			var_value_setter.SetVariable("wnd_minimized", m_Package.VSMainWindow.Minimized);
 			var_value_setter.SetVariable("wnd_foreground", m_Package.VSMainWindow.IsForegroundWindow());
+			var_value_setter.SetVariable("app_active", m_Package.VSMainWindow.IsAppActive);
 
 			bool debugging = false;
 			string debug_mode = "";
@@ -303,6 +323,15 @@ namespace VSWindowTitleChanger
 					vs_instance_info.multiple_instances = true;
 				}
 			}
+		}
+
+		public EvalContext CreateFreshEvalContext()
+		{
+			PackageGlobals.VSMultiInstanceInfo multi_instance_info;
+			GetVSMultiInstanceInfo(out multi_instance_info);
+			EvalContext eval_ctx = new EvalContext();
+			SetVariableValuesFromIDEState(eval_ctx, multi_instance_info);
+			return eval_ctx;
 		}
 
 		void AddFilePathVars(IVariableValueSetter var_value_setter, ref string path, bool user_forward_slashes, string var_name_prefix)
