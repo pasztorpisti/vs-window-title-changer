@@ -11,6 +11,9 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 		OpUpcase,
 		OpLocase,
 		OpLcap,
+		OpBool,
+		OpString,
+		OpBackslashize,
 
 		OpContains,
 		OpStartsWith,
@@ -59,6 +62,9 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 				case TokenType.OpUpcase: return "\"upcase\"";
 				case TokenType.OpLocase: return "\"locase\"";
 				case TokenType.OpLcap: return "\"lcap\"";
+				case TokenType.OpBool: return "\"bool\"";
+				case TokenType.OpString: return "\"string\"";
+				case TokenType.OpBackslashize: return "\"backslashize\"";
 				case TokenType.OpContains: return "\"contains\"";
 				case TokenType.OpStartsWith: return "\"startswith\"";
 				case TokenType.OpEndsWith: return "\"endswith\"";
@@ -301,6 +307,12 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 					return SetNextToken(TokenType.OpLocase, variable, start_pos, variable.Length);
 				case "lcap":
 					return SetNextToken(TokenType.OpLcap, variable, start_pos, variable.Length);
+				case "bool":
+					return SetNextToken(TokenType.OpBool, variable, start_pos, variable.Length);
+				case "string":
+					return SetNextToken(TokenType.OpString, variable, start_pos, variable.Length);
+				case "backslashize":
+					return SetNextToken(TokenType.OpBackslashize, variable, start_pos, variable.Length);
 				case "contains":
 					return SetNextToken(TokenType.OpContains, variable, start_pos, variable.Length);
 				case "startswith":
