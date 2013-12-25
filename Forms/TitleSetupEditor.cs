@@ -158,7 +158,7 @@ namespace VSWindowTitleChanger
 					lvi.Font = editTitleExpression.Font;
 					ListViewItem.ListViewSubItem lvsi = lvi.SubItems.Add(val.ToString());
 					lvsi.Font = lvi.Font;
-					lvsi = lvi.SubItems.Add(val.GetType().ToString());
+					lvsi = lvi.SubItems.Add(val.GetType().ToString().ToLower());
 					lvsi.Font = lvi.Font;
 					listVariables.Items.Add(lvi);
 					m_VariableNameToLVI[name] = lvi;
@@ -168,7 +168,7 @@ namespace VSWindowTitleChanger
 					Value val = m_Variables[name];
 					ListViewItem lvi = m_VariableNameToLVI[name];
 					lvi.SubItems[1].Text = val.ToString();
-					lvi.SubItems[2].Text = val.GetType().ToString();
+					lvi.SubItems[2].Text = val.GetType().ToString().ToLower();
 				}
 			}
 #endif
