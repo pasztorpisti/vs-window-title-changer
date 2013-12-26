@@ -459,8 +459,18 @@ namespace VSWindowTitleChanger
 			set
 			{
 				base.Text = value;
-				// TODO: we could also put this change into the undo buffer...
-				//DetectAndSaveChange();
+
+				UndoEntry entry = new UndoEntry();
+				entry.Id = m_NextUndoEntryId++;
+				entry.PrevCaretPos = m_PrevSelStart + m_PrevSelLength;
+				entry.NewCaretPos = 0;
+				entry.Pos = 0;
+				entry.CutText = m_PrevText==null ? "" : m_PrevText;
+				entry.PastedText = value;
+				m_UndoBuffer.AddChange(entry);
+				if (UndoEntryAdded != null)
+					UndoEntryAdded(entry);
+
 				ClearUndo();
 			}
 		}
