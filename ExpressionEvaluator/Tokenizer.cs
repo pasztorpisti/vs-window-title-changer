@@ -32,6 +32,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 		Variable,
 
 		Ternary,
+		TernarySeparator,
 
 		If,
 		Else,
@@ -85,6 +86,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 				case TokenType.OpenBracket: return "\"(\"";
 				case TokenType.CloseBracket: return "\")\"";
 				case TokenType.Ternary: return "\"?\"";
+				case TokenType.TernarySeparator: return "\":\"";
 				case TokenType.EOF: return "<EOF>";
 				default:
 					Debug.Assert(false, "Unhandled TokenType!");
@@ -224,6 +226,8 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 					return SetNextToken(TokenType.CloseBracket, 1);
 				case '?':
 					return SetNextToken(TokenType.Ternary, 1);
+				case ':':
+					return SetNextToken(TokenType.TernarySeparator, 1);
 				case '&':
 					if (Lookahead(1) == '&')
 						return SetNextToken(TokenType.OpAnd, 2);

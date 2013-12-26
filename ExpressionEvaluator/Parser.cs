@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 namespace VSWindowTitleChanger.ExpressionEvaluator
 {
 	// Operators, higher precedence first (you can use parentheses to modify the evaluation order):
-	// high precedence ternary (cond_value?true_operand)
 	// =~ !~                                            string regex match and not match (case insensitive)
 	// not ! upcase locase lcap bool str backslashize   logical not, convert string to uppercase, convert string to lowercase, convert string to have a leading capital
 	//                                                  convert to bool, convert to string, convert to string if needed and replace all '/' chars to '\' chars.
@@ -15,7 +14,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// and && &                                         logical and
 	// xor ^                                            logical xor
 	// or || |                                          logical or
-	// low precedence ternary (if-else)
+	// low precedence ternary ?:
 	//
 	// If both operands of == or != have string type then these perform string comparison.
 	// If one of the operands is bool and the other is string then the string is automatically
@@ -84,15 +83,14 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 	// Grammar:
 	// Expression ->				LowPrecedenceTernary
-	// LowPrecedenceTernary ->		OpOr "if" OpOr "else" OpOr | OpOr "if" OpOr
+	// LowPrecedenceTernary ->		OpOr "?" OpOr ":" OpOr | OpOr "?" OpOr
 	// OpOr ->						OpXor ( "or" OpXor )*
 	// OpXor ->						OpAnd ( "xor" OpAnd )*
 	// OpAnd ->						OpCompare ( "and" OpCompare )*
 	// OpCompare ->					OpSubstring ( ( "==" | "!=" ) OpSubstring )*
 	// OpSubstring ->				OpConcat ( ( "contains" | "startswith" | "endswith" ) OpConcat )*
 	// OpConcat ->					OpRegex ( "+" OpRegex )*
-	// OpRegex ->					HighPrecedenceTernary ( ( "=~" | "!~" ) Const-HighPrecedenceTernary )
-	// HighPrecedenceTernary ->		OpUnary "?" HighPrecedenceTernary
+	// OpRegex ->					OpUnary ( ( "=~" | "!~" ) Const-Unary )
 	// OpUnary ->					( "not" | "upcase" | "locase" | "lcap" ) OpUnary | Value
 	// Value ->						StringLiteral | Variable | BracketExpression | IfElse
 	// IfElse ->					"if" BracketExpression BraceExpression "else" ( BraceExpression | IfElse )
@@ -122,14 +120,14 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 		public int ErrorPos { get { return m_ErrorPos; } }
 		public string ErrorMessage { get { return m_ErrorMessage; } }
 
-		private string m_InputText;
-		private int m_ErrorPos;
-		private string m_ErrorMessage;
+		string m_InputText;
+		int m_ErrorPos;
+		string m_ErrorMessage;
 	}
 
 	class ParserException_ExpectedTokens : ParserException
 	{
-		private static string TokenTypesToString(TokenType[] token_types)
+		static string TokenTypesToString(TokenType[] token_types)
 		{
 			string s = "";
 			foreach (TokenType token_type in token_types)
@@ -148,7 +146,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 		}
 
 		public TokenType[] ExpectedTokenTypes { get { return m_ExpectedTokenTypes; } }
-		private TokenType[] m_ExpectedTokenTypes;
+		TokenType[] m_ExpectedTokenTypes;
 	}
 
 
@@ -182,23 +180,23 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 		public string Text { get { return m_Tokenizer.Text; } }
 		public int Pos { get { return m_Tokenizer.Pos; } }
 
-		private Expression Parse_Expression()
+		Expression Parse_Expression()
 		{
 			return Parse_LowPrecedenceTernary();
 		}
 
 
-		private Value m_DefaultValue = new StringValue("");
+		Value m_DefaultValue = new StringValue("");
 
-		private Expression Parse_LowPrecedenceTernary()
+		Expression Parse_LowPrecedenceTernary()
 		{
 			Expression expr = Parse_OpOr();
-			while (m_Tokenizer.PeekNextToken().type == TokenType.If)
+			while (m_Tokenizer.PeekNextToken().type == TokenType.Ternary)
 			{
 				m_Tokenizer.ConsumeNextToken();
 				Expression cond_expr = Parse_OpOr();
 				Expression false_expr;
-				if (m_Tokenizer.PeekNextToken().type == TokenType.Else)
+				if (m_Tokenizer.PeekNextToken().type == TokenType.TernarySeparator)
 				{
 					m_Tokenizer.ConsumeNextToken();
 					false_expr = Parse_OpOr();
@@ -212,7 +210,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			return expr;
 		}
 
-		private Expression Parse_OpOr()
+		Expression Parse_OpOr()
 		{
 			Expression expr = Parse_OpXor();
 			while (m_Tokenizer.PeekNextToken().type == TokenType.OpOr)
@@ -223,7 +221,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			return expr;
 		}
 
-		private Expression Parse_OpXor()
+		Expression Parse_OpXor()
 		{
 			Expression expr = Parse_OpAnd();
 			while (m_Tokenizer.PeekNextToken().type == TokenType.OpXor)
@@ -234,7 +232,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			return expr;
 		}
 
-		private Expression Parse_OpAnd()
+		Expression Parse_OpAnd()
 		{
 			Expression expr = Parse_OpCompare();
 			while (m_Tokenizer.PeekNextToken().type == TokenType.OpAnd)
@@ -245,7 +243,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			return expr;
 		}
 
-		private Expression Parse_OpCompare()
+		Expression Parse_OpCompare()
 		{
 			Expression expr = Parse_OpSubstring();
 			for (;;)
@@ -261,7 +259,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			}
 		}
 
-		private Expression Parse_OpSubstring()
+		Expression Parse_OpSubstring()
 		{
 			Expression expr = Parse_OpConcat();
 			for (;;)
@@ -287,7 +285,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			}
 		}
 
-		private Expression Parse_OpConcat()
+		Expression Parse_OpConcat()
 		{
 			Expression expr = Parse_OpRegex();
 			while (m_Tokenizer.PeekNextToken().type == TokenType.OpConcat)
@@ -298,9 +296,9 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			return expr;
 		}
 
-		private Expression Parse_OpRegex()
+		Expression Parse_OpRegex()
 		{
-			Expression expr = Parse_HighPrecedenceTernary();
+			Expression expr = Parse_OpUnary();
 
 			for (;;)
 			{
@@ -311,7 +309,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				m_Tokenizer.ConsumeNextToken();
 
 				Token token = m_Tokenizer.PeekNextToken();
-				Expression regex_expr = Parse_HighPrecedenceTernary();
+				Expression regex_expr = Parse_OpUnary();
 				Value const_val = regex_expr.EliminateConstSubExpressions();
 				if (const_val == null)
 					throw new ParserException(m_Tokenizer.Text, token.pos, "Expected a constant expression that evaluates into a regex string. This expression isn't constant.");
@@ -333,18 +331,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			return expr;
 		}
 
-		private Expression Parse_HighPrecedenceTernary()
-		{
-			Expression expr = Parse_OpUnary();
-			if (m_Tokenizer.PeekNextToken().type == TokenType.Ternary)
-			{
-				m_Tokenizer.ConsumeNextToken();
-				return new Ternary(expr, Parse_HighPrecedenceTernary(), m_DefaultValue);
-			}
-			return expr;
-		}
-
-		private Expression Parse_OpUnary()
+		Expression Parse_OpUnary()
 		{
 			TokenType token_type = m_Tokenizer.PeekNextToken().type;
 			switch (token_type)
@@ -375,7 +362,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			}
 		}
 
-		private Expression Parse_Value()
+		Expression Parse_Value()
 		{
 			Token token = m_Tokenizer.PeekNextToken();
 			switch (token.type)
@@ -424,7 +411,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			return new Ternary(cond_expr, true_expr, false_expr);
 		}
 
-		private Expression Parse_BracketExpression()
+		Expression Parse_BracketExpression()
 		{
 			Expect(TokenType.OpenBracket);
 			Expression expr = Parse_Expression();
