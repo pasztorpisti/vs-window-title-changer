@@ -21,7 +21,7 @@ namespace VSWindowTitleChanger
 		ExpressionCompilerJob m_DelayedCompileErrorJob;
 		DateTime m_DelayedCompileErrorDeadline;
 
-		enum ECompileResultHandling
+		public enum ECompileResultHandling
 		{
 			Success,
 			DelayedError,
@@ -29,12 +29,22 @@ namespace VSWindowTitleChanger
 		}
 		ECompileResultHandling m_CompileResultHandling = ECompileResultHandling.Success;
 
-
 		IVariableValueResolver m_CompileTimeConstants;
 
 		TextBox m_CompileResultTextBox;
 
 		Pen m_UnderlinePen;
+
+		public ECompileResultHandling CompileResultHandling { get { return m_CompileResultHandling; } }
+		public int WarningCount
+		{
+			get
+			{
+				if (m_CompileResultHandling != ECompileResultHandling.Success || m_PrevFinishedJob == null)
+					return 0;
+				return m_PrevFinishedJob.SortedUnresolvedVariables.Count;
+			}
+		}
 
 		public ExpressionTextBox ExpressionTextBox
 		{
