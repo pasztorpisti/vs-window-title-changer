@@ -276,6 +276,27 @@ namespace VSWindowTitleChanger
 
 		private void buttonOK_Click(object sender, EventArgs e)
 		{
+			if (m_BackgroundExpressionCompiler.CompileResultHandling != BackgroundExpressionCompiler.ECompileResultHandling.Success)
+			{
+				DialogResult res = MessageBox.Show(this,
+					"The given expression contains compile errors so it isn't usable.\n" +
+					"If you save this then VS will always show its default title.\n" +
+					"Do you really want to save and use this expression?",
+					"ERROR!", MessageBoxButtons.YesNo, MessageBoxIcon.Stop);
+				if (res == DialogResult.No)
+					return;
+			}
+			else if (m_BackgroundExpressionCompiler.WarningCount > 0)
+			{
+				DialogResult res = MessageBox.Show(this,
+					"The given expression contains warnings (unresolved variables).\n" +
+					"These variables will evaluate to empty strings.\n" +
+					"Do you really want to save and use this expression?",
+					"Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
+				if (res == DialogResult.No)
+					return;
+			}
+
 			m_ClosingWithOK = true;
 			SaveTitleSetup();
 			Close();
