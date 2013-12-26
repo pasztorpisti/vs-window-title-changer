@@ -48,7 +48,7 @@ namespace VSWindowTitleChanger
 			this.ClientSize = new System.Drawing.Size(696, 472);
 			this.Controls.Add(this.helpBrowser);
 			this.Name = "TitleSetupEditorHelp";
-			this.Text = "TitleSetupEditorHelp";
+			this.Text = "Help: Title Setup";
 			this.ResumeLayout(false);
 
 		}
