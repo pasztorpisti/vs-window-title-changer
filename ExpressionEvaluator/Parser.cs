@@ -194,7 +194,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			while (m_Tokenizer.PeekNextToken().type == TokenType.Ternary)
 			{
 				m_Tokenizer.ConsumeNextToken();
-				Expression cond_expr = Parse_OpOr();
+				Expression true_expr = Parse_OpOr();
 				Expression false_expr;
 				if (m_Tokenizer.PeekNextToken().type == TokenType.TernarySeparator)
 				{
@@ -205,7 +205,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				{
 					false_expr = m_DefaultValue;
 				}
-				expr = new Ternary(cond_expr, expr, false_expr);
+				expr = new Ternary(expr, true_expr, false_expr);
 			}
 			return expr;
 		}
