@@ -477,6 +477,20 @@ namespace VSWindowTitleChanger
 			else if (e.KeyChar == first_char)
 			{
 				bool double_char = line_idx >= line.Length || Char.IsWhiteSpace(line[line_idx]);
+
+				if (double_char && first_char == '"')
+				{
+					string txt = GetTextRange(0, char_index);
+					int quote_count = 0;
+					foreach (char c in txt)
+					{
+						if (c == '"')
+							++quote_count;
+					}
+					if (0 != (quote_count & 1))
+						double_char = false;
+				}
+
 				if (double_char)
 				{
 					// We pause and resume painting because after text modification we change the cursor position too
