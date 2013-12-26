@@ -9,6 +9,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using VSWindowTitleChanger.ExpressionEvaluator;
 using System.Windows.Forms;
+using System.Text;
 
 namespace VSWindowTitleChanger
 {
@@ -156,6 +157,38 @@ namespace VSWindowTitleChanger
 			}
 		}
 
+		[DllImport("user32.dll")]
+		static extern IntPtr GetActiveWindow();
+
+		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+		static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+		static string GetWindowClassName(IntPtr hWnd)
+		{
+			// Pre-allocate 256 characters, since this is the maximum class name length.
+			StringBuilder class_name = new StringBuilder(256);
+			//Get the window class name
+			int ret = GetClassName(hWnd, class_name, class_name.Capacity);
+			if (ret <= 0)
+				return "";
+			return class_name.ToString();
+		}
+
+		[DllImport("user32.dll", CharSet = CharSet.Unicode)]
+		private static extern int GetWindowTextLength(IntPtr hWnd);
+
+		[DllImport("user32.dll", CharSet = CharSet.Unicode)]
+		private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+		private static string GetWindowText(IntPtr hWnd)
+		{
+			int length = GetWindowTextLength(hWnd);
+			StringBuilder sb = new StringBuilder(length + 1);
+			GetWindowText(hWnd, sb, sb.Capacity);
+			return sb.ToString();
+		}
+
+
 		void SetVariableValuesFromIDEState(IVariableValueSetter var_value_setter, VSMultiInstanceInfo multi_instance_info)
 		{
 			DTE2 dte = (DTE2)m_Package.GetInterface(typeof(DTE));
@@ -256,6 +289,17 @@ namespace VSWindowTitleChanger
 
 			var_value_setter.SetVariable("multi_instances", multi_instance_info.multiple_instances);
 			var_value_setter.SetVariable("multi_instances_same_ver", multi_instance_info.multiple_instances_same_version);
+
+			string active_wnd_title = "";
+			string active_wnd_class = "";
+			IntPtr active_wnd = GetActiveWindow();
+			if (active_wnd != IntPtr.Zero)
+			{
+				active_wnd_title = GetWindowText(active_wnd);
+				active_wnd_class = GetWindowClassName(active_wnd);
+			}
+			var_value_setter.SetVariable("active_wnd_title", active_wnd_title);
+			var_value_setter.SetVariable("active_wnd_class", active_wnd_class);
 		}
 
 

@@ -40,6 +40,8 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	//                               use double quotation marks: "a double quote in the string: "" <- here"
 	//
 	// Builtin variable names:
+	// active_wnd_class              string: the classname of the active VS window. Empty string if the currently focused foreground window isn't a window of VS.
+	// active_wnd_title              string: the title of the active VS window. Empty string if the currently focused foreground window isn't a window of VS.
 	// sln_groupname                 string: a captured named group of the solution pathname regex. an empty string if the group doesn't exist.
 	// sln_open                      bool: true if we have a solution open
 	// sln_path                      string: the full pathname of the solution file
