@@ -63,7 +63,7 @@ namespace VSWindowTitleChanger
 			if (end_pos == end_line_first_char_idx)
 				--end_line;
 			if (start_line > end_line)
-				return;
+				end_line = start_line;
 			if (end_pos == end_line_first_char_idx)
 				end_line_first_char_idx = m_TextBox.GetLineStartCharIndexFromLineNumber(end_line);
 			int end_line_length = m_TextBox.GetLineLengthFromCharIndex(end_line_first_char_idx);
