@@ -38,14 +38,14 @@ namespace VSWindowTitleChanger
 			this.helpBrowser.Location = new System.Drawing.Point(0, 0);
 			this.helpBrowser.MinimumSize = new System.Drawing.Size(20, 20);
 			this.helpBrowser.Name = "helpBrowser";
-			this.helpBrowser.Size = new System.Drawing.Size(696, 472);
+			this.helpBrowser.Size = new System.Drawing.Size(1111, 708);
 			this.helpBrowser.TabIndex = 0;
 			// 
 			// TitleSetupEditorHelp
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(696, 472);
+			this.ClientSize = new System.Drawing.Size(1111, 708);
 			this.Controls.Add(this.helpBrowser);
 			this.Name = "TitleSetupEditorHelp";
 			this.Text = "Help: Title Setup";

@@ -23,8 +23,11 @@ namespace VSWindowTitleChanger
 
 		private void helpBrowser_Navigating(object sender, WebBrowserNavigatingEventArgs e)
 		{
-			e.Cancel = true;
-			Process.Start(e.Url.ToString());
+			if (e.Url.Host.Length != 0)
+			{
+				e.Cancel = true;
+				Process.Start(e.Url.ToString());
+			}
 		}
 
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
