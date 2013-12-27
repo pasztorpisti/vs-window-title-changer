@@ -27,6 +27,8 @@ namespace VSWindowTitleChanger
 		{
 			InitializeComponent();
 
+			CheckFont();
+
 			VisibleChanged += TitleSetupEditor_VisibleChanged;
 			Shown += TitleSetupEditor_Shown;
 			FormClosing += TitleSetupEditor_FormClosing;
@@ -55,6 +57,24 @@ namespace VSWindowTitleChanger
 #endif
 		}
 
+		void CheckFont()
+		{
+			// If the Consolas font is not available then we try to fallback to Lucida Console
+			// Consolas is available since Vista/VS2010 while Lucida Console is available since
+			// Plus95 and Win98 but Consolas looks nicer with cleartype.
+
+			System.Drawing.Font new_font = null;
+			if (!editTitleExpression.Font.Name.Equals("Consolas", StringComparison.OrdinalIgnoreCase))
+			{
+				new_font = new System.Drawing.Font("Lucida Console", 9f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
+			}
+
+			if (new_font != null)
+			{
+				editTitleExpression.Font = new_font;
+				titleOrCompileError.Font = new_font;
+			}
+		}
 
 		public TitleSetup TitleSetup
 		{
