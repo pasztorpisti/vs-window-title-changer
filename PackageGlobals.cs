@@ -337,6 +337,8 @@ namespace VSWindowTitleChanger
 
 			IMoniker[] monikers = new IMoniker[1];
 			IntPtr num_fetched = IntPtr.Zero;
+			int dte_count = 0;
+			int dte_count_our_version = 0;
 			while (VSConstants.S_OK == moniker_enumerator.Next(1, monikers, num_fetched))
 			{
 				IBindCtx ctx;
@@ -355,23 +357,18 @@ namespace VSWindowTitleChanger
 				DTE2 dte = com_object as DTE2;
 				if (dte != null)
 				{
+					++dte_count;
 					Match m = m_DTEComObjectNameRegex.Match(name);
 					if (m.Success)
 					{
 						Group g = m.Groups["dte_version"];
-						if (g.Success)
-						{
-							if (g.Value == our_dte_version)
-							{
-								vs_instance_info.multiple_instances = true;
-								vs_instance_info.multiple_instances_same_version = true;
-								return;
-							}
-						}
+						if (g.Success && g.Value == our_dte_version)
+							++dte_count_our_version;
 					}
-					vs_instance_info.multiple_instances = true;
 				}
 			}
+			vs_instance_info.multiple_instances = dte_count > 1;
+			vs_instance_info.multiple_instances_same_version = dte_count_our_version > 1;
 		}
 
 		public EvalContext CreateFreshEvalContext()
