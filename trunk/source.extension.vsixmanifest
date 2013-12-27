@@ -8,6 +8,7 @@
     <Locale>1033</Locale>
     <License>License.txt</License>
     <Icon>VSWindowTitleChanger.png</Icon>
+    <PreviewImage>VSWindowTitleChanger_Preview.png</PreviewImage>
     <InstalledByMsi>false</InstalledByMsi>
     <SupportedProducts>
       <VisualStudio Version="10.0">
