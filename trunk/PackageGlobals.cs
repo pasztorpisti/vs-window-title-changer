@@ -220,7 +220,15 @@ namespace VSWindowTitleChanger
 					startup_project = dte.Solution.Item(projects.GetValue(0));
 			}
 
-			Document active_document = dte.ActiveDocument;
+			Document active_document;
+			try
+			{
+				active_document = dte.ActiveDocument;
+			}
+			catch
+			{
+				active_document = null;
+			}
 
 			AddFilePathVars(var_value_setter, ref solution_path, SlashPathSeparator, "sln_");
 			var_value_setter.SetVariable("sln_open", solution_path.Length > 0);
