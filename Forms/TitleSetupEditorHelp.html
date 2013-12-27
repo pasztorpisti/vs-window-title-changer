@@ -1,9 +1,602 @@
 ﻿<html>
 <head>
-	<title>Visual Studio Window Title Changer Help</title>
+	<title>Help: Title Changer Expressions</title>
+	<style type="text/css">
+		body {
+			font-family: "Arial";
+			font-size: 12pt;
+		}
+		a {
+			text-decoration: none;
+		}
+		table {
+			border-collapse: collapse;
+			margin-top: 10px;
+			margin-bottom: 10px;
+		}
+		th {
+			text-align: left;
+			padding-left: 5px;
+			padding-right: 10px;
+		}
+		td {
+			horizontal-align: left;
+			vertical-align: top;
+			padding-top: 3px;
+			padding-bottom: 3px;
+			padding-left: 5px;
+			padding-right: 10px;
+		}
+		td pre {
+			margin: 0px;
+		}
+		td.var_name {
+			font-family: "Consolas", "Lucida Console", monospace;
+			font-size: 11pt;
+			color: #404040;
+		}
+		table.normal th {
+			background-color: lightgrey;
+		}
+		table.normal, table.normal th, table.normal td {
+			border: 1px solid lightgrey;
+		}
+		pre.expression {
+			font-family: "Consolas", "Lucida Console", monospace;
+			font-size: 11pt;
+			color: #404040;
+		}
+		.expr_operator {
+			font-family: "Consolas", "Lucida Console", monospace;
+			font-size: 11pt;
+			color: #404040;
+		}
+		.title_text {
+			font-family: "Consolas", "Lucida Console", monospace;
+			font-size: 11pt;
+			color: #303030;
+		}
+	</style>
 </head>
 <body>
-	<h1>Visual Studio Window Title Changer Help</h1>
-	<a href="http://visualstudiogallery.msdn.microsoft.com/2e8ebfe4-023f-4c4d-9b7a-d05bbc5cb239">The Visual Studio Gallery page of the extension</a>
+<h1>Tutorial for the Title Changer Visual Studio extension</h1>
+<ol class="toc">
+	<li><a href="#basic_usage">Basic usage</a></li>
+	<li><a href="#language_basics">Expression language basics</a></li>
+	<li><a href="#operators">Expression language operators and their precedence</a></li>
+	<li><a href="#variables">Expression language variables and their description</a></li>
+	<li><a href="#regex_magic">Regex magic</a>
+		<ol>
+			<li><a href="#string_slicing">String slicing</a></li>
+		</ol>
+	</li>
+	<li><a href="#examples">Examples</a></li>
+	<li><a href="#general_info">General Info about the extension</a></li>
+</ol>
+<a name="basic_usage"></a>
+<h2>Basic usage</h2>
+<p>
+As a first step open the setup window of the Title Changer extension. Go to <b>Tools/Options/VS Window Title Changer</b> and then select the <b>Window Title Patterns</b> option and press its <b>"..."</b> button. The setup window of the extension should appear as a result, it has a TextBox in which you can enter your window title expression.
+</p>
+Simply setting the titlebar to a constant string:
+<table class="expression">
+	<tr>
+		<td>Expression</td>
+		<td><pre class="expression">&quot;This is my constant VS title string&quot;</pre></td>
+	</tr>
+	<tr>
+		<td>Titlebar</td>
+		<td><pre class="title_text">This is my constant VS title string</pre></td>
+	</tr>
+</table>
+If you want to include a quotation mark in your text then put two quotation marks into the string:
+<table class="expression">
+	<tr>
+		<td>Expression</td>
+		<td><pre class="expression">&quot;Quote from Hannibal: &quot;&quot;I shall either find a way or make one.&quot;&quot;&quot;</pre></td>
+	</tr>
+	<tr>
+		<td>Titlebar</td>
+		<td><pre class="title_text">Quote from Hannibal: &quot;I shall either find a way or make one.&quot;</pre></td>
+	</tr>
+</table>
+You can use any character inside a string except newline and of course you have to escape quotation marks by using double quotation marks.
+
+<h3>Taking it to the next level</h3>
+The extension provides you with a set of variables that contain some info about the state of Visual Studio. You can see the list of these variables along with their actual value in the listview at the bottom of the setup window. You can include the value of these variables in your titlebar.
+<table class="expression">
+	<tr>
+		<td>Expression</td>
+		<td><pre class="expression">sln_filename + &quot; - Visual Studio &quot; + vs_version + &quot; &quot; + vs_edition</pre></td>
+	</tr>
+	<tr>
+		<td>Titlebar</td>
+		<td><pre class="title_text">Test - Visual Studio 2010 Ultimate</pre></td>
+	</tr>
+	<tr>
+		<td><pre class="expression">var sln_filename</pre></td>
+		<td><pre class="title_text">Test</pre></td>
+	</tr>
+</table>
+As you can see you can use the + operator to concatenate strings and the values of variables. The only problem with the above example is that the sln_filename can be an empty string if there is no solution open and in that case your VS titlebar with this expression evaluates to the following:
+<table class="expression">
+	<tr>
+		<td>Expression</td>
+		<td><pre class="expression">sln_filename + &quot; - Visual Studio &quot; + vs_version + &quot; &quot; + vs_edition</pre></td>
+	</tr>
+	<tr>
+		<td>Titlebar</td>
+		<td><pre class="title_text"> - Visual Studio 2010 Ultimate</pre></td>
+	</tr>
+	<tr>
+		<td><pre class="expression">var sln_filename</pre></td>
+		<td><pre class="title_text"></pre></td>
+	</tr>
+</table>
+There are many ways to deal with this but in either case we have to use a conditional expression. Here are a few solutions:
+<h4>Solution #1</h4>
+<table class="expression">
+	<tr>
+		<td>Expression</td>
+		<td><pre class="expression">(sln_filename ? sln_filename : &quot;&lt;no solution&gt;&quot;) + <span class="expression_string">&quot; - Visual Studio &quot;</span> + vs_version + &quot; &quot; + vs_edition</pre></td>
+	</tr>
+	<tr>
+		<td>Titlebar</td>
+		<td><pre class="title_text">&lt;no solution&gt; - Visual Studio 2010 Ultimate</pre></td>
+	</tr>
+	<tr>
+		<td><pre class="expression">var sln_filename</pre></td>
+		<td><pre class="title_text"></pre></td>
+	</tr>
+</table>
+<h4>Solution #2</h4>
+<table class="expression">
+	<tr>
+		<td>Expression</td>
+		<td><pre class="expression">if (sln_filename) {
+    sln_filename + &quot; - Visual Studio &quot; + vs_version + &quot; &quot; + vs_edition
+} else {
+    // do whatever you want if there is no solution open
+    &quot;Visual Studio &quot; + vs_version + &quot; &quot; + vs_edition
+}
+</pre></td>
+	</tr>
+	<tr>
+		<td>Titlebar</td>
+		<td><pre class="title_text">Visual Studio 2010 Ultimate</pre></td>
+	</tr>
+	<tr>
+		<td><pre class="expression">var sln_filename</pre></td>
+		<td><pre class="title_text"></pre></td>
+	</tr>
+</table>
+<h4>Solution #X</h4>
+Of course these are not the only solutions but the above samples shows well how to deal with issues like this.
+If you need something simple and you are lazy to read the expression language tutorial (that isn't long at all) then you can jump to the <a href="#examples">Examples section</a> to copy paste a template for yourself.
+
+<a name="language_basics"></a>
+<h2>Expression language basics</h2>
+<ul>
+	<li>The expression language of this extension is case insensitive when it comes to comparing string values and matching regular expressions.</li>
+	<li>There are only two types: bool and string. bool has two passible values: true/false. Both conversion from string to bool and conversion from bool to string are possible. Conversion automatically takes place when an operator or language construct expects a specific type but you can explicitly convert a value with the <span class="expr_operator">bool</span> or <span class="expr_operator">string</span> unary operators.
+		<ul>
+			<li>Converting a bool to string results in "true" or "false".</li>
+			<li>Converting a string to bool results in false only if the length of the string is zero.</li>
+		</ul>
+		Most operators except a specific type and automatically convert the type of your values/expressions into the expected type. The only exception is the <span class="expr_operator">==</span> operator that that is smart and performs case insensitive string comparison if both operands are strings, in all other cases it converts both operands to bool and performs bool comparison.
+	</li>
+	<li>Variable names are allowed to contain any unicode characters and '_' and '$'. Since we have only a few predefined constants and variables available (as you will se below) this restriction may look irrelevant but when you start using regex group matching you can optionally name your regex groups and in that case this rule comes handy.</li>
+	<li>If you use a variable that doesn't exist in the given scope then it is treated as a warning and the variable automatically evaluates into an empty string. The expression editor underlines these variables.</li>
+	<li>You can use single-line comments just like in C++/C# by prefixing the comment with //</li>
+</ul>
+<a name="operators"></a>
+<h2>Expression language operators and their precedence</h2>
+Operators are listed top to bottom in descending precedence.
+<table class="normal">
+	<tr>
+		<th>Precedence</th>
+		<th>Operator</th>
+		<th>Description</th>
+	</tr>
+	<tr>
+		<td>1</td>
+		<td><pre class="expression">if (bool_val) {
+    val
+} else {
+    val
+}
+
+if (bool_val) {
+    val
+} else if (bool_val) {
+    val
+} else if ...
+
+} else {
+    val
+}		</pre></td>
+		<td>You can use zero or more else-if branches but the else branch is always required. In this expression language the if-else statement is also an expression and isn't really a flow construct. It is much like a higher precedence ternary (?:) operator. You can for example add the value of two if-else statements however this may look odd and you may not want to exploit this...</td>
+	</tr>
+	<tr>
+		<td rowspan="2">2</td>
+		<td><pre class="expression">string_val =~ string_const</pre></td>
+		<td>Matches string_val against the specified regex. The result is a bool value that is true if the match is successful.</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">string_val !~ string_const</pre></td>
+		<td>Matches string_val against the specified regex. The result is a bool value that is false if the match is successful.</td>
+	</tr>
+	<tr>
+		<td rowspan="7">3</td>
+		<td><pre class="expression">not bool_val
+bool_val</pre></td>
+		<td>Bool not operator.</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">upcase string_val</pre></td>
+		<td>Converts a string to uppercase.</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">locase string_val</pre></td>
+		<td>Converts a string to lowercase.</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">lcap string_val</pre></td>
+		<td>Converts the first character of the string to capital and converts the rest of the string to lowercase.</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">backslashize string_val</pre></td>
+		<td>Replaces all '/' characters to '\' characters in the specified string. Comes handy if you prefer backslashes in pathnames as all of the provided variables contains pathnames with / characters to make it easier to write regex to match them.</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">bool value</pre></td>
+		<td>Converts the specified value to bool. Does nothing if the specified value is already bool. In case of strings it evaluates to false only if the length of the string is zero.</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">string value</pre></td>
+		<td>Converts the specified value to string. Does nothing if the specified value is already string. In case of bool values it evaluates to &quot;true&quot; or &quot;false&quot;.</td>
+	</tr>
+	<tr>
+		<td>4</td>
+		<td><pre class="expression">string_val + string_val</pre></td>
+		<td>String concatenation.</td>
+	</tr>
+	<tr>
+		<td rowspan="3">5</td>
+		<td><pre class="expression">string_val0 contains string_val1</pre></td>
+		<td>Returns true if string_val0 contains string_val1 as a substring. (case insensitive)</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">string_val0 startswith string_val1</pre></td>
+		<td>Returns true if string_val1 is the prefix of string_val0. (case insensitive)</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">string_val0 endswith string_val1</pre></td>
+		<td>Returns true if string_val1 is the postfix of string_val0. (case insensitive)</td>
+	</tr>
+	<tr>
+		<td rowspan="2">6</td>
+		<td><pre class="expression">val0 == val1</pre></td>
+		<td>If both val0 and val1 are strings then returns true if the strings are equal. (case insensitive) If either val0 or val1 is bool then this operator converts both operands to bool values and performs bool comparison.</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">val0 != val1</pre></td>
+		<td>The opposite of the <span class="expr_operator">==</span> operator.</td>
+	</tr>
+	<tr>
+		<td>7</td>
+		<td><pre class="expression">bool_val and bool_val
+bool_val && bool_val
+bool_val & bool_val</pre></td>
+		<td>Bool AND operator.</td>
+	</tr>
+	<tr>
+		<td>8</td>
+		<td><pre class="expression">bool_val xor bool_val
+bool_val ^ bool_val</pre></td>
+		<td>Bool eXclusive OR (XOR) operator.</td>
+	</tr>
+	<tr>
+		<td>9</td>
+		<td><pre class="expression">bool_val or bool_val
+bool_val || bool_val
+bool_val | bool_val</pre></td>
+		<td>Bool OR operator.</td>
+	</tr>
+	<tr>
+		<td>10</td>
+		<td><pre class="expression">bool_val ? val0 : val1
+bool_val ? val0</pre></td>
+		<td>Ternary operator. Evaluates to val0 if bool_val is true otherwise it evaluates to val1. If you omit the optional ":" and val1 then val1 defaults to an empty string.</td>
+	</tr>
+</table>
+
+<a name="variables"></a>
+<h2>Expression language variables and their description</h2>
+<table class="normal">
+	<tr>
+		<th>Name</th>
+		<th>Type</th>
+		<th>Description</th>
+	</tr>
+	<tr>
+		<td class="var_name">active_wnd_class</td>
+		<td class="var_name">string</td>
+		<td>The classname of the active VS window. This is an empty string if the currently focused foreground window isn't a window of VS.</td>
+	</tr>
+	<tr>
+		<td class="var_name">active_wnd_title</td>
+		<td class="var_name">string</td>
+		<td>The title of the active VS window. This is an empty string if the currently focused foreground window isn't a window of VS.</td>
+	</tr>
+	<tr>
+		<td class="var_name">any_doc_dirty</td>
+		<td class="var_name">bool</td>
+		<td>True if any of the open documents/files is modified.</td>
+	</tr>
+	<tr>
+		<td class="var_name">any_proj_dirty</td>
+		<td class="var_name">bool</td>
+		<td>True if any of the project files is modified.</td>
+	</tr>
+	<tr>
+		<td class="var_name">anything_dirty</td>
+		<td class="var_name">bool</td>
+		<td>True if the solution file or any of the project files or any of the open documents is modified.</td>
+	</tr>
+	<tr>
+		<td class="var_name">app_active</td>
+		<td class="var_name">bool</td>
+		<td>True if one of the windows of this VS instance is the foreground window. This is very similar to the wnd_foreground variable that is active only when the foreground window is the VS main window.</td>
+	</tr>
+	<tr>
+		<td class="var_name">Configuration</td>
+		<td class="var_name">string</td>
+		<td>Configuration name or an empty string (false) if there is no active configuration. e.g.: &quot;Release&quot;</td>
+	</tr>
+	<tr>
+		<td class="var_name">debug_mode</td>
+		<td class="var_name">string</td>
+		<td>&quot;&quot; or &quot;Running&quot; or &quot;Debugging&quot;. This is basically an enum. It can be used as a bool (just like the debugging variable) because it is empty string when not debugging.</td>
+	</tr>
+	<tr>
+		<td class="var_name">debugging</td>
+		<td class="var_name">bool</td>
+		<td>True if debugging, false otherwise.</td>
+	</tr>
+	<tr>
+		<td class="var_name">doc_dir</td>
+		<td class="var_name">string</td>
+		<td>Active document directory, there is no trailing path separator char. This is an empty string if we don't have an active document open.</td>
+	</tr>
+	<tr>
+		<td class="var_name">doc_dirty</td>
+		<td class="var_name">bool</td>
+		<td>True if the active document is modified. This is an empty string if we don't have an active document open.</td>
+	</tr>
+	<tr>
+		<td class="var_name">doc_ext</td>
+		<td class="var_name">string</td>
+		<td>The extension of the active document. e.g.: &quot;cpp&quot; or &quot;cs&quot;. This is an empty string if we don't have an active document open.</td>
+	</tr>
+	<tr>
+		<td class="var_name">doc_file</td>
+		<td class="var_name">string</td>
+		<td>Active document filename with extension. e.g.: &quot;test.cpp&quot;.  This is an empty string if we don't have an active document open.</td>
+	</tr>
+	<tr>
+		<td class="var_name">doc_filename</td>
+		<td class="var_name">string</td>
+		<td>Active document filename without extension. e.g.: &quot;test&quot;. This is an empty string if we don't have an active document open.</td>
+	</tr>
+	<tr>
+		<td class="var_name">doc_open</td>
+		<td class="var_name">bool</td>
+		<td>true if we have an open document, an active document</td>
+	</tr>
+	<tr>
+		<td class="var_name">doc_path</td>
+		<td class="var_name">string</td>
+		<td>Full pathname of the active document. This is an empty string if we don't have an active document open.</td>
+	</tr>
+	<tr>
+		<td class="var_name">dte_version</td>
+		<td class="var_name">string</td>
+		<td>The actual numbered version of Visual Studio. e.g.: &quot;10.0&quot; for VS2010</td>
+	</tr>
+	<tr>
+		<td class="var_name">multi_instances</td>
+		<td class="var_name">bool</td>
+		<td>True if at least one other instance of Visual Studio is running simultaneously. The other instances are allowed to be different versions of Visual Studio.</td>
+	</tr>
+	<tr>
+		<td class="var_name">multi_instances_same_ver</td>
+		<td class="var_name">bool</td>
+		<td>True if at least one other Visual Studio instance is running with the same version number as our instance.</td>
+	</tr>
+	<tr>
+		<td class="var_name">orig_title</td>
+		<td class="var_name">string</td>
+		<td>The title text that VS would set if this extension wouldn't be active.</td>
+	</tr>
+	<tr>
+		<td class="var_name">platform</td>
+		<td class="var_name">string</td>
+		<td>Platform name or an empty string (false) if there is no active platform. e.g.: &quot;Win32&quot;</td>
+	</tr>
+	<tr>
+		<td class="var_name">sln_dir</td>
+		<td class="var_name">string</td>
+		<td>Solution directory, there is no trailing path separator char. This is an empty string if we don't have a solution open.</td>
+	</tr>
+	<tr>
+		<td class="var_name">sln_dirty</td>
+		<td class="var_name">bool</td>
+		<td>True if the solution file has been modified.</td>
+	</tr>
+	<tr>
+		<td class="var_name">sln_file</td>
+		<td class="var_name">string</td>
+		<td>The name of the solution file with extension. This is an empty string if we don't have a solution open.</td>
+	</tr>
+	<tr>
+		<td class="var_name">sln_filename</td>
+		<td class="var_name">string</td>
+		<td>The name of the solution file without extension. This is an empty string if we don't have a solution open.</td>
+	</tr>
+	<tr>
+		<td class="var_name">sln_open</td>
+		<td class="var_name">bool</td>
+		<td>True if we have a solution open.</td>
+	</tr>
+	<tr>
+		<td class="var_name">sln_path</td>
+		<td class="var_name">string</td>
+		<td>The full pathname of the open solution. This is an empty string if we don't have a solution open.</td>
+	</tr>
+	<tr>
+		<td class="var_name">startup_proj</td>
+		<td class="var_name">string</td>
+		<td>The name of the project that is selected as the startup project or an empty string if there is no startup project selected.
+		Note that this is usually the same as startup_proj_filename but this can be different if you rename a project in the solution explorer.
+		The rename operation changes this but leaves the project filename unchanged.</td>
+	</tr>
+	<tr>
+		<td class="var_name">startup_proj_dir</td>
+		<td class="var_name">string</td>
+		<td>The directory of the startup project without a trailing path separator char. This is an empty string if we don't have a startup project selected.</td>
+	</tr>
+	<tr>
+		<td class="var_name">startup_proj_dirty</td>
+		<td class="var_name">bool</td>
+		<td>True if the startup project is modified.</td>
+	</tr>
+	<tr>
+		<td class="var_name">startup_proj_ext</td>
+		<td class="var_name">string</td>
+		<td>The extension of the startup project. e.g.: &quot;vcxproj&quot; This is an empty string if we don't have a startup project selected.</td>
+	</tr>
+	<tr>
+		<td class="var_name">startup_proj_file</td>
+		<td class="var_name">string</td>
+		<td>The name of the startup project with extension. This is an empty string if we don't have a startup project selected.</td>
+	</tr>
+	<tr>
+		<td class="var_name">startup_proj_filename</td>
+		<td class="var_name">string</td>
+		<td>The name of the startup project without extension. This is an empty string if we don't have a startup project selected.</td>
+	</tr>
+	<tr>
+		<td class="var_name">startup_proj_path</td>
+		<td class="var_name">string</td>
+		<td>The full pathname of the startup project. This is an empty string if we don't have a startup project selected.</td>
+	</tr>
+	<tr>
+		<td class="var_name">vs_edition</td>
+		<td class="var_name">string</td>
+		<td>The edition of VS. e.g.: &quot;Ultimate&quot;, &quot;Professional&quot;</td>
+	</tr>
+	<tr>
+		<td class="var_name">vs_version</td>
+		<td class="var_name">string</td>
+		<td>Possible values: &quot;2005&quot;, &quot;2008&quot;, &quot;2010&quot;, &quot;2012&quot; or &quot;2013&quot;</td>
+	</tr>
+	<tr>
+		<td class="var_name">wnd_foreground</td>
+		<td class="var_name">bool</td>
+		<td>True if the foreground (focused) window is the VS main window.</td>
+	</tr>
+	<tr>
+		<td class="var_name">wnd_minimized</td>
+		<td class="var_name">bool</td>
+		<td>True if the VS main window is minimized.</td>
+	</tr>
+</table>
+
+<a name="regex_magic"></a>
+<h2>Regex magic</h2>
+As you see there are two regex matching operators <span class="exp_operator">=~</span> and <span class="exp_operator">!~</span>. These operators simply return bool values indicating the success or failure of the matching. This bool value alone is already very handy if all you want is making decisions but you can also use the powerful group capturing capabilities of the regex engine. In order to do so you have to use one of the regex matching operators as the conditional expression of an if-else statement or a ternary (?:) operator. In case of successful regex match the executed branch of the if-else statement or ternary operator can use the value of the captured regex groups as $0, $1, ... and $regex_name if you have named regex groups.
+<br/>Example:
+<pre class="expression">
+if (sln_path =~ &quot;Visual Studio.*?/(?&lt;subdir&gt;.*)/(?&lt;sln_name&gt;.*)\.sln&quot;) {
+    // $0, $1, $2, $subdir and $sln_name are available only in this branch of the if statement
+    &quot;subdir=&quot; + $subdir + &quot; name=&quot; + $sln_name
+} else {
+    orig_title
+}
+</pre>
+If we used the <span class="exp_operator">!~</span> operator then in case of successful match the else block would execute so the regex group variables would be accessible in the else branch. This regex group matching feature works similarly with the ternary (?:) operator too.
+
+<a name="string_slicing"></a>
+<h3>String slicing</h3>
+The language doesn't support string slicing (as I think most users of the extensions won't need it) but you can still slice strings using regex magic just not as beautifully as if we had language support for it. A few examples:
+<table class="expression">
+	<tr>
+		<td>str[4:]</td>
+		<td><pre class="expression">((str=~&quot;^.{4}(.*)$&quot;) ? $1 : &quot;&quot;)</pre></td>
+	</tr>
+	<tr>
+		<td>str[:4]</td>
+		<td><pre class="expression">((str=~&quot;^(.{4}).*$&quot;) ? $1 : str)</pre></td>
+	</tr>
+	<tr>
+		<td>str[-4:]</td>
+		<td><pre class="expression">((str=~&quot;^.*(.{4})$&quot;) ? $1 : str)</pre></td>
+	</tr>
+	<tr>
+		<td>str[:-4]</td>
+		<td><pre class="expression">((str=~&quot;^(.*).{4}$&quot;) ? $1 : &quot;&quot;)</pre></td>
+	</tr>
+</table>
+
+<a name="examples"></a>
+<h2>Examples</h2>
+<ol>
+	<li>Using a constant string as the title text:
+		<pre class="expression">&quot;This is my constant VS title string&quot;</pre>
+	</li>
+	<li>Showing only the name of the currently open solution:
+		<pre class="expression">sln_filename ? sln_filename : &quot;&lt;no solution open&gt;&quot;</pre>
+	</li>
+	<li>Showing a '*' in the title text if anything is modified:
+		<pre class="expression">(sln_filename ? sln_filename : &quot;&lt;no solution open&gt;&quot;) + (anything_dirty ? &quot;*&quot;)</pre>
+	</li>
+	<li>Showing &quot;(Debugging)&quot; or &quot;(Running)&quot; when debugging a program:
+		<pre class="expression">(sln_filename ? sln_filename : &quot;&lt;no solution open&gt;&quot;) + (anything_dirty ? &quot;*&quot;) + (debugging ? &quot; (&quot; + lcap debug_mode + &quot;)&quot;)</pre>
+	</li>
+	<li>Putting only the solution filename and the branch name into your title when the branch name is somewhere in the name of a directory that contains the solution file.
+	Let's complicate things a bit more by supporting two projects that contain the branch name in their solution directory differently:
+		<pre class="expression">
+if (sln_path =~ &quot;(/MyProject1_(?&lt;branch&gt;[^/]+)/Code/Solutions/[^/]+\.sln)|(/(?&lt;branch&gt;[^/]+)_MyProject2/Solutions/[^/]+\.sln)$&quot;) {
+    // MyProject1 has directory structure like root_dir/MyProject1_BranchName/Code/Solutions/Something.sln
+    // MyProject2 has directory structure like root_dir/BranchName_MyProject2/Solutions/Something.sln
+    sln_filename + &quot; &quot; + $branch
+} else {
+    orig_title
+}
+		</pre>
+		OR a bit different solution to the same problem that is more readable in some cases:
+		<pre class="expression">
+if (sln_path =~ &quot;/MyProject1_(?&lt;branch&gt;[^/]+)/Code/Solutions/[^/]+\.sln$&quot;) {
+    // MyProject1 has directory structure like root_dir/MyProject1_BranchName/Code/Solutions/Something.sln
+    sln_filename + &quot; &quot; + $branch
+} else if (sln_path =~ &quot;/(?&lt;branch&gt;[^/]+)_MyProject2/Solutions/[^/]+\.sln$&quot;) {
+    // MyProject2 has directory structure like root_dir/BranchName_MyProject2/Solutions/Something.sln
+    sln_filename + &quot; &quot; + $branch
+} else {
+    orig_title
+}
+		</pre>
+	</li>
+</ol>
+
+<a name="general_info"></a>
+<h2>General Info about the extension</h2>
+Copyright © 2013 István Pásztor
+<h3>Supported Visual Studio Versions</h3>
+Currently this extension supports VS2005, VS2008, VS2010, VS2012 and VS2013. VS2010 and later versions can install it comfortably in the form of a vsix package. Unfortunately VS2005 and VS2008 do not support vsix packages so I have to find out how to put together an msi installer for these two VS versions. Until then only VS2010+ users can enjoy the functionality of the extension.
+<h3>Links</h3>
+The Visual Studio Gallery page of this extension: <a href="http://visualstudiogallery.msdn.microsoft.com/2e8ebfe4-023f-4c4d-9b7a-d05bbc5cb239">http://visualstudiogallery.msdn.microsoft.com/2e8ebfe4-023f-4c4d-9b7a-d05bbc5cb239</a><br/>
+The project is opensource released under the terms of <a href="http://opensource.org/licenses/MIT">The MIT License</a>: <a href="http://code.google.com/p/vs-window-title-changer/">http://code.google.com/p/vs-window-title-changer/</a>
 </body>
 </html>
