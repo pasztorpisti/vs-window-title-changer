@@ -24,6 +24,16 @@ namespace VSWindowTitleChanger
 		private bool m_IsAppActive;
 
 		public bool IsAppActive { get { return m_IsAppActive; } }
+
+		void SetIsAppActive(bool app_active)
+		{
+			if (m_IsAppActive == app_active)
+				return;
+			m_IsAppActive = app_active;
+			if (OnWindowTitleUpdateNeeded != null)
+				OnWindowTitleUpdateNeeded();
+		}
+
 		public string OriginalTitle { get { return m_OriginalTitle; } }
 
 		[DllImport("user32.dll", CharSet = CharSet.Unicode)]
@@ -106,6 +116,27 @@ namespace VSWindowTitleChanger
 			}
 		}
 
+		[DllImport("user32.dll")]
+		static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+		[DllImport("kernel32.dll")]
+		static extern uint GetCurrentProcessId();
+
+		// It seems that sometimes we don't receive WM_ACTIVATEAPP(1) when the debugged program quits and
+		// this plugin thinks that this app is still inactive. We help on that by periodically polling this state.
+		public void UpdateAppActive()
+		{
+			bool app_active = false;
+			IntPtr foreground_wnd = GetForegroundWindow();
+			if (foreground_wnd != null)
+			{
+				uint foreground_process_id;
+				if (0 != GetWindowThreadProcessId(foreground_wnd, out foreground_process_id))
+					app_active = foreground_process_id == GetCurrentProcessId();
+			}
+			SetIsAppActive(app_active);
+		}
+
 		public delegate void WindowTitleUpdateNeededHandler();
 		public event WindowTitleUpdateNeededHandler OnWindowTitleUpdateNeeded;
 
@@ -135,9 +166,7 @@ namespace VSWindowTitleChanger
 				switch (m.Msg)
 				{
 					case WM_ACTIVATEAPP:
-						m_IsAppActive = m.WParam != IntPtr.Zero;
-						if (OnWindowTitleUpdateNeeded != null)
-							OnWindowTitleUpdateNeeded();
+						SetIsAppActive(m.WParam != IntPtr.Zero);
 						break;
 
 					case WM_WINDOWPOSCHANGED:

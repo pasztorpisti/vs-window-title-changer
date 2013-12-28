@@ -107,6 +107,8 @@ namespace VSWindowTitleChanger
 
 		private void UpdateWindowTitle()
 		{
+			m_VSMainWindow.UpdateAppActive();
+
 			PackageGlobals globals = PackageGlobals.Instance();
 			EvalContext eval_ctx = globals.CreateFreshEvalContext();
 			bool variables_changed = !CompareVariables(eval_ctx.VariableValues, m_PrevVariableValues);
