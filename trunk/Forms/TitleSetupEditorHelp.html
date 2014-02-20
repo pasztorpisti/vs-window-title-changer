@@ -171,19 +171,19 @@ There are many ways to deal with this but in either case we have to use a condit
 	</tr>
 </table>
 <h4>Solution #X</h4>
-Of course these are not the only solutions but the above samples shows well how to deal with issues like this.
+Of course these are not the only solutions but the above samples show well how to deal with issues like this.
 If you need something simple and you are lazy to read the expression language tutorial (that isn't long at all) then you can jump to the <a href="#examples">Examples section</a> to copy paste a template for yourself.
 
 <a name="language_basics"></a>
 <h2>Expression language basics</h2>
 <ul>
 	<li>The expression language of this extension is case insensitive when it comes to comparing string values and matching regular expressions.</li>
-	<li>There are only two types: bool and string. bool has two passible values: true/false. Both conversion from string to bool and conversion from bool to string are possible. Conversion automatically takes place when an operator or language construct expects a specific type but you can explicitly convert a value with the <span class="expr_operator">bool</span> or <span class="expr_operator">string</span> unary operators.
+	<li>There are only two types: bool and string. bool has two possible values: true/false. Both conversion from string to bool and conversion from bool to string are possible. Conversion automatically takes place when an operator or language construct expects a specific type but you can explicitly convert a value with the <span class="expr_operator">bool</span> or <span class="expr_operator">string</span> unary operators.
 		<ul>
 			<li>Converting a bool to string results in "true" or "false".</li>
 			<li>Converting a string to bool results in false only if the length of the string is zero.</li>
 		</ul>
-		Most operators except a specific type and automatically convert the type of your values/expressions into the expected type. The only exception is the <span class="expr_operator">==</span> operator that that is smart and performs case insensitive string comparison if both operands are strings, in all other cases it converts both operands to bool and performs bool comparison.
+		Most operators expect a specific type and automatically convert the type of your values/expressions into the expected type. The only exception is the <span class="expr_operator">==</span> operator that is smart and performs case insensitive string comparison if both operands are strings, in all other cases it converts both operands to bool and performs bool comparison.
 	</li>
 	<li>Variable names are allowed to contain any unicode characters and '_' and '$'. Since we have only a few predefined constants and variables available (as you will se below) this restriction may look irrelevant but when you start using regex group matching you can optionally name your regex groups and in that case this rule comes handy.</li>
 	<li>If you use a variable that doesn't exist in the given scope then it is treated as a warning and the variable automatically evaluates into an empty string. The expression editor underlines these variables.</li>
