@@ -47,6 +47,8 @@ namespace VSWindowTitleChanger
 			editTitleExpression.AfterRedo += editTitleExpression_AfterRedo;
 			editTitleExpression.UndoEntryAdded += editTitleExpression_UndoEntryAdded;
 
+			listVariables.MouseDoubleClick += listVariables_MouseDoubleClick;
+
 			m_BackgroundExpressionCompiler = new BackgroundExpressionCompiler();
 			m_BackgroundExpressionCompiler.ExpressionTextBox = editTitleExpression;
 			m_BackgroundExpressionCompiler.WarningsLabel = labelWarnings;
@@ -126,6 +128,22 @@ namespace VSWindowTitleChanger
 			SetupModifiedChanged();
 			UpdateLineAndColumnLabels();
 			m_BackgroundExpressionCompiler.ForceRecompile();
+		}
+
+		void listVariables_MouseDoubleClick(object sender, MouseEventArgs e)
+		{
+			ListViewItem lvi = listVariables.GetItemAt(e.X, e.Y);
+			if (lvi == null)
+				return;
+			string var_name = lvi.Text;
+			string text = editTitleExpression.Text;
+			int sel_start = editTitleExpression.SelectionStart;
+			if (sel_start > 0 && !Char.IsWhiteSpace(text[sel_start - 1]))
+				var_name = " " + var_name;
+			int sel_end = sel_start + editTitleExpression.SelectionLength;
+			if (sel_end < text.Length && !Char.IsWhiteSpace(text[sel_end]))
+				var_name += " ";
+			editTitleExpression.SetSelectedText(var_name);
 		}
 
 		void editTitleExpression_SelectionChanged(object sender, EventArgs e)
