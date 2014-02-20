@@ -48,6 +48,7 @@ namespace VSWindowTitleChanger
 			editTitleExpression.UndoEntryAdded += editTitleExpression_UndoEntryAdded;
 
 			listVariables.MouseDoubleClick += listVariables_MouseDoubleClick;
+			listVariables.KeyDown += listVariables_KeyDown;
 
 			m_BackgroundExpressionCompiler = new BackgroundExpressionCompiler();
 			m_BackgroundExpressionCompiler.ExpressionTextBox = editTitleExpression;
@@ -135,6 +136,23 @@ namespace VSWindowTitleChanger
 			ListViewItem lvi = listVariables.GetItemAt(e.X, e.Y);
 			if (lvi == null)
 				return;
+			PasteVariableNameFromListItem(lvi);
+		}
+
+		void listVariables_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.KeyCode != Keys.Enter)
+				return;
+			e.Handled = true;
+
+			ListViewItem lvi = listVariables.FocusedItem;
+			if (lvi == null)
+				return;
+			PasteVariableNameFromListItem(lvi);
+		}
+
+		void PasteVariableNameFromListItem(ListViewItem lvi)
+		{
 			string var_name = lvi.Text;
 			string text = editTitleExpression.Text;
 			int sel_start = editTitleExpression.SelectionStart;
