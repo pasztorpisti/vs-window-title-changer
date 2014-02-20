@@ -144,6 +144,7 @@ namespace VSWindowTitleChanger
 			if (sel_end < text.Length && !Char.IsWhiteSpace(text[sel_end]))
 				var_name += " ";
 			editTitleExpression.SetSelectedText(var_name);
+			editTitleExpression.Focus();
 		}
 
 		void editTitleExpression_SelectionChanged(object sender, EventArgs e)
