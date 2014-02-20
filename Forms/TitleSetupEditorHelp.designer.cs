@@ -34,7 +34,7 @@ namespace VSWindowTitleChanger
 			// helpBrowser
 			// 
 			this.helpBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.helpBrowser.IsWebBrowserContextMenuEnabled = false;
+			this.helpBrowser.IsWebBrowserContextMenuEnabled = true;
 			this.helpBrowser.Location = new System.Drawing.Point(0, 0);
 			this.helpBrowser.MinimumSize = new System.Drawing.Size(20, 20);
 			this.helpBrowser.Name = "helpBrowser";
