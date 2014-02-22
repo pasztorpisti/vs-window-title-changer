@@ -62,6 +62,13 @@ namespace VSWindowTitleChanger
 		{
 			m_UIThreadDispatcher.BeginInvoke(action);
 		}
+		public static void InvokeOnUIThread(Job action)
+		{
+			if (m_UIThreadDispatcher.InvokeRequired)
+				m_UIThreadDispatcher.Invoke(action);
+			else
+				action();
+		}
 
 		public TitleSetup TitleSetup
 		{

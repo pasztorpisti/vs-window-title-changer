@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using System;
+﻿using System;
+using System.Diagnostics;
 using System.Text;
+using Microsoft.TeamFoundation.VersionControl.Client;
 
 
 namespace VSWindowTitleChanger.ExpressionEvaluator
@@ -15,25 +15,27 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			string workspace_name = "";
 			if (path.Length > 0)
 			{
-				try
+				PackageGlobals.InvokeOnUIThread(delegate()
 				{
-					Workstation ws = Workstation.Current;
-					if (ws != null)
+					try
 					{
-						WorkspaceInfo wsi = ws.GetLocalWorkspaceInfo(path);
-						if (wsi != null)
-							workspace_name = wsi.Name;
+						Workstation ws = Workstation.Current;
+						if (ws != null)
+						{
+							WorkspaceInfo wsi = ws.GetLocalWorkspaceInfo(path);
+							if (wsi != null)
+								workspace_name = wsi.Name;
+						}
 					}
-				}
-				catch (System.Exception ex)
-				{
-					Debug.WriteLine(ex.ToString());
-				}
+					catch (System.Exception ex)
+					{
+						Debug.WriteLine(ex.ToString());
+					}
+				});
 			}
 
 			return new StringValue(workspace_name);
 		}
-
 	}
 
 
