@@ -109,7 +109,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	}
 
 
-	class Variable : Expression
+	class Variable : NeverConstExpression
 	{
 		public Variable(string name, int position, int length)
 			: base(null)
@@ -405,6 +405,26 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 		}
 	}
 
+
+	// An expression whose value is never const so it can not be eliminated by const subexpression elimination
+	// because the value of this expression depends not only on its subexpressions but also on some other
+	// external things (like system and/or VS api calls).
+	abstract class NeverConstExpression : Expression
+	{
+#if DEBUG
+		// In debug we make sure that the user passes at least one parameter to the constructor even if it is null...
+		protected NeverConstExpression(Expression first_expr, params Expression[] sub_expressions) : base(first_expr, sub_expressions) { }
+#else
+		protected NeverConstExpression(params Expression[] sub_expressions) : base(sub_expressions) {}
+#endif
+
+		protected sealed internal override Value EliminateConstSubExpressions(Private.ConstEvalContext ctx)
+		{
+			base.EliminateConstSubExpressions(ctx);
+			return null;
+		}
+
+	}
 
 	namespace Private
 	{

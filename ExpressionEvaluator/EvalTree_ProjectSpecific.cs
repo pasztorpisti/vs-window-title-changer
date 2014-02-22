@@ -6,7 +6,7 @@ using System.Text;
 
 namespace VSWindowTitleChanger.ExpressionEvaluator
 {
-	class FuncWorkspaceName : Expression
+	class FuncWorkspaceName : NeverConstExpression
 	{
 		public FuncWorkspaceName(Expression operand) : base(operand) { }
 		public override Value Evaluate(IEvalContext ctx)
@@ -42,7 +42,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 		string Evaluate(int exec_period_secs, string command, string workdir);
 	}
 
-	class FuncExec : Expression
+	class FuncExec : NeverConstExpression
 	{
 		// variable_name is allowed to be null
 		public FuncExec(ExecFuncEvaluator evaluator, string variable_name, int exec_period_secs, Expression command, Expression workdir)
@@ -72,12 +72,6 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 		public override IVariableValueResolver GetLocalContext()
 		{
 			return m_LocalContext;
-		}
-
-		protected internal override Value EliminateConstSubExpressions(Private.ConstEvalContext ctx)
-		{
-			base.EliminateConstSubExpressions(ctx);
-			return null;
 		}
 
 		protected internal override Value RecursiveCollectUnresolvedVariables(IEvalContext ctx)
