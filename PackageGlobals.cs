@@ -477,19 +477,19 @@ namespace VSWindowTitleChanger
 
 			AddFilePathVars(var_value_setter, ref var_values.sln_path, SlashPathSeparator, "sln_");
 			var_value_setter.SetVariable("sln_open", var_values.sln_path.Length > 0);
-			var_value_setter.SetVariable("sln_dirty", var_values.sln_dirty);
+			var_value_setter.SetVariable("sln_dirty", var_values.sln_dirty ? "*" : "");
 
 			AddFilePathVars(var_value_setter, ref var_values.doc_path, SlashPathSeparator, "doc_");
 			var_value_setter.SetVariable("doc_open", var_values.doc_path.Length > 0);
-			var_value_setter.SetVariable("doc_dirty", var_values.doc_dirty);
-			var_value_setter.SetVariable("any_doc_dirty", var_values.any_doc_dirty);
+			var_value_setter.SetVariable("doc_dirty", var_values.doc_dirty ? "*" : "");
+			var_value_setter.SetVariable("any_doc_dirty", var_values.any_doc_dirty ? "*" : "");
 
 			AddFilePathVars(var_value_setter, ref var_values.startup_proj_path, SlashPathSeparator, "startup_proj_");
 			var_value_setter.SetVariable("startup_proj", var_values.startup_proj);
-			var_value_setter.SetVariable("startup_proj_dirty", var_values.startup_proj_dirty);
+			var_value_setter.SetVariable("startup_proj_dirty", var_values.startup_proj_dirty ? "*" : "");
 
-			var_value_setter.SetVariable("any_proj_dirty", var_values.any_proj_dirty);
-			var_value_setter.SetVariable("anything_dirty", var_values.sln_dirty || var_values.any_proj_dirty || var_values.any_doc_dirty);
+			var_value_setter.SetVariable("any_proj_dirty", var_values.any_proj_dirty ? "*" : "");
+			var_value_setter.SetVariable("anything_dirty", (var_values.sln_dirty || var_values.any_proj_dirty || var_values.any_doc_dirty) ? "*" : "");
 
 			var_value_setter.SetVariable("wnd_minimized", var_values.wnd_minimized);
 			var_value_setter.SetVariable("wnd_foreground", var_values.wnd_foreground);
