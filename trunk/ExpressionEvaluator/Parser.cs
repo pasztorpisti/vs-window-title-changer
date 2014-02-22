@@ -377,6 +377,9 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				}
 			}
 
+			if (exec_period_secs <= 0)
+				throw new ParserException(m_Tokenizer.Text, token.pos, "The exec_period parameter of exec must be a an integer that is greater than zero!");
+
 			Expression command, workdir;
 			try
 			{
