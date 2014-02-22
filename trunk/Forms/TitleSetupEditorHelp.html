@@ -351,18 +351,18 @@ bool_val ? val0</pre></td>
 	</tr>
 	<tr>
 		<td class="var_name">any_doc_dirty</td>
-		<td class="var_name">bool</td>
-		<td>True if any of the open documents/files is modified.</td>
+		<td class="var_name">string</td>
+		<td>"*" if any of the open documents/files is modified "" otherwise. You can use it as a bool value too.</td>
 	</tr>
 	<tr>
 		<td class="var_name">any_proj_dirty</td>
-		<td class="var_name">bool</td>
-		<td>True if any of the project files is modified.</td>
+		<td class="var_name">string</td>
+		<td>"*" if any of the project files is modified "" otherwise. You can use it as a bool value too.</td>
 	</tr>
 	<tr>
 		<td class="var_name">anything_dirty</td>
-		<td class="var_name">bool</td>
-		<td>True if the solution file or any of the project files or any of the open documents is modified.</td>
+		<td class="var_name">string</td>
+		<td>"*" if the solution file or any of the project files or any of the open documents is modified "" otherwise. You can use it as a bool value too.</td>
 	</tr>
 	<tr>
 		<td class="var_name">app_active</td>
@@ -391,8 +391,8 @@ bool_val ? val0</pre></td>
 	</tr>
 	<tr>
 		<td class="var_name">doc_dirty</td>
-		<td class="var_name">bool</td>
-		<td>True if the active document is modified. This is an empty string if we don't have an active document open.</td>
+		<td class="var_name">string</td>
+		<td>"*" if the active document is modified "" otherwise. You can use it as a bool value too.</td>
 	</tr>
 	<tr>
 		<td class="var_name">doc_ext</td>
@@ -451,8 +451,8 @@ bool_val ? val0</pre></td>
 	</tr>
 	<tr>
 		<td class="var_name">sln_dirty</td>
-		<td class="var_name">bool</td>
-		<td>True if the solution file has been modified.</td>
+		<td class="var_name">string</td>
+		<td>"*" if the solution file has been modified "" otherwise. You can use it as a bool value too.</td>
 	</tr>
 	<tr>
 		<td class="var_name">sln_file</td>
@@ -488,8 +488,8 @@ bool_val ? val0</pre></td>
 	</tr>
 	<tr>
 		<td class="var_name">startup_proj_dirty</td>
-		<td class="var_name">bool</td>
-		<td>True if the startup project is modified.</td>
+		<td class="var_name">string</td>
+		<td>"*" if the startup project is modified "" otherwise. You can use it as a bool value too.</td>
 	</tr>
 	<tr>
 		<td class="var_name">startup_proj_ext</td>
@@ -652,10 +652,10 @@ What happens if your program hangs up or executes longer than the <span class="e
 		<pre class="expression">sln_filename ? sln_filename : &quot;&lt;no solution open&gt;&quot;</pre>
 	</li>
 	<li>Showing a '*' in the title text if anything is modified:
-		<pre class="expression">(sln_filename ? sln_filename : &quot;&lt;no solution open&gt;&quot;) + (anything_dirty ? &quot;*&quot;)</pre>
+		<pre class="expression">(sln_filename ? sln_filename : &quot;&lt;no solution open&gt;&quot;) + anything_dirty</pre>
 	</li>
 	<li>Showing &quot;(Debugging)&quot; or &quot;(Running)&quot; when debugging a program:
-		<pre class="expression">(sln_filename ? sln_filename : &quot;&lt;no solution open&gt;&quot;) + (anything_dirty ? &quot;*&quot;) + (debugging ? &quot; (&quot; + lcap debug_mode + &quot;)&quot;)</pre>
+		<pre class="expression">(sln_filename ? sln_filename : &quot;&lt;no solution open&gt;&quot;) + anything_dirty + (debugging ? &quot; (&quot; + lcap debug_mode + &quot;)&quot;)</pre>
 	</li>
 	<li>Showing the current date and time in the titlebar. :-) We are using the date and time commands of cmd for this.
 		<pre class="expression">exec 60 &quot;date /t&quot; &quot;&quot; + exec 5 &quot;time /t&quot; &quot;&quot;</pre>
