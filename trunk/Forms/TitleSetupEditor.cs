@@ -50,6 +50,8 @@ namespace VSWindowTitleChanger
 			listVariables.MouseDoubleClick += listVariables_MouseDoubleClick;
 			listVariables.KeyDown += listVariables_KeyDown;
 
+			checkBoxDebugExec.CheckedChanged += checkBoxDebugExec_CheckedChanged;
+
 			m_BackgroundExpressionCompiler = new BackgroundExpressionCompiler();
 			m_BackgroundExpressionCompiler.ExpressionTextBox = editTitleExpression;
 			m_BackgroundExpressionCompiler.WarningsLabel = labelWarnings;
@@ -149,6 +151,16 @@ namespace VSWindowTitleChanger
 			if (lvi == null)
 				return;
 			PasteVariableNameFromListItem(lvi);
+		}
+
+		void UpdateExecDebug()
+		{
+			PackageGlobals.Instance().ExecFuncEvaluator.DebugMode = Visible && checkBoxDebugExec.Checked;
+		}
+
+		void checkBoxDebugExec_CheckedChanged(object sender, EventArgs e)
+		{
+			UpdateExecDebug();
 		}
 
 		void PasteVariableNameFromListItem(ListViewItem lvi)
@@ -262,6 +274,8 @@ namespace VSWindowTitleChanger
 				editTitleExpression.Text = " ";
 				editTitleExpression.ClearUndo();
 			}
+
+			UpdateExecDebug();
 		}
 
 		void TitleSetupEditor_Shown(object sender, EventArgs e)

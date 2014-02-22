@@ -98,16 +98,27 @@ namespace VSWindowTitleChanger
 			}
 		}
 
+		public ExecFuncEvaluatorThread ExecFuncEvaluator
+		{
+			get
+			{
+				return m_ExecFuncEvaluatorThread;
+			}
+		}
+
 		VSWindowTitleChangerPackage m_Package;
 		TitleSetup m_TitleSetup;
 		TitleSetupEditor m_TitleSetupEditor;
 
 		VariableValueResolver m_CompileTimeConstants;
+		ExecFuncEvaluatorThread m_ExecFuncEvaluatorThread;
 
 		PackageGlobals(VSWindowTitleChangerPackage package)
 		{
 			m_Package = package;
 			CreateCompileTimeConstants();
+
+			m_ExecFuncEvaluatorThread = new ExecFuncEvaluatorThread();
 
 			m_TitleSetup = package.GetTitleSetupFromOptions();
 			m_TitleSetupEditor = new TitleSetupEditor();
@@ -132,6 +143,8 @@ namespace VSWindowTitleChanger
 		{
 			m_TitleSetupEditor.Dispose();
 			m_TitleSetupEditor = null;
+
+			m_ExecFuncEvaluatorThread.Dispose();
 		}
 
 		void CreateCompileTimeConstants()

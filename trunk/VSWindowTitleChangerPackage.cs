@@ -102,6 +102,7 @@ namespace VSWindowTitleChanger
 		}
 
 		string m_PrevTitleExpressionStr = "";
+		bool m_ExpressionContainsExec;
 		Dictionary<string, Value> m_PrevVariableValues = new Dictionary<string, Value>();
 		EExtensionActivationRule m_PrevExtensionActivationRule = EExtensionActivationRule.AlwaysInactive;
 
@@ -144,10 +145,10 @@ namespace VSWindowTitleChanger
 			if (extension_active)
 			{
 				TitleSetup title_setup = globals.TitleSetup;
-				if (variables_changed || m_PrevExtensionActivationRule != options.ExtensionActivationRule ||
+				if (m_ExpressionContainsExec || variables_changed || m_PrevExtensionActivationRule != options.ExtensionActivationRule ||
 					title_setup.TitleExpression != m_PrevTitleExpressionStr)
 				{
-					Parser parser = new Parser(title_setup.TitleExpression, globals.CompileTimeConstants); ;
+					Parser parser = new Parser(title_setup.TitleExpression, globals.ExecFuncEvaluator, globals.CompileTimeConstants); ;
 					ExpressionCompilerJob job = new ExpressionCompilerJob(parser,  globals.CreateFreshEvalContext(), false, m_CompiledExpressionCache);
 					job.OnCompileFinished += OnCompileFinished;
 					m_ExpressionCompilerThread.RemoveAllJobs();
@@ -167,6 +168,7 @@ namespace VSWindowTitleChanger
 		{
 			if (m_VSMainWindow == null)
 				return;
+			m_ExpressionContainsExec = job.ContainsExec;
 			Value title_value = job.EvalResult;
 			if (title_value != null)
 			{
@@ -230,7 +232,7 @@ namespace VSWindowTitleChanger
 			m_ExpressionCompilerThread = new ExpressionCompilerThread();
 			// During normal use the expression doesn't change except when configuring so a cache size of 1 does the job quite well.
 			// Usually what changes is the variables.
-			m_CompiledExpressionCache = new CompiledExpressionCache(PackageGlobals.Instance().CompileTimeConstants, 1);
+			m_CompiledExpressionCache = new CompiledExpressionCache(PackageGlobals.Instance().ExecFuncEvaluator, PackageGlobals.Instance().CompileTimeConstants, 1);
 
 			UpdateWindowTitle();
 		}

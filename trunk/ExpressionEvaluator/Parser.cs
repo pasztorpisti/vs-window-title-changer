@@ -92,13 +92,16 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// OpCompare ->					OpSubstring ( ( "==" | "!=" ) OpSubstring )*
 	// OpSubstring ->				OpConcat ( ( "contains" | "startswith" | "endswith" ) OpConcat )*
 	// OpConcat ->					OpRegex ( "+" OpRegex )*
-	// OpRegex ->					OpUnary ( ( "=~" | "!~" ) Const-Unary )
+	// OpRegex ->					FuncExec ( ( "=~" | "!~" ) Const-FuncExec )
+	// FuncExec ->					"exec" Integer OpUnary OpUnary | "exec" Variable Integer OpUnary OpUnary
 	// OpUnary ->					( "not" | "upcase" | "locase" | "lcap" ) OpUnary | Value
 	// Value ->						StringLiteral | Variable | BracketExpression | IfElse
 	// IfElse ->					"if" BracketExpression BraceExpression "else" ( BraceExpression | IfElse )
 	// BracketExpression ->			"(" Expression ")"
 	// BraceExpression ->			"{" Expression "}"
 
+	// Integer ->					Digit Digit*
+	// Digit ->						"0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 	// StringLiteral ->				'"' ( UnicodeCharacter* ( EscapedQuote UnicodeCharacter* )* '"'
 	// EscapedQuote ->				'"' '"'
 
@@ -106,12 +109,15 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 	using Private;
 	using Tokenizer;
+	using System;
 
 
 	class ParserException : ExpressionEvaluatorException
 	{
 		public ParserException(string input_text, int error_pos, string error_message)
-			: base(error_message)
+			: this(input_text, error_pos, error_message, null) {}
+		public ParserException(string input_text, int error_pos, string error_message, Exception inner_exception)
+			: base(error_message, inner_exception)
 		{
 			m_InputText = input_text;
 			m_ErrorPos = error_pos;
@@ -154,14 +160,15 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 	class Parser
 	{
-		public Parser(string text) : this(text, null, true) {}
+		public Parser(string text, ExecFuncEvaluator exec_func_evaluator) : this(text, exec_func_evaluator, null, true) {}
 
-		public Parser(string text, IVariableValueResolver compile_time_constants)
-			: this(text, compile_time_constants, true) {}
+		public Parser(string text, ExecFuncEvaluator exec_func_evaluator, IVariableValueResolver compile_time_constants)
+			: this(text, exec_func_evaluator, compile_time_constants, true) {}
 
-		public Parser(string text, IVariableValueResolver compile_time_constants, bool consume_whole_text)
+		public Parser(string text, ExecFuncEvaluator exec_func_evaluator, IVariableValueResolver compile_time_constants, bool consume_whole_text)
 		{
 			m_Tokenizer = new Tokenizer.Tokenizer(text);
+			m_ExecFuncEvaluator = exec_func_evaluator;
 			m_CompileTimeConstants = compile_time_constants==null ? (IVariableValueResolver)new VariableValueResolver() : compile_time_constants;
 			m_ConsumeWholeText = consume_whole_text;
 		}
@@ -181,6 +188,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 		public string Text { get { return m_Tokenizer.Text; } }
 		public int Pos { get { return m_Tokenizer.Pos; } }
+		public bool ContainsExec { get { return m_ContainsExec; } }
 
 		Expression Parse_Expression()
 		{
@@ -300,7 +308,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 		Expression Parse_OpRegex()
 		{
-			Expression expr = Parse_OpUnary();
+			Expression expr = Parse_FuncExec();
 
 			for (;;)
 			{
@@ -311,7 +319,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				m_Tokenizer.ConsumeNextToken();
 
 				Token token = m_Tokenizer.PeekNextToken();
-				Expression regex_expr = Parse_OpUnary();
+				Expression regex_expr = Parse_FuncExec();
 				Value const_val = regex_expr.EliminateConstSubExpressions();
 				if (const_val == null)
 					throw new ParserException(m_Tokenizer.Text, token.pos, "Expected a constant expression that evaluates into a regex string. This expression isn't constant.");
@@ -331,6 +339,64 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				expr = new OpRegexMatch(expr, regex_expr, regex, op == TokenType.OpRegexNotMatch);
 			}
 			return expr;
+		}
+
+		Expression Parse_FuncExec()
+		{
+			Token token = m_Tokenizer.PeekNextToken();
+			if (token.type != TokenType.FuncExec)
+				return Parse_OpUnary();
+			m_Tokenizer.ConsumeNextToken();
+
+			m_ContainsExec = true;
+
+			token = m_Tokenizer.GetNextToken();
+			if (token.type != TokenType.Variable)
+				throw new ParserException(m_Tokenizer.Text, token.pos, "The first parameter of exec must be a variable name or a positive integer.");
+
+			string variable_name = null;
+			int exec_period_secs = 0;
+
+			try
+			{
+				exec_period_secs = Convert.ToInt32(token.data);
+			}
+			catch (System.Exception)
+			{
+				variable_name = token.data;
+				token = m_Tokenizer.GetNextToken();
+				if (token.type != TokenType.Variable)
+					throw new ParserException(m_Tokenizer.Text, token.pos, "If the first parameter of exec is a variable then the second must be an positive integer (exec period in seconds).");
+				try
+				{
+					exec_period_secs = Convert.ToInt32(token.data);
+				}
+				catch (System.Exception)
+				{
+					throw new ParserException(m_Tokenizer.Text, token.pos, "If the first parameter of exec is a variable then the second must be an positive integer (exec period in seconds).");
+				}
+			}
+
+			Expression command, workdir;
+			try
+			{
+				command = Parse_OpUnary();
+			}
+			catch (ParserException ex)
+			{
+				throw new ParserException(ex.InputText, ex.ErrorPos, "Error parsing the 'command' parameter of the exec function!", ex);
+			}
+
+			try
+			{
+				workdir = Parse_OpUnary();
+			}
+			catch (ParserException ex)
+			{
+				throw new ParserException(ex.InputText, ex.ErrorPos, "Error parsing the 'workdir' parameter of the exec function!", ex);
+			}
+
+			return new FuncExec(m_ExecFuncEvaluator, variable_name, exec_period_secs, command, workdir);
 		}
 
 		Expression Parse_OpUnary()
@@ -386,7 +452,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				case TokenType.If:
 					return Parse_IfElse();
 				default:
-					throw new ParserException(m_Tokenizer.Text, token.pos, "Expected a const literal, variable, bracketed expression or if-else construct here.");
+					throw new ParserException(m_Tokenizer.Text, token.pos, "Expected an expression here.");
 			}
 		}
 
@@ -440,8 +506,10 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			throw new ParserException_ExpectedTokens(m_Tokenizer.Text, token.pos, token_types);
 		}
 
+		ExecFuncEvaluator m_ExecFuncEvaluator;
 		Tokenizer.Tokenizer m_Tokenizer;
 		IVariableValueResolver m_CompileTimeConstants;
 		bool m_ConsumeWholeText;
+		bool m_ContainsExec;
 	}
 }
