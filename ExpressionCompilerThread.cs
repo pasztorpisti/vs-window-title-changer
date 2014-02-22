@@ -102,11 +102,13 @@ namespace VSWindowTitleChanger
 		Expression m_Expression;
 		Value m_EvalResult;
 		List<Variable> m_SortedUnresolvedVariables;
+		bool m_ContainsExec;
 
 		public Exception Error { get { return m_Error; } }
 		// Only if there is no error:
 		public Expression Expession { get { return m_Expression; } }
 		public Value EvalResult { get { return m_EvalResult; } }
+		public bool ContainsExec { get { return m_ContainsExec; } }
 		public List<Variable> SortedUnresolvedVariables { get { return m_SortedUnresolvedVariables; } }
 
 		class VariablePosComparer : IComparer<Variable>
@@ -127,10 +129,12 @@ namespace VSWindowTitleChanger
 					CompiledExpression compiled_expression = m_Cache.GetEntry(m_Parser.Text);
 					m_Expression = compiled_expression.expression;
 					m_Error = compiled_expression.compile_error;
+					m_ContainsExec = compiled_expression.contains_exec;
 				}
 				else
 				{
 					m_Expression = m_Parser.Parse();
+					m_ContainsExec = m_Parser.ContainsExec;
 				}
 
 				if (m_Expression != null && m_EvalContext != null)

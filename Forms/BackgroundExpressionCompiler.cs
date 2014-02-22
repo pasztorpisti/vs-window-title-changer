@@ -95,11 +95,14 @@ namespace VSWindowTitleChanger
 
 		ExpressionCompilerThread m_CompilerThread;
 		System.Windows.Forms.Timer m_ErrorRecompileTimer = new System.Windows.Forms.Timer();
+		System.Windows.Forms.Timer m_ExecFuncForceReEvaluateTimer = new System.Windows.Forms.Timer();
 
 		public BackgroundExpressionCompiler()
 		{
 			m_ErrorRecompileTimer.Interval = 100;
 			m_ErrorRecompileTimer.Tick += ErrorRecompileTimer_Tick;
+			m_ExecFuncForceReEvaluateTimer.Interval = 500;
+			m_ExecFuncForceReEvaluateTimer.Tick += ExecFuncForceReEvaluateTimer_Tick;
 			m_UnderlinePen = new Pen(Color.Orange);
 		}
 
@@ -151,6 +154,7 @@ namespace VSWindowTitleChanger
 				return;
 			m_CompilerThread = new ExpressionCompilerThread();
 			m_ErrorRecompileTimer.Start();
+			m_ExecFuncForceReEvaluateTimer.Start();
 
 			m_PrevFinishedJob = null;
 			m_CompileResultHandling = ECompileResultHandling.Success;
@@ -162,6 +166,7 @@ namespace VSWindowTitleChanger
 			if (!Enabled)
 				return;
 			m_ErrorRecompileTimer.Stop();
+			m_ExecFuncForceReEvaluateTimer.Stop();
 			m_PrevFinishedJob = null;
 			m_CompilerThread.Dispose();
 			m_CompilerThread = null;
@@ -178,6 +183,14 @@ namespace VSWindowTitleChanger
 			m_CompileResultHandling = ECompileResultHandling.Error;
 		}
 
+		void ExecFuncForceReEvaluateTimer_Tick(object sender, EventArgs e)
+		{
+			if (!Enabled || m_PrevFinishedJob == null)
+				return;
+			if (m_PrevFinishedJob.ContainsExec)
+				ForceRecompile();
+		}
+
 		int m_MostRecentUndoEntryId = -1;
 
 		void StartCompilation(int undo_entry_id)
@@ -186,7 +199,7 @@ namespace VSWindowTitleChanger
 			if (m_CompilerThread == null || m_ExpressionTextBox == null || m_CompileTimeConstants == null)
 				return;
 
-			Parser parser = new Parser(m_ExpressionTextBox.Text, m_CompileTimeConstants);
+			Parser parser = new Parser(m_ExpressionTextBox.Text, PackageGlobals.Instance().ExecFuncEvaluator, m_CompileTimeConstants);
 			ExpressionCompilerJob job = new ExpressionCompilerJob(parser, PackageGlobals.Instance().CreateFreshEvalContext(), true, null);
 			job.OnCompileFinished += OnCompileFinished;
 			job.UserData = (IntPtr)m_MostRecentUndoEntryId;

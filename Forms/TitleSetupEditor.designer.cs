@@ -28,6 +28,7 @@ namespace VSWindowTitleChanger
 			this.label1 = new System.Windows.Forms.Label();
 			this.splitVariables = new System.Windows.Forms.SplitContainer();
 			this.titleOrCompileError = new System.Windows.Forms.TextBox();
+			this.label6 = new System.Windows.Forms.Label();
 			this.label2 = new System.Windows.Forms.Label();
 			this.listVariables = new System.Windows.Forms.ListView();
 			this.columnVariableName = new System.Windows.Forms.ColumnHeader();
@@ -36,7 +37,7 @@ namespace VSWindowTitleChanger
 			this.buttonHelp = new System.Windows.Forms.Button();
 			this.buttonCancel = new System.Windows.Forms.Button();
 			this.buttonOK = new System.Windows.Forms.Button();
-			this.label6 = new System.Windows.Forms.Label();
+			this.checkBoxDebugExec = new System.Windows.Forms.CheckBox();
 			this.lineNumbers = new VSWindowTitleChanger.RichTextBoxLineNumbers();
 			this.editTitleExpression = new VSWindowTitleChanger.ExpressionTextBox();
 			this.splitMain.Panel1.SuspendLayout();
@@ -216,6 +217,16 @@ namespace VSWindowTitleChanger
 			this.titleOrCompileError.TabIndex = 0;
 			this.titleOrCompileError.Text = "Window Title";
 			// 
+			// label6
+			// 
+			this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.label6.AutoSize = true;
+			this.label6.Location = new System.Drawing.Point(721, 6);
+			this.label6.Name = "label6";
+			this.label6.Size = new System.Drawing.Size(236, 13);
+			this.label6.TabIndex = 4;
+			this.label6.Text = "Double click or ENTER to paste variable names.";
+			// 
 			// label2
 			// 
 			this.label2.AutoSize = true;
@@ -290,15 +301,16 @@ namespace VSWindowTitleChanger
 			this.buttonOK.Text = "OK";
 			this.buttonOK.UseVisualStyleBackColor = true;
 			// 
-			// label6
+			// checkBoxDebugExec
 			// 
-			this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.label6.AutoSize = true;
-			this.label6.Location = new System.Drawing.Point(721, 6);
-			this.label6.Name = "label6";
-			this.label6.Size = new System.Drawing.Size(236, 13);
-			this.label6.TabIndex = 4;
-			this.label6.Text = "Double click or ENTER to paste variable names.";
+			this.checkBoxDebugExec.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+			this.checkBoxDebugExec.AutoSize = true;
+			this.checkBoxDebugExec.Location = new System.Drawing.Point(102, 633);
+			this.checkBoxDebugExec.Name = "checkBoxDebugExec";
+			this.checkBoxDebugExec.Size = new System.Drawing.Size(151, 17);
+			this.checkBoxDebugExec.TabIndex = 4;
+			this.checkBoxDebugExec.Text = "Debug the exec command";
+			this.checkBoxDebugExec.UseVisualStyleBackColor = true;
 			// 
 			// lineNumbers
 			// 
@@ -336,6 +348,7 @@ namespace VSWindowTitleChanger
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(984, 662);
+			this.Controls.Add(this.checkBoxDebugExec);
 			this.Controls.Add(this.buttonOK);
 			this.Controls.Add(this.buttonCancel);
 			this.Controls.Add(this.buttonHelp);
@@ -354,6 +367,7 @@ namespace VSWindowTitleChanger
 			this.splitVariables.Panel2.PerformLayout();
 			this.splitVariables.ResumeLayout(false);
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 		}
 
@@ -383,6 +397,7 @@ namespace VSWindowTitleChanger
 		private System.Windows.Forms.Label labelWarnings;
 		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.Label label6;
+		private System.Windows.Forms.CheckBox checkBoxDebugExec;
 
 
 	}
