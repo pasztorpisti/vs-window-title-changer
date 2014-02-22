@@ -406,12 +406,6 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	}
 
 
-	interface ExecFuncEvaluator
-	{
-		string Evaluate(int exec_period_secs, string command, string workdir);
-	}
-
-
 	namespace Private
 	{
 
@@ -838,64 +832,6 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			private bool m_InvertResultValue;
 			private IVariableValueResolver m_LocalContext;
 		}
-
-		class FuncExec : Expression
-		{
-			// variable_name is allowed to be null
-			public FuncExec(ExecFuncEvaluator evaluator, string variable_name, int exec_period_secs, Expression command, Expression workdir)
-				: base(command, workdir)
-			{
-				m_Evaluator = evaluator;
-				m_VariableName = variable_name;
-				m_ExecPeriodSecs = exec_period_secs;
-			}
-
-			public override Value Evaluate(IEvalContext ctx)
-			{
-				string command = SubExpressions[0].Evaluate(ctx).ToString();
-				string workdir = SubExpressions[1].Evaluate(ctx).ToString();
-
-				string exec_output = m_Evaluator.Evaluate(m_ExecPeriodSecs, command, workdir);
-
-				if (m_VariableName != null)
-				{
-					m_LocalContext = new VariableValueResolver();
-					m_LocalContext.SetVariable(m_VariableName, exec_output);
-				}
-
-				return new StringValue(exec_output);
-			}
-
-			public override IVariableValueResolver GetLocalContext()
-			{
-				return m_LocalContext;
-			}
-
-			protected internal override Value EliminateConstSubExpressions(Private.ConstEvalContext ctx)
-			{
-				base.EliminateConstSubExpressions(ctx);
-				return null;
-			}
-
-			protected internal override Value RecursiveCollectUnresolvedVariables(IEvalContext ctx)
-			{
-				SubExpressions[0].RecursiveCollectUnresolvedVariables(ctx);
-				SubExpressions[1].RecursiveCollectUnresolvedVariables(ctx);
-				string output = "X";
-				if (m_VariableName != null)
-				{
-					m_LocalContext = new VariableValueResolver();
-					m_LocalContext.SetVariable(m_VariableName, output);
-				}
-				return new StringValue(output);
-			}
-
-			ExecFuncEvaluator m_Evaluator;
-			string m_VariableName;
-			int m_ExecPeriodSecs;
-			VariableValueResolver m_LocalContext;
-		}
-
 
 		class OpUpperCase : Expression
 		{

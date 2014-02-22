@@ -16,6 +16,9 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 		OpBackslashize,
 
 		FuncExec,
+		FuncRelPath,
+		FuncWorkspaceName,
+		FuncSlnWorkspaceName,
 
 		OpContains,
 		OpStartsWith,
@@ -69,6 +72,9 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 				case TokenType.OpString: return "\"string\"";
 				case TokenType.OpBackslashize: return "\"backslashize\"";
 				case TokenType.FuncExec: return "\"exec\"";
+				case TokenType.FuncRelPath: return "\"relpath\"";
+				case TokenType.FuncWorkspaceName: return "\"workspace_name\"";
+				case TokenType.FuncSlnWorkspaceName: return "\"sln_workspace_name\"";
 				case TokenType.OpContains: return "\"contains\"";
 				case TokenType.OpStartsWith: return "\"startswith\"";
 				case TokenType.OpEndsWith: return "\"endswith\"";
@@ -322,6 +328,12 @@ namespace VSWindowTitleChanger.ExpressionEvaluator.Tokenizer
 					return SetNextToken(TokenType.OpBackslashize, variable, start_pos, variable.Length);
 				case "exec":
 					return SetNextToken(TokenType.FuncExec, variable, start_pos, variable.Length);
+				case "relpath":
+					return SetNextToken(TokenType.FuncRelPath, variable, start_pos, variable.Length);
+				case "workspace_name":
+					return SetNextToken(TokenType.FuncWorkspaceName, variable, start_pos, variable.Length);
+				case "sln_workspace_name":
+					return SetNextToken(TokenType.FuncSlnWorkspaceName, variable, start_pos, variable.Length);
 				case "contains":
 					return SetNextToken(TokenType.OpContains, variable, start_pos, variable.Length);
 				case "startswith":
