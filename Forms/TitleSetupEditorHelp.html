@@ -242,7 +242,7 @@ if (bool_val) {
 		<td>Matches string_val against the specified regex. The result is a bool value that is false if the match is successful.</td>
 	</tr>
 	<tr>
-		<td rowspan="7">3</td>
+		<td rowspan="8">3</td>
 		<td><pre class="expression">not bool_val
 !bool_val</pre></td>
 		<td>Bool not operator.</td>
@@ -272,17 +272,16 @@ if (bool_val) {
 		<td>Converts the specified value to string. Does nothing if the specified value is already string. In case of bool values it evaluates to &quot;true&quot; or &quot;false&quot;.</td>
 	</tr>
 	<tr>
-		<td>4</td>
 		<td><pre class="expression">exec [variable] exec_period command workdir</pre></td>
 		<td>Executes a command in a given workdir periodically and this <span class="expression">exec</span> function call returns the (processed) output of the executed command. Optionally you can specify a <span class="expression">[variable]</span> parameter and in this case <span class="expression">exec</span> not only returns the output of the command but stores it into the specified variable as well. This is useful only if you use <span class="expression">exec</span> as the conditional expression of an if statement or a conditional (ternary <span class="expr_operator">?:</span>) operator, in this case you can access the output of the command by using the specified variable in the if body or true-expression of the ternary. The <span class="expression">exec</span> command is probably as powerful as the rest of the features of this extension so I don't try to describe it here, I gave it a separate section for this: <a href="#exec_magic">Exec magic</a></td>
 	</tr>
 	<tr>
-		<td>5</td>
+		<td>4</td>
 		<td><pre class="expression">string_val + string_val</pre></td>
 		<td>String concatenation.</td>
 	</tr>
 	<tr>
-		<td rowspan="3">6</td>
+		<td rowspan="3">5</td>
 		<td><pre class="expression">string_val0 contains string_val1</pre></td>
 		<td>Returns true if string_val0 contains string_val1 as a substring. (case insensitive)</td>
 	</tr>
@@ -295,7 +294,7 @@ if (bool_val) {
 		<td>Returns true if string_val1 is the postfix of string_val0. (case insensitive)</td>
 	</tr>
 	<tr>
-		<td rowspan="2">7</td>
+		<td rowspan="2">6</td>
 		<td><pre class="expression">val0 == val1</pre></td>
 		<td>If both val0 and val1 are strings then returns true if the strings are equal. (case insensitive) If either val0 or val1 is bool then this operator converts both operands to bool values and performs bool comparison.</td>
 	</tr>
@@ -304,27 +303,27 @@ if (bool_val) {
 		<td>The opposite of the <span class="expr_operator">==</span> operator.</td>
 	</tr>
 	<tr>
-		<td>8</td>
+		<td>7</td>
 		<td><pre class="expression">bool_val and bool_val
 bool_val && bool_val
 bool_val & bool_val</pre></td>
 		<td>Bool AND operator.</td>
 	</tr>
 	<tr>
-		<td>9</td>
+		<td>8</td>
 		<td><pre class="expression">bool_val xor bool_val
 bool_val ^ bool_val</pre></td>
 		<td>Bool eXclusive OR (XOR) operator.</td>
 	</tr>
 	<tr>
-		<td>10</td>
+		<td>9</td>
 		<td><pre class="expression">bool_val or bool_val
 bool_val || bool_val
 bool_val | bool_val</pre></td>
 		<td>Bool OR operator.</td>
 	</tr>
 	<tr>
-		<td>11</td>
+		<td>10</td>
 		<td><pre class="expression">bool_val ? val0 : val1
 bool_val ? val0</pre></td>
 		<td>Ternary operator. Evaluates to val0 if bool_val is true otherwise it evaluates to val1. If you omit the optional ":" and val1 then val1 defaults to an empty string.</td>

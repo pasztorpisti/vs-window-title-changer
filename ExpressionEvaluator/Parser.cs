@@ -92,13 +92,15 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 	// OpCompare ->					OpSubstring ( ( "==" | "!=" ) OpSubstring )*
 	// OpSubstring ->				OpConcat ( ( "contains" | "startswith" | "endswith" ) OpConcat )*
 	// OpConcat ->					OpRegex ( "+" OpRegex )*
-	// OpRegex ->					FuncExec ( ( "=~" | "!~" ) Const-FuncExec )
-	// FuncExec ->					"exec" Integer OpUnary OpUnary | "exec" Variable Integer OpUnary OpUnary
-	// OpUnary ->					( "not" | "upcase" | "locase" | "lcap" ) OpUnary | Value
+	// OpRegex ->					FunctionCall ( ( "=~" | "!~" ) Const-FunctionCall )
+	// FunctionCall ->				OpUnary | FuncExec | Value
 	// Value ->						StringLiteral | Variable | BracketExpression | IfElse
 	// IfElse ->					"if" BracketExpression BraceExpression "else" ( BraceExpression | IfElse )
 	// BracketExpression ->			"(" Expression ")"
 	// BraceExpression ->			"{" Expression "}"
+
+	// FuncExec ->					"exec" Integer FunctionCall FunctionCall | "exec" Variable Integer FunctionCall FunctionCall
+	// OpUnary ->					( "not" | "upcase" | "locase" | "lcap" ) FunctionCall
 
 	// Integer ->					Digit Digit*
 	// Digit ->						"0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
@@ -308,7 +310,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 		Expression Parse_OpRegex()
 		{
-			Expression expr = Parse_FuncExec();
+			Expression expr = Parse_FunctionCall();
 
 			for (;;)
 			{
@@ -319,7 +321,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				m_Tokenizer.ConsumeNextToken();
 
 				Token token = m_Tokenizer.PeekNextToken();
-				Expression regex_expr = Parse_FuncExec();
+				Expression regex_expr = Parse_FunctionCall();
 				Value const_val = regex_expr.EliminateConstSubExpressions();
 				if (const_val == null)
 					throw new ParserException(m_Tokenizer.Text, token.pos, "Expected a constant expression that evaluates into a regex string. This expression isn't constant.");
@@ -341,16 +343,48 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			return expr;
 		}
 
+		Expression Parse_FunctionCall()
+		{
+			TokenType token_type = m_Tokenizer.PeekNextToken().type;
+			switch (token_type)
+			{
+				// More complex "Function Calls"
+				case TokenType.FuncExec:
+					m_Tokenizer.ConsumeNextToken();
+					return Parse_FuncExec();
+
+				// Unary Operators
+				case TokenType.OpNot:
+					m_Tokenizer.ConsumeNextToken();
+					return new OpNot(Parse_FunctionCall());
+				case TokenType.OpUpcase:
+					m_Tokenizer.ConsumeNextToken();
+					return new OpUpperCase(Parse_FunctionCall());
+				case TokenType.OpLocase:
+					m_Tokenizer.ConsumeNextToken();
+					return new OpLowerCase(Parse_FunctionCall());
+				case TokenType.OpLcap:
+					m_Tokenizer.ConsumeNextToken();
+					return new OpLeadingCapitalCase(Parse_FunctionCall());
+				case TokenType.OpBool:
+					m_Tokenizer.ConsumeNextToken();
+					return new OpBool(Parse_FunctionCall());
+				case TokenType.OpString:
+					m_Tokenizer.ConsumeNextToken();
+					return new OpString(Parse_FunctionCall());
+				case TokenType.OpBackslashize:
+					m_Tokenizer.ConsumeNextToken();
+					return new OpBackslashize(Parse_FunctionCall());
+				default:
+					return Parse_Value();
+			}
+		}
+
 		Expression Parse_FuncExec()
 		{
-			Token token = m_Tokenizer.PeekNextToken();
-			if (token.type != TokenType.FuncExec)
-				return Parse_OpUnary();
-			m_Tokenizer.ConsumeNextToken();
-
 			m_ContainsExec = true;
 
-			token = m_Tokenizer.GetNextToken();
+			Token token = m_Tokenizer.GetNextToken();
 			if (token.type != TokenType.Variable)
 				throw new ParserException(m_Tokenizer.Text, token.pos, "The first parameter of exec must be a variable name or a positive integer.");
 
@@ -383,7 +417,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			Expression command, workdir;
 			try
 			{
-				command = Parse_OpUnary();
+				command = Parse_FunctionCall();
 			}
 			catch (ParserException ex)
 			{
@@ -392,7 +426,7 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 			try
 			{
-				workdir = Parse_OpUnary();
+				workdir = Parse_FunctionCall();
 			}
 			catch (ParserException ex)
 			{
@@ -400,37 +434,6 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			}
 
 			return new FuncExec(m_ExecFuncEvaluator, variable_name, exec_period_secs, command, workdir);
-		}
-
-		Expression Parse_OpUnary()
-		{
-			TokenType token_type = m_Tokenizer.PeekNextToken().type;
-			switch (token_type)
-			{
-				case TokenType.OpNot:
-					m_Tokenizer.ConsumeNextToken();
-					return new OpNot(Parse_OpUnary());
-				case TokenType.OpUpcase:
-					m_Tokenizer.ConsumeNextToken();
-					return new OpUpperCase(Parse_OpUnary());
-				case TokenType.OpLocase:
-					m_Tokenizer.ConsumeNextToken();
-					return new OpLowerCase(Parse_OpUnary());
-				case TokenType.OpLcap:
-					m_Tokenizer.ConsumeNextToken();
-					return new OpLeadingCapitalCase(Parse_OpUnary());
-				case TokenType.OpBool:
-					m_Tokenizer.ConsumeNextToken();
-					return new OpBool(Parse_OpUnary());
-				case TokenType.OpString:
-					m_Tokenizer.ConsumeNextToken();
-					return new OpString(Parse_OpUnary());
-				case TokenType.OpBackslashize:
-					m_Tokenizer.ConsumeNextToken();
-					return new OpBackslashize(Parse_OpUnary());
-				default:
-					return Parse_Value();
-			}
 		}
 
 		Expression Parse_Value()
