@@ -242,7 +242,7 @@ if (bool_val) {
 		<td>Matches string_val against the specified regex. The result is a bool value that is false if the match is successful.</td>
 	</tr>
 	<tr>
-		<td rowspan="8">3</td>
+		<td rowspan="11">3</td>
 		<td><pre class="expression">not bool_val
 !bool_val</pre></td>
 		<td>Bool not operator.</td>
@@ -274,6 +274,18 @@ if (bool_val) {
 	<tr>
 		<td><pre class="expression">exec [variable] exec_period command workdir</pre></td>
 		<td>Executes a command in a given workdir periodically and this <span class="expression">exec</span> function call returns the (processed) output of the executed command. Optionally you can specify a <span class="expression">[variable]</span> parameter and in this case <span class="expression">exec</span> not only returns the output of the command but stores it into the specified variable as well. This is useful only if you use <span class="expression">exec</span> as the conditional expression of an if statement or a conditional (ternary <span class="expr_operator">?:</span>) operator, in this case you can access the output of the command by using the specified variable in the if body or true-expression of the ternary. The <span class="expression">exec</span> command is probably as powerful as the rest of the features of this extension so I don't try to describe it here, I gave it a separate section for this: <a href="#exec_magic">Exec magic</a></td>
+	</tr>
+	<tr>
+		<td><pre class="expression">relpath dir_string path_string</pre></td>
+		<td>Converts a file/directory pathname specified by the path_string parameter to a pathname that is relative to the specified directory. Both dir_string and path_string must be either absolute or relative pathnames otherwise the function returns the value of path_string. If both dir_string and path_string are absolute but they refer to different drives then the return value is path_string. The incoming parameters can use both '\' and '/' as path separators but the return value of the function always contains '/' path separators and the return value never has a trailing slash.</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">workspace_name path_string</pre></td>
+		<td>Gets the name of the workspace that contains the specified path. The info is obtained using locally cached data (according to the msdn docs). The return value is an empty string if the info can not be retrieved.</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">sln_workspace_name</pre></td>
+		<td>This is a shorthand for the <span class="expression">workspace_name sln_dir</span> function call.</td>
 	</tr>
 	<tr>
 		<td>4</td>
