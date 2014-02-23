@@ -84,7 +84,7 @@
       <DependentUpon>TitleSetupEditorHelp.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\TitleSetupEditorHelpResources.Designer.cs" />
-    <Compile Include="Guids_2008.cs" />
+    <Compile Include="Guids.cs" />
     <Compile Include="PackageGlobals.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
