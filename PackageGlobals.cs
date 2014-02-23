@@ -113,6 +113,26 @@ namespace VSWindowTitleChanger
 			}
 		}
 
+		public int DTEMajorVersion
+		{
+			get
+			{
+				Debug.Assert(m_DTEMajorVersion >= 0);
+				return m_DTEMajorVersion;
+			}
+		}
+
+		public int DTEMinorVersion
+		{
+			get
+			{
+				Debug.Assert(m_DTEMinorVersion >= 0);
+				return m_DTEMinorVersion;
+			}
+		}
+
+		int m_DTEMajorVersion = -1;
+		int m_DTEMinorVersion = -1;
 		VSWindowTitleChangerPackage m_Package;
 		TitleSetup m_TitleSetup;
 		TitleSetupEditor m_TitleSetupEditor;
@@ -124,6 +144,7 @@ namespace VSWindowTitleChanger
 		{
 			m_Package = package;
 			CreateCompileTimeConstants();
+			ParseDTEVersion();
 
 			m_ExecFuncEvaluatorThread = new ExecFuncEvaluatorThread();
 
@@ -163,6 +184,24 @@ namespace VSWindowTitleChanger
 			m_CompileTimeConstants.SetVariable("dte_version", dte.Version);
 			m_CompileTimeConstants.SetVariable("vs_version", DTEVersionToVSYear(dte.Version));
 			m_CompileTimeConstants.SetVariable("vs_edition", dte.Edition);
+		}
+
+		void ParseDTEVersion()
+		{
+			try
+			{
+				DTE2 dte = (DTE2)m_Package.GetInterface(typeof(DTE));
+				string[] version_numbers = dte.Version.Split(new char[] { '.' });
+				Debug.Assert(version_numbers.Length == 2);
+				if (version_numbers.Length != 2)
+					return;
+				string dte_version = dte.Version;
+				m_DTEMajorVersion = Convert.ToInt32(version_numbers[0]);
+				m_DTEMinorVersion = Convert.ToInt32(version_numbers[1]);
+			}
+			catch (System.Exception)
+			{
+			}
 		}
 
 		static string DTEVersionToVSYear(string dte_version)

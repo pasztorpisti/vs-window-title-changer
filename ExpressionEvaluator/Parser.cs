@@ -361,6 +361,12 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 				case TokenType.FuncSlnWorkspaceName:
 					m_Tokenizer.ConsumeNextToken();
 					return new FuncWorkspaceName(new Variable("sln_dir", m_Tokenizer.Pos, 0));
+				case TokenType.FuncWorkspaceOwner:
+					m_Tokenizer.ConsumeNextToken();
+					return new FuncWorkspaceOwner(Parse_FunctionCall());
+				case TokenType.FuncSlnWorkspaceOwner:
+					m_Tokenizer.ConsumeNextToken();
+					return new FuncWorkspaceOwner(new Variable("sln_dir", m_Tokenizer.Pos, 0));
 
 				// Unary Operators
 				case TokenType.OpNot:
