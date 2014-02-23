@@ -1,11 +1,100 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Text;
-using Microsoft.TeamFoundation.VersionControl.Client;
+using System.Reflection;
 
 
 namespace VSWindowTitleChanger.ExpressionEvaluator
 {
+
+	class WorkspaceInfoGetter
+	{
+		static WorkspaceInfoGetter m_Instance;
+
+		public static WorkspaceInfoGetter Instance()
+		{
+			if (m_Instance == null)
+				m_Instance = new WorkspaceInfoGetter();
+			return m_Instance;
+		}
+
+		public string GetOwner(string path)
+		{
+			return GetStringWorkspaceProperty(path, m_PIName);
+		}
+
+		public string GetName(string path)
+		{
+			return GetStringWorkspaceProperty(path, m_PIOwnerName);
+		}
+
+		string GetStringWorkspaceProperty(string path, PropertyInfo pi)
+		{
+			if (path.Length == 0 || pi == null)
+				return "";
+			try
+			{
+				object workstation = m_PICurrent.GetValue(null, null);
+				if (workstation == null)
+					return "";
+				object workspace_info = m_MIGetLocalWorkspaceInfo.Invoke(workstation, new object[] { path });
+				if (workspace_info == null)
+					return "";
+				object val = pi.GetValue(workspace_info, null);
+				return val.ToString();
+			}
+			catch (System.Exception ex)
+			{
+				Debug.WriteLine(ex.ToString());
+				return "";
+			}
+		}
+
+		PropertyInfo m_PICurrent;
+		MethodInfo m_MIGetLocalWorkspaceInfo;
+		PropertyInfo m_PIName;
+		PropertyInfo m_PIOwnerName;
+
+		WorkspaceInfoGetter()
+		{
+			Init();
+		}
+
+		void Init()
+		{
+			try
+			{
+				string workstation_class_asm_ref = "Microsoft.TeamFoundation.VersionControl.Client.Workstation, Microsoft.TeamFoundation.VersionControl.Client, Version={0}.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL";
+				string workspaceinfo_class_asm_ref = "Microsoft.TeamFoundation.VersionControl.Client.WorkspaceInfo, Microsoft.TeamFoundation.VersionControl.Client, Version={0}.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL";
+				int dte_major_version = PackageGlobals.Instance().DTEMajorVersion;
+
+				System.Type workstation_class = System.Type.GetType(string.Format(workstation_class_asm_ref, PackageGlobals.Instance().DTEMajorVersion));
+				if (workstation_class != null)
+				{
+					m_PICurrent = workstation_class.GetProperty("Current", BindingFlags.Static | BindingFlags.Public);
+					if (m_PICurrent != null)
+					{
+						m_MIGetLocalWorkspaceInfo = workstation_class.GetMethod("GetLocalWorkspaceInfo", new System.Type[] { typeof(string) });
+						if (m_MIGetLocalWorkspaceInfo != null)
+						{
+							System.Type workspaceinfo_class = System.Type.GetType(string.Format(workspaceinfo_class_asm_ref, PackageGlobals.Instance().DTEMajorVersion));
+							if (workspaceinfo_class != null)
+							{
+								m_PIName = workspaceinfo_class.GetProperty("Name");
+								m_PIOwnerName = workspaceinfo_class.GetProperty("OwnerName");
+							}
+						}
+					}
+				}
+			}
+			catch (System.Exception ex)
+			{
+				Debug.WriteLine(ex.ToString());
+			}
+		}
+	}
+
+
 	class FuncWorkspaceName : NeverConstExpression
 	{
 		public FuncWorkspaceName(Expression operand) : base(operand) { }
@@ -17,24 +106,30 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 			{
 				PackageGlobals.InvokeOnUIThread(delegate()
 				{
-					try
-					{
-						Workstation ws = Workstation.Current;
-						if (ws != null)
-						{
-							WorkspaceInfo wsi = ws.GetLocalWorkspaceInfo(path);
-							if (wsi != null)
-								workspace_name = wsi.Name;
-						}
-					}
-					catch (System.Exception ex)
-					{
-						Debug.WriteLine(ex.ToString());
-					}
+					workspace_name = WorkspaceInfoGetter.Instance().GetName(path);
 				});
 			}
 
 			return new StringValue(workspace_name);
+		}
+	}
+
+	class FuncWorkspaceOwner : NeverConstExpression
+	{
+		public FuncWorkspaceOwner(Expression operand) : base(operand) { }
+		public override Value Evaluate(IEvalContext ctx)
+		{
+			string path = SubExpressions[0].Evaluate(ctx).ToString();
+			string owner = "";
+			if (path.Length > 0)
+			{
+				PackageGlobals.InvokeOnUIThread(delegate()
+				{
+					owner = WorkspaceInfoGetter.Instance().GetOwner(path);
+				});
+			}
+
+			return new StringValue(owner);
 		}
 	}
 

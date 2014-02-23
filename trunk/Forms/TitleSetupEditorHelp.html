@@ -242,7 +242,7 @@ if (bool_val) {
 		<td>Matches string_val against the specified regex. The result is a bool value that is false if the match is successful.</td>
 	</tr>
 	<tr>
-		<td rowspan="11">3</td>
+		<td rowspan="13">3</td>
 		<td><pre class="expression">not bool_val
 !bool_val</pre></td>
 		<td>Bool not operator.</td>
@@ -286,6 +286,14 @@ if (bool_val) {
 	<tr>
 		<td><pre class="expression">sln_workspace_name</pre></td>
 		<td>This is a shorthand for the <span class="expression">workspace_name sln_dir</span> function call.</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">workspace_owner path_string</pre></td>
+		<td>Gets the name of the owner of the workspace that contains the specified path. The info is obtained using locally cached data (according to the msdn docs). The return value is an empty string if the info can not be retrieved.</td>
+	</tr>
+	<tr>
+		<td><pre class="expression">sln_workspace_owner</pre></td>
+		<td>This is a shorthand for the <span class="expression">workspace_owner sln_dir</span> function call.</td>
 	</tr>
 	<tr>
 		<td>4</td>
