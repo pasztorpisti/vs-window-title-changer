@@ -261,7 +261,7 @@ if (bool_val) {
 	</tr>
 	<tr>
 		<td><pre class="expression">backslashize string_val</pre></td>
-		<td>Replaces all '/' characters to '\' characters in the specified string. Comes handy if you prefer backslashes in pathnames as all of the provided variables contains pathnames with / characters to make it easier to write regex to match them.</td>
+		<td>Replaces all '/' characters to '\' characters in the specified string. Comes handy if you prefer backslashes in pathnames as all of the provided variables contain pathnames with / characters to make it easier to write regex to match them.</td>
 	</tr>
 	<tr>
 		<td><pre class="expression">bool value</pre></td>
@@ -628,7 +628,7 @@ Above you can see two ugly examples. The first one executes git using its full p
 
 <a name="exec_debugging"></a>
 <h3>Debugging exec</h3>
-When you are setting up an <span class="expression">exec</span> command you can have hard time in figuring out what goes wrong when the specified command fails: Does it execute at all? Is it command launching that fails or the command itself returns nozero exticode? It is hard to tell what went wrong because <span class="expression">exec</span> simply returns an empty string in case of an error. Fortunatley there is a remedy for this: In the Title Setup window of the extension you can check "Debug the exec command" checkbox. This checkbox has effect only while the setup window is open and it changes the behavior of the <span class="expression">exec</span> function in the following way: If <span class="expression">exec</span> fails for some reason then instead of return an empty string it returns a big ugly error report string that comes quite handy for you even if it drastically changes/alters the evaluation of the title expression. Here is an example to this error output:
+When you are setting up an <span class="expression">exec</span> command you can have hard time in figuring out what goes wrong when the specified command fails: Does it execute at all? Is it command launching that fails or the command itself returns nozero exticode? It is hard to tell what went wrong because <span class="expression">exec</span> simply returns an empty string in case of an error. Fortunatley there is a remedy for this: In the Title Setup window of the extension you can check "Debug the exec command" checkbox. This checkbox has effect only while the setup window is open and it changes the behavior of the <span class="expression">exec</span> function in the following way: If <span class="expression">exec</span> fails for some reason then instead of returning an empty string it returns a big ugly error report string that comes quite handy for you even if it drastically changes/alters the evaluation of the title expression. Here is an example to this error output:
 <table class="expression">
 	<tr>
 		<td>Expression</td>

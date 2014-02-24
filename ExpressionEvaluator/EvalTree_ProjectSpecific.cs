@@ -20,12 +20,12 @@ namespace VSWindowTitleChanger.ExpressionEvaluator
 
 		public string GetOwner(string path)
 		{
-			return GetStringWorkspaceProperty(path, m_PIName);
+			return GetStringWorkspaceProperty(path, m_PIOwnerName);
 		}
 
 		public string GetName(string path)
 		{
-			return GetStringWorkspaceProperty(path, m_PIOwnerName);
+			return GetStringWorkspaceProperty(path, m_PIName);
 		}
 
 		string GetStringWorkspaceProperty(string path, PropertyInfo pi)
