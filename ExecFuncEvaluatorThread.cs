@@ -219,6 +219,8 @@ namespace VSWindowTitleChanger
 				else
 					SetErrorMessageAndResetValue(string.Format("[[[exec exitcode={0} stdout={1} stderr={2}]]]", exitcode, m_StdOut.ToString(), m_StdErr.ToString()));
 
+				m_Process.Dispose();
+
 				m_StdOut = null;
 				m_StdErr = null;
 				m_Process = null;
@@ -346,6 +348,8 @@ namespace VSWindowTitleChanger
 
 				KillProcessAndChildren(m_Process.Id);
 				m_Process.WaitForExit();
+				m_Process.Dispose();
+				m_Process = null;
 			}
 		}
 	}
