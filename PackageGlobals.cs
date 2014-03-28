@@ -491,7 +491,7 @@ namespace VSWindowTitleChanger
 				var_values.exceptions.Add(ex);
 			}
 
-			if (var_values.exceptions.Count > 0)
+			if (var_values.exceptions.Count > 0 && m_Package.IsDebugEnabled())
 			{
 				OutputWindow output_window = null;
 				try
