@@ -23,14 +23,16 @@ namespace VSWindowTitleChanger
 	{
 		EExtensionActivationRule ExtensionActivationRule { get; set; }
 		TitleSetup TitleSetup { get; set; }
+		bool Debug { get; set; }
 	}
 
 	[ClassInterface(ClassInterfaceType.AutoDual)]
 	[ComVisible(true)]
 	public class ToolOptions : DialogPage, ISerializedOptions
 	{
-		private EExtensionActivationRule m_ExtensionActivationRule;
-		private TitleSetup m_TitleSetup;
+		EExtensionActivationRule m_ExtensionActivationRule;
+		TitleSetup m_TitleSetup;
+		bool m_Debug;
 
 		[Category("Window Title Changer Options")]
 		[DisplayName("Extension Activation")]
@@ -44,6 +46,11 @@ namespace VSWindowTitleChanger
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public TitleSetup TitleSetup { get { return m_TitleSetup; } set { m_TitleSetup = value; } }
 
+		[Category("Window Title Changer Options")]
+		[DisplayName("Debug")]
+		[Description("Turns on/off debug output. May come handy if your plugin crashes/misbehaves and you want to investigate the reasons.")]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public bool Debug { get { return m_Debug; } set { m_Debug = value; } }
 
 		public override void ResetSettings()
 		{
@@ -53,11 +60,13 @@ namespace VSWindowTitleChanger
 
 		public class SerializedOptions : ISerializedOptions
 		{
-			private EExtensionActivationRule m_ExtensionActivationRule;
-			private TitleSetup m_TitleSetup;
+			EExtensionActivationRule m_ExtensionActivationRule;
+			TitleSetup m_TitleSetup;
+			bool m_Debug;
 
 			public EExtensionActivationRule ExtensionActivationRule { get { return m_ExtensionActivationRule; } set { m_ExtensionActivationRule = value; } }
 			public TitleSetup TitleSetup { get { return m_TitleSetup; } set { m_TitleSetup = value; } }
+			public bool Debug { get { return m_Debug; } set { m_Debug = value; } }
 		}
 
 		private static void CopyOptions(ISerializedOptions src, ISerializedOptions dest)
