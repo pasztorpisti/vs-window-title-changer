@@ -231,6 +231,46 @@ namespace VSWindowTitleChanger
 			}
 			return null;
 		}
+
+		public void PrintControlHierarchy(PackageGlobals.DebugOutputInterface debug_output, DependencyObject node, int level)
+		{
+			string indent = new string(' ', level * 4);
+			for (int i = 0, e = VisualTreeHelper.GetChildrenCount(node); i < e; ++i)
+			{
+				DependencyObject child = VisualTreeHelper.GetChild(node, i);
+				if (child != null)
+				{
+					Type type = child.GetType();
+					if (type == typeof(System.Windows.Controls.TextBlock) || type.IsSubclassOf(typeof(System.Windows.Controls.TextBlock)))
+					{
+						System.Windows.Controls.TextBlock text_block = (System.Windows.Controls.TextBlock)child;
+						debug_output.WriteLine(indent + type.FullName + " \"" + text_block.Text + "\"");
+					}
+					else
+					{
+						debug_output.WriteLine(indent + type.FullName);
+					}
+					PrintControlHierarchy(debug_output, child, level + 1);
+				}
+			}
+		}
+
+		public void DebugPrintTitleControlHierarchy()
+		{
+			PackageGlobals.DebugOutputInterface debug_output = PackageGlobals.DebugOutput;
+			debug_output.WriteLine("----- BEGIN TITLE CONTROL HIERARCHY");
+			debug_output.WriteLine("m_TitleTextBlock: {0}", m_TitleTextBlock==null ? 0 : 1);
+			DependencyObject root = HwndSource.FromHwnd(m_MainHWND).RootVisual as DependencyObject;
+			debug_output.WriteLine("root: {0}", root == null ? 0 : 1);
+			if (root != null)
+			{
+				DependencyObject titlebar = FindInSubtreeByClassNamePostfix(root, ".MainWindowTitleBar") as DependencyObject;
+				debug_output.WriteLine("titlebar: {0}", titlebar == null ? 0 : 1);
+				if (titlebar != null)
+					PrintControlHierarchy(debug_output, titlebar, 0);
+			}
+			debug_output.WriteLine("----- END TITLE CONTROL HIERARCHY");
+		}
 #endif
 	}
 }
