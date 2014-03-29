@@ -11,6 +11,7 @@ using EnvDTE80;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using VSWindowTitleChanger.ExpressionEvaluator;
+using Microsoft.VisualStudio.Shell;
 
 namespace VSWindowTitleChanger
 {
@@ -44,6 +45,58 @@ namespace VSWindowTitleChanger
 			Debug.Assert(m_Globals != null);
 			return m_Globals;
 		}
+
+		public class DebugOutputInterface
+		{
+			Package m_Package;
+
+			public void SetPackage(Package package)
+			{
+				m_Package = package;
+			}
+
+			public void Write(string msg)
+			{
+				Debug.Write(msg);
+				if (m_Package == null)
+					return;
+				PackageGlobals.InvokeOnUIThread(delegate()
+				{
+					IVsOutputWindowPane output_pane = m_Package.GetOutputPane(GuidList.guidVSWindowTitleChangerCmdSet, "VSWindowTitleChanger");
+					if (output_pane != null)
+						output_pane.OutputString(msg);
+				});
+			}
+
+			public void Write(string msg, params object[] args)
+			{
+				Write(string.Format(msg, args));
+			}
+
+			public void WriteLine(string msg)
+			{
+				Debug.WriteLine(msg);
+				if (m_Package == null)
+					return;
+				PackageGlobals.InvokeOnUIThread(delegate()
+				{
+					IVsOutputWindowPane output_pane = m_Package.GetOutputPane(GuidList.guidVSWindowTitleChangerCmdSet, "VSWindowTitleChanger");
+					if (output_pane != null)
+					{
+						msg += "\n";
+						output_pane.OutputString(msg);
+					}
+				});
+			}
+
+			public void WriteLine(string msg, params object[] args)
+			{
+				WriteLine(string.Format(msg, args));
+			}
+		}
+
+		public static DebugOutputInterface DebugOutput = new DebugOutputInterface();
+
 
 		public delegate void Job();
 
@@ -493,32 +546,9 @@ namespace VSWindowTitleChanger
 
 			if (var_values.exceptions.Count > 0 && m_Package.IsDebugEnabled())
 			{
-				OutputWindow output_window = null;
-				try
-				{
-					DTE2 dte = (DTE2)m_Package.GetInterface(typeof(DTE));
-					Window window = dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
-					output_window = (OutputWindow)window.Object;
-				}
-				catch
-				{
-				}
-
+				DebugOutput.WriteLine("----- Exceptions: GetVariableValues:");
 				foreach (Exception ex in var_values.exceptions)
-				{
-					string msg = "----------------- VSWindowTitleChanger Exception: " + ex.ToString();
-					Debug.WriteLine(msg);
-					if (output_window != null)
-					{
-						try
-						{
-							output_window.ActivePane.OutputString("\n" + msg + "\n");
-						}
-						catch
-						{
-						}
-					}
-				}
+					DebugOutput.WriteLine("EX: " + ex.ToString());
 			}
 
 			AddFilePathVars(var_value_setter, ref var_values.sln_path, SlashPathSeparator, "sln_");

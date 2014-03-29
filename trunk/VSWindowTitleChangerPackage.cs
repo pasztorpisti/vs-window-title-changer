@@ -47,6 +47,7 @@ namespace VSWindowTitleChanger
 	{
 		public VSWindowTitleChangerPackage()
 		{
+			PackageGlobals.DebugOutput.SetPackage(this);
 			Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
 		}
 
@@ -112,6 +113,10 @@ namespace VSWindowTitleChanger
 		Dictionary<string, Value> m_PrevVariableValues = new Dictionary<string, Value>();
 		EExtensionActivationRule m_PrevExtensionActivationRule = EExtensionActivationRule.AlwaysInactive;
 
+#if VS2010_AND_LATER
+		int m_DebugPrintTitleControlHierarchyCount = 0;
+#endif
+
 		private void UpdateWindowTitle()
 		{
 			m_VSMainWindow.UpdateAppActive();
@@ -125,9 +130,17 @@ namespace VSWindowTitleChanger
 				m_PrevVariableValues = eval_ctx.VariableValues;
 				globals.TitleSetupEditor.Variables = eval_ctx.VariableValues;
 			}
-	
+
 			ToolOptions options = (ToolOptions)GetDialogPage(typeof(ToolOptions));
 
+#if VS2010_AND_LATER
+			if (m_DebugPrintTitleControlHierarchyCount < 5 && options.Debug)
+			{
+				++m_DebugPrintTitleControlHierarchyCount;
+				m_VSMainWindow.DebugPrintTitleControlHierarchy();
+			}
+#endif
+	
 			PackageGlobals.VSMultiInstanceInfo multi_instance_info;
 			globals.GetVSMultiInstanceInfo(out multi_instance_info);
 
