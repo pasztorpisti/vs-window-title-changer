@@ -116,6 +116,15 @@ namespace VSWindowTitleChanger
 			}
 		}
 
+		public void Update()
+		{
+#if VS2010_AND_LATER
+			if (m_TitleTextBlock == null && PackageGlobals.Instance().DTEMajorVersion > 10)
+				TryfindTitleTextBlock();
+#endif
+			UpdateAppActive();
+		}
+
 		[DllImport("user32.dll")]
 		static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
@@ -124,7 +133,7 @@ namespace VSWindowTitleChanger
 
 		// It seems that sometimes we don't receive WM_ACTIVATEAPP(1) when the debugged program quits and
 		// this plugin thinks that this app is still inactive. We help on that by periodically polling this state.
-		public void UpdateAppActive()
+		void UpdateAppActive()
 		{
 			bool app_active = false;
 			IntPtr foreground_wnd = GetForegroundWindow();
