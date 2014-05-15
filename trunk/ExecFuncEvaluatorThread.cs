@@ -196,9 +196,14 @@ namespace VSWindowTitleChanger
 			{
 				m_DebugMode = debug_mode;
 				if (m_Process == null)
+				{
 					LaunchProcessIfNeeded();
+				}
 				else if (m_Process.HasExited)
+				{
+					m_Process.WaitForExit();
 					ProcessTerminated();
+				}
 			}
 
 			static string TransformOutput(string s)
