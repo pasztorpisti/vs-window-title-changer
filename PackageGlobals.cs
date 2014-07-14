@@ -387,6 +387,7 @@ namespace VSWindowTitleChanger
 			public string active_wnd_title = "";
 			public string active_wnd_class = "";
 			public string orig_title = "";
+			public string cmdline = "";
 
 			public List<Exception> exceptions = new List<Exception>();
 		}
@@ -418,6 +419,9 @@ namespace VSWindowTitleChanger
 
 			return null;
 		}
+
+		[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+		private static extern IntPtr GetCommandLine();
 
 		void GetVariableValues(VarValues var_values)
 		{
@@ -529,6 +533,15 @@ namespace VSWindowTitleChanger
 			}
 
 			var_values.orig_title = m_Package.VSMainWindow.OriginalTitle;
+
+			try
+			{
+				var_values.cmdline = Marshal.PtrToStringAuto(GetCommandLine());
+			}
+			catch (System.Exception ex)
+			{
+				var_values.exceptions.Add(ex);
+			}
 		}
 
 
@@ -598,6 +611,8 @@ namespace VSWindowTitleChanger
 
 			var_value_setter.SetVariable("active_wnd_title", var_values.active_wnd_title);
 			var_value_setter.SetVariable("active_wnd_class", var_values.active_wnd_class);
+
+			var_value_setter.SetVariable("cmdline", var_values.cmdline);
 		}
 
 
