@@ -3,7 +3,7 @@
   <Identifier Id="1e0c061a-af97-43bb-930d-7e3629676249">
     <Name>Visual Studio Window Title Changer</Name>
     <Author>István Pásztor</Author>
-    <Version>2.1.6</Version>
+    <Version>2.1.7</Version>
     <Description xml:space="preserve">Changes the Visual Studio Window Title by evaluating a user defined expression. Extremely helpful when working with multiple branches of the same project.</Description>
     <Locale>1033</Locale>
     <MoreInfoUrl>http://visualstudiogallery.msdn.microsoft.com/2e8ebfe4-023f-4c4d-9b7a-d05bbc5cb239</MoreInfoUrl>
