@@ -53,6 +53,8 @@ namespace VSWindowTitleChanger
 			for (;;)
 			{
 				m_WakeUpEvent.WaitOne();
+				// FIXME: BUG: After waiting for the event we should
+				// remove jobs in a loop until m_Jobs is empty.
 				IJob job;
 				lock (this)
 				{
@@ -61,6 +63,8 @@ namespace VSWindowTitleChanger
 					job = m_Jobs.First.Value;
 					m_Jobs.RemoveFirst();
 				}
+				// FIXME: some people experience NullPointerException somewhere
+				// in this Run method. It might be job or something inside Execute.
 				job.Execute();
 			}
 		}
