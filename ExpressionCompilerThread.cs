@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -53,19 +53,19 @@ namespace VSWindowTitleChanger
 			for (;;)
 			{
 				m_WakeUpEvent.WaitOne();
-				// FIXME: BUG: After waiting for the event we should
-				// remove jobs in a loop until m_Jobs is empty.
-				IJob job;
+				LinkedList<IJob> jobs;
 				lock (this)
 				{
 					if (m_StopRequest)
 						break;
-					job = m_Jobs.First.Value;
-					m_Jobs.RemoveFirst();
+
+					jobs = m_Jobs;
+					m_Jobs = new LinkedList<IJob>();
 				}
-				// FIXME: some people experience NullPointerException somewhere
-				// in this Run method. It might be job or something inside Execute.
-				job.Execute();
+				foreach (IJob job in jobs)
+				{
+					job.Execute();
+				}
 			}
 		}
 
