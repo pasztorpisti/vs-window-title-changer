@@ -16,9 +16,9 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin_2005\Debug\</OutputPath>
-    <IntermediateOutputPath>obj\obj_2005\Debug\</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>obj\obj_2005\Debug\</BaseIntermediateOutputPath>
+    <OutputPath>bin\vs2005\Debug\</OutputPath>
+    <IntermediateOutputPath>obj\vs2005\Debug\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\vs2005\Debug\</BaseIntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -26,9 +26,9 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin_2005\Release\</OutputPath>
-    <IntermediateOutputPath>obj\obj_2005\Release\</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>obj\obj_2005\Release\</BaseIntermediateOutputPath>
+    <OutputPath>bin\vs2005\Release\</OutputPath>
+    <IntermediateOutputPath>obj\vs2005\Release\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\vs2005\Release\</BaseIntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -133,7 +133,7 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="C:\Program Files (x86)\Visual Studio 2005 SDK\2007.02\VisualStudioIntegration\Tools\Build\Microsoft.VsSDK.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
