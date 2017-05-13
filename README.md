@@ -19,6 +19,8 @@ After installing the plugin go to the `Tools | Options... | VS Window Title Chan
 Select the `Window Title Setup` row and click the `...` button when it appears.
 This should pop up the title setup window where you can enter your window title expression.
 
+![Title Setup Window](TitleSetupWindow.png)
+
 While the title expression setup window is open you can press F1 to read the help.
 Alternatively you can read the same help [here](http://htmlpreview.github.io/?https://github.com/pasztorpisti/vs-window-title-changer/blob/master/Forms/TitleSetupEditorHelp.html).
 
