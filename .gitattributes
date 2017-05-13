@@ -1,0 +1,12 @@
+*.cs            text=crlf
+*.sln           text=crlf
+*.csproj        text=crlf
+*.csporj.user   text=crlf
+*.vsixmanifest  text=crlf
+*.html          text=crlf
+*.resx          text=crlf
+*.md            text=crlf
+*.txt           text=crlf
+*.png           binary
+*.vsix          binary
+*.ico           binary
