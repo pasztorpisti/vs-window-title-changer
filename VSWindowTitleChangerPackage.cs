@@ -36,7 +36,7 @@ namespace VSWindowTitleChanger
 	[ProvideLoadKey("Standard", "2.0", "Visual Studio Window Title Changer", "WoofWoof", 1)]
 	// This attribute is used to register the informations needed to show the this package
 	// in the Help/About dialog of Visual Studio.
-	[InstalledProductRegistration(false, "#110", "#112", "2.1.8", IconResourceID = 400)]
+	[InstalledProductRegistration(false, "#110", "#112", "2.1.9", IconResourceID = 400)]
 	[Guid(GuidList.guidVSWindowTitleChangerPkgString)]
 	[ProvideOptionPage(typeof(ToolOptions), "VS Window Title Changer", "Settings", 0, 0, true)]
 	[ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids80.DesignMode)]

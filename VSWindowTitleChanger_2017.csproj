@@ -41,9 +41,9 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin_2017\Debug\</OutputPath>
-    <IntermediateOutputPath>obj\obj_2017\Debug\</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>obj\obj_2017\Debug\</BaseIntermediateOutputPath>
+    <OutputPath>bin\vs2017\Debug\</OutputPath>
+    <IntermediateOutputPath>obj\vs2017\Debug\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\vs2017\Debug\</BaseIntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE;VS2010_AND_LATER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -53,9 +53,9 @@
     <OutputType>Library</OutputType>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin_2017\Release\</OutputPath>
-    <IntermediateOutputPath>obj\obj_2017\Release\</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>obj\obj_2017\Release\</BaseIntermediateOutputPath>
+    <OutputPath>bin\vs2017\Release\</OutputPath>
+    <IntermediateOutputPath>obj\vs2017\Release\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\vs2017\Release\</BaseIntermediateOutputPath>
     <DefineConstants>TRACE;VS2010_AND_LATER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -68,9 +68,9 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin_2017\Debug_GUI\</OutputPath>
-    <IntermediateOutputPath>obj\obj_2017\Debug_GUI\</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>obj\obj_2017\Debug_GUI\</BaseIntermediateOutputPath>
+    <OutputPath>bin\vs2017\Debug_GUI\</OutputPath>
+    <IntermediateOutputPath>obj\vs2017\Debug_GUI\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\vs2017\Debug_GUI\</BaseIntermediateOutputPath>
     <DefineConstants>TRACE;DEBUG;DEBUG_GUI;VS2010_AND_LATER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -82,9 +82,9 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin_2017\Debug_ExpressionEvaluator\</OutputPath>
-    <IntermediateOutputPath>obj\obj_2017\Debug_ExpressionEvaluator\</IntermediateOutputPath>
-    <BaseIntermediateOutputPath>obj\obj_2017\Debug_ExpressionEvaluator\</BaseIntermediateOutputPath>
+    <OutputPath>bin\vs2017\Debug_ExpressionEvaluator\</OutputPath>
+    <IntermediateOutputPath>obj\vs2017\Debug_ExpressionEvaluator\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\vs2017\Debug_ExpressionEvaluator\</BaseIntermediateOutputPath>
     <DefineConstants>TRACE;DEBUG;DEBUG_EXPRESSION_EVALUATOR;VS2010_AND_LATER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>

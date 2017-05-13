@@ -1,4 +1,3 @@
-# Visual Studio 2017
 .vs/
-bin_*/
+bin/
 obj/
