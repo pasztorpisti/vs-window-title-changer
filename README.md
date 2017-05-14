@@ -24,6 +24,11 @@ This should pop up the title setup window where you can enter your window title 
 While the title expression setup window is open you can press F1 to read the help.
 Alternatively you can read the same help [here](http://htmlpreview.github.io/?https://github.com/pasztorpisti/vs-window-title-changer/blob/master/Forms/TitleSetupEditorHelp.html).
 
+## Development
+
+The code and solution files for VS2005, VS2008 and VS2010 can be found in the
+[pre-vs2017 branch](https://github.com/pasztorpisti/vs-window-title-changer/tree/pre-vs2017).
+
 ## Contributors
 
 - [mdvtj](https://github.com/mdvtj) helped in adding VS2017 support
