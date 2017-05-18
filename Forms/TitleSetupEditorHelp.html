@@ -3,7 +3,7 @@
 	<title>Help: Title Changer Expressions</title>
 	<style type="text/css">
 		body {
-			font-family: "Arial";
+			font-family: "Arial", "sans-serif";
 			font-size: 12pt;
 		}
 		a {
@@ -15,31 +15,25 @@
 			margin-bottom: 10px;
 		}
 		th {
+			background-color: lightgrey;
 			text-align: left;
 			padding-left: 5px;
 			padding-right: 10px;
 		}
 		td {
-			horizontal-align: left;
 			vertical-align: top;
-			padding-top: 3px;
-			padding-bottom: 3px;
-			padding-left: 5px;
-			padding-right: 10px;
+			padding: 3px 10px 3px 5px;
+		}
+		table, table th, table td {
+			border: 1px solid lightgrey;
 		}
 		td pre {
-			margin: 0px;
+			margin: 0;
 		}
 		td.var_name {
 			font-family: "Consolas", "Lucida Console", monospace;
 			font-size: 11pt;
 			color: #404040;
-		}
-		table.normal th {
-			background-color: lightgrey;
-		}
-		table.normal, table.normal th, table.normal td {
-			border: 1px solid lightgrey;
 		}
 		pre.expression {
 			font-family: "Consolas", "Lucida Console", monospace;
@@ -91,7 +85,23 @@
 <a name="basic_usage"></a>
 <h2>Basic usage</h2>
 <p>
-As a first step open the setup window of the Title Changer extension. Go to <b>Tools/Options/VS Window Title Changer</b> and then select the <b>Window Title Patterns</b> option and press its <b>"..."</b> button. The setup window of the extension should appear as a result, it has a TextBox in which you can enter your window title expression. Note that this setup window is intentionally modeless to allow you to work around in your Visual Studio while you are setting up the title expression. It is helpful for example to be able to modify the Platform/Config and to change solution file and open documents to test your title expression. So after opening the title setup window you can close the Options dialog of Visual Studio. There is a know minor issue regarding the modeless nature of the title setup window: If you open the modeless title setup window and close the Options dialog then reopening the modal Options dialog (or any other modal dialog of VS) steals the modeless nature of the title setup window. Again, this is a minor issue that has an acceptable workaround so this won't be addressed in the future especially because I don't know an easy fix for this.
+	Open the setup window of the Title Changer extension: Go to <b>Tools | Options... | VS Window Title Changer</b>,
+	select the <b>Window Title Patterns</b> option and press its <b>"..."</b> button.
+	The setup window of the extension should appear as a result - it has a TextBox in which you can enter your window
+	title expression.
+</p>
+<p>
+	Note that this setup window is intentionally modeless to allow you to experiment with your
+	Visual Studio while you are setting up the title expression. It is helpful for example when you want to modify the
+	Platform/Config, change the solution file, open documents, etc to test your title expression.
+	After opening the title setup window you can close the Options dialog of Visual Studio.
+</p>
+<p>
+	There is a know minor issue regarding the modeless nature of the title setup window:
+	If you open the modeless title setup window and close the Options dialog then reopening the modal Options dialog
+	(or any other modal dialog of VS) steals the modeless nature of the title setup window.
+	Again, this is a minor issue that has an acceptable workaround so this won't be addressed in the future especially
+	because I don't know an easy fix for this.
 </p>
 Simply setting the titlebar to a constant string:
 <table class="expression">
@@ -118,7 +128,9 @@ If you want to include a quotation mark in your text then put two quotation mark
 You can use any character inside a string except newline and of course you have to escape quotation marks by using double quotation marks.
 
 <h3>Taking it to the next level</h3>
-The extension provides you with a set of variables that contain some info about the state of Visual Studio. You can see the list of these variables along with their actual value in the listview at the bottom of the setup window. You can include the value of these variables in your titlebar.
+The extension provides you with a set of variables that contain some info about the state of Visual Studio.
+You can see the list of these variables along with their actual value in the listview at the bottom of the setup window.
+You can include the value of these variables in your titlebar.
 <table class="expression">
 	<tr>
 		<td>Expression</td>
@@ -133,7 +145,9 @@ The extension provides you with a set of variables that contain some info about 
 		<td><pre class="title_text">Test</pre></td>
 	</tr>
 </table>
-As you can see you can use the + operator to concatenate strings and the values of variables. The only problem with the above example is that the sln_filename can be an empty string if there is no solution open and in that case your VS titlebar with this expression evaluates to the following:
+As you can see you can use the + operator to concatenate strings and the values of variables.
+The only problem with the above example is that the sln_filename can be an empty string if there is no solution open
+and in that case your VS titlebar with this expression evaluates to the following:
 <table class="expression">
 	<tr>
 		<td>Expression</td>
@@ -148,7 +162,8 @@ As you can see you can use the + operator to concatenate strings and the values 
 		<td><pre class="title_text"></pre></td>
 	</tr>
 </table>
-There are many ways to deal with this but in either case we have to use a conditional expression. Here are a few solutions:
+There are many ways to deal with this but in either case we have to use a conditional expression.
+Here are a few solutions:
 <h4>Solution #1</h4>
 <table class="expression">
 	<tr>
@@ -187,21 +202,42 @@ There are many ways to deal with this but in either case we have to use a condit
 </table>
 <h4>Solution #X</h4>
 Of course these are not the only solutions but the above samples show well how to deal with issues like this.
-If you need something simple and you are lazy to read the expression language tutorial (that isn't long at all) then you can jump to the <a href="#examples">Examples section</a> to copy paste a template for yourself.
+If you need something simple and you are lazy to read the expression language tutorial (that isn't long at all)
+then you can jump to the <a href="#examples">Examples section</a> to copy paste a template for yourself.
 
 <a name="language_basics"></a>
 <h2>Expression language basics</h2>
 <ul>
-	<li>The expression language of this extension is case insensitive when it comes to comparing string values and matching regular expressions.</li>
-	<li>There are only two types: bool and string. bool has two possible values: true/false. Both conversion from string to bool and conversion from bool to string are possible. Conversion automatically takes place when an operator or language construct expects a specific type but you can explicitly convert a value with the <span class="expr_operator">bool</span> or <span class="expr_operator">string</span> unary operators.
+	<li>
+		The expression language of this extension is case insensitive when it comes to comparing string values and
+		matching regular expressions.
+	</li>
+	<li>
+		There are only two types: bool and string. bool has two possible values: true/false.
+		Both conversion from string to bool and conversion from bool to string are possible.
+		Conversion automatically takes place when an operator or language construct expects a specific type but you
+		can explicitly convert a value with the <span class="expr_operator">bool</span> or
+		<span class="expr_operator">string</span> unary operators.
 		<ul>
 			<li>Converting a bool to string results in "true" or "false".</li>
 			<li>Converting a string to bool results in false only if the length of the string is zero.</li>
 		</ul>
-		Most operators expect a specific type and automatically convert the type of your values/expressions into the expected type. The only exception is the <span class="expr_operator">==</span> operator that is smart and performs case insensitive string comparison if both operands are strings, in all other cases it converts both operands to bool and performs bool comparison.
+		Most operators expect a specific type and automatically convert the type of your values/expressions into the
+		expected type.
+		The only exception is the <span class="expr_operator">==</span> operator that is smart and performs case
+		insensitive string comparison if both operands are strings, in all other cases it converts both operands to
+		bool and performs bool comparison.
 	</li>
-	<li>Variable names are allowed to contain any unicode characters and '_' and '$'. Since we have only a few predefined constants and variables available (as you will se below) this restriction may look irrelevant but when you start using regex group matching you can optionally name your regex groups and in that case this rule comes handy.</li>
-	<li>If you use a variable that doesn't exist in the given scope then it is treated as a warning and the variable automatically evaluates into an empty string. The expression editor underlines these variables.</li>
+	<li>
+		Variable names are allowed to contain any unicode characters and '_' and '$'. Since we have only a few
+		predefined constants and variables available (as you will se below) this restriction may look irrelevant but
+		when you start using regex group matching you can optionally name your regex groups and in that case this
+		rule comes handy.
+	</li>
+	<li>
+		If you use a variable that doesn't exist in the given scope then it is treated as a warning and the variable
+		automatically evaluates into an empty string. The expression editor underlines these variables.
+	</li>
 	<li>You can use single-line comments just like in C++/C# by prefixing the comment with //</li>
 </ul>
 <a name="operators"></a>
@@ -230,7 +266,13 @@ if (bool_val) {
 } else {
     val
 }		</pre></td>
-		<td>You can use zero or more else-if branches but the else branch is always required. In this expression language the if-else statement is also an expression and isn't really a flow construct. It is much like a higher precedence ternary (<span class="expr_operator">?:</span>) operator. You can for example add the value of two if-else statements however this may look odd and you may not want to exploit this...</td>
+		<td>
+			You can use zero or more else-if branches but the else branch is always required. In this expression
+			language the if-else statement is also an expression and isn't really a flow construct.
+			It is much like a higher precedence ternary (<span class="expr_operator">?:</span>) operator.
+			You can for example add the value of two if-else statements however this may look odd and you may not
+			want to exploit this...
+		</td>
 	</tr>
 	<tr>
 		<td rowspan="2">2</td>
@@ -261,31 +303,67 @@ if (bool_val) {
 	</tr>
 	<tr>
 		<td><pre class="expression">backslashize string_val</pre></td>
-		<td>Replaces all '/' characters to '\' characters in the specified string. Comes handy if you prefer backslashes in pathnames as all of the provided variables contain pathnames with / characters to make it easier to write regex to match them.</td>
+		<td>
+			Replaces all '/' characters to '\' characters in the specified string. Comes handy if you prefer
+			backslashes in pathnames as all of the provided variables contain pathnames with / characters to make it
+			easier to write regex to match them.
+		</td>
 	</tr>
 	<tr>
 		<td><pre class="expression">bool value</pre></td>
-		<td>Converts the specified value to bool. Does nothing if the specified value is already bool. In case of strings it evaluates to false only if the length of the string is zero.</td>
+		<td>
+			Converts the specified value to bool. Does nothing if the specified value is already bool. In case of
+			strings it evaluates to false only if the length of the string is zero.
+		</td>
 	</tr>
 	<tr>
 		<td><pre class="expression">string value</pre></td>
-		<td>Converts the specified value to string. Does nothing if the specified value is already string. In case of bool values it evaluates to &quot;true&quot; or &quot;false&quot;.</td>
+		<td>
+			Converts the specified value to string. Does nothing if the specified value is already string.
+			In case of bool values it evaluates to &quot;true&quot; or &quot;false&quot;.
+		</td>
 	</tr>
 	<tr>
 		<td><pre class="expression">exec [variable] exec_period command workdir</pre></td>
-		<td>Executes a command in a given workdir periodically and this <span class="expression">exec</span> function call returns the (processed) output of the executed command. Optionally you can specify a <span class="expression">[variable]</span> parameter and in this case <span class="expression">exec</span> not only returns the output of the command but stores it into the specified variable as well. This is useful only if you use <span class="expression">exec</span> as the conditional expression of an if statement or a conditional (ternary <span class="expr_operator">?:</span>) operator, in this case you can access the output of the command by using the specified variable in the if body or true-expression of the ternary. The <span class="expression">exec</span> command is probably as powerful as the rest of the features of this extension so I don't try to describe it here, I gave it a separate section for this: <a href="#exec_magic">Exec magic</a></td>
+		<td>
+			Executes a command in a given workdir periodically and this <span class="expression">exec</span> function
+			call returns the (processed) output of the executed command. Optionally you can specify a
+			<span class="expression">[variable]</span> parameter and in this case <span class="expression">exec</span>
+			not only returns the output of the command but stores it into the specified variable as well.
+			This is useful only if you use <span class="expression">exec</span> as the conditional expression of an if
+			statement or a conditional (ternary <span class="expr_operator">?:</span>) operator, in this case you can
+			access the output of the command by using the specified variable in the if body or true-expression of the
+			ternary. The <span class="expression">exec</span> command is probably as powerful as the rest of the
+			features of this extension so I don't try to describe it here, I gave it a separate section for this:
+			<a href="#exec_magic">Exec magic</a>
+		</td>
 	</tr>
 	<tr>
 		<td><pre class="expression">relpath dir_string path_string</pre></td>
-		<td>Converts a file/directory pathname specified by the path_string parameter to a pathname that is relative to the specified directory. Both dir_string and path_string must be either absolute or relative pathnames otherwise the function returns the value of path_string. If both dir_string and path_string are absolute but they refer to different drives then the return value is path_string. The incoming parameters can use both '\' and '/' as path separators but the return value of the function always contains '/' path separators and the return value never has a trailing slash.</td>
+		<td>
+			Converts a file/directory pathname specified by the path_string parameter to a pathname that is relative
+			to the specified directory. Both dir_string and path_string must be either absolute or relative pathnames
+			otherwise the function returns the value of path_string.
+			If both dir_string and path_string are absolute but they refer to different drives then the return value
+			is path_string. The incoming parameters can use both '\' and '/' as path separators but the return value
+			of the function always contains '/' path separators and the return value never has a trailing slash.
+		</td>
 	</tr>
 	<tr>
 		<td><pre class="expression">workspace_name path_string</pre></td>
-		<td>Gets the name of the workspace that contains the specified path. The info is obtained using locally cached data (according to the msdn docs). The return value is an empty string if the info can not be retrieved.</td>
+		<td>
+			Gets the name of the workspace that contains the specified path.
+			The info is obtained using locally cached data (according to the msdn docs).
+			The return value is an empty string if the info can not be retrieved.
+		</td>
 	</tr>
 	<tr>
 		<td><pre class="expression">workspace_owner path_string</pre></td>
-		<td>Gets the name of the owner of the workspace that contains the specified path. The info is obtained using locally cached data (according to the msdn docs). The return value is an empty string if the info can not be retrieved.</td>
+		<td>
+			Gets the name of the owner of the workspace that contains the specified path.
+			The info is obtained using locally cached data (according to the msdn docs).
+			The return value is an empty string if the info can not be retrieved.
+		</td>
 	</tr>
 	<tr>
 		<td>4</td>
@@ -308,7 +386,10 @@ if (bool_val) {
 	<tr>
 		<td rowspan="2">6</td>
 		<td><pre class="expression">val0 == val1</pre></td>
-		<td>If both val0 and val1 are strings then returns true if the strings are equal. (case insensitive) If either val0 or val1 is bool then this operator converts both operands to bool values and performs bool comparison.</td>
+		<td>
+			If both val0 and val1 are strings then returns true if the strings are equal (case insensitive).
+			If either val0 or val1 is bool then this operator converts both operands to bool values and performs bool comparison.
+		</td>
 	</tr>
 	<tr>
 		<td><pre class="expression">val0 != val1</pre></td>
@@ -338,7 +419,10 @@ bool_val | bool_val</pre></td>
 		<td>10</td>
 		<td><pre class="expression">bool_val ? val0 : val1
 bool_val ? val0</pre></td>
-		<td>Ternary operator. Evaluates to val0 if bool_val is true otherwise it evaluates to val1. If you omit the optional ":" and val1 then val1 defaults to an empty string.</td>
+		<td>
+			Ternary operator. Evaluates to val0 if bool_val is true otherwise it evaluates to val1.
+			If you omit the optional ":" and val1 then val1 defaults to an empty string.
+		</td>
 	</tr>
 </table>
 
@@ -353,12 +437,18 @@ bool_val ? val0</pre></td>
 	<tr>
 		<td class="var_name">active_wnd_class</td>
 		<td class="var_name">string</td>
-		<td>The classname of the active VS window. This is an empty string if the currently focused foreground window isn't a window of VS.</td>
+		<td>
+			The classname of the active VS window.
+			This is an empty string if the currently focused foreground window isn't a window of VS.
+		</td>
 	</tr>
 	<tr>
 		<td class="var_name">active_wnd_title</td>
 		<td class="var_name">string</td>
-		<td>The title of the active VS window. This is an empty string if the currently focused foreground window isn't a window of VS.</td>
+		<td>
+			The title of the active VS window.
+			This is an empty string if the currently focused foreground window isn't a window of VS.
+		</td>
 	</tr>
 	<tr>
 		<td class="var_name">any_doc_dirty</td>
@@ -373,12 +463,19 @@ bool_val ? val0</pre></td>
 	<tr>
 		<td class="var_name">anything_dirty</td>
 		<td class="var_name">string</td>
-		<td>"*" if the solution file or any of the project files or any of the open documents is modified "" otherwise. You can use it as a bool value too.</td>
+		<td>
+			"*" if the solution file or any of the project files or any of the open documents is modified "" otherwise.
+			You can use it as a bool value too.
+		</td>
 	</tr>
 	<tr>
 		<td class="var_name">app_active</td>
 		<td class="var_name">bool</td>
-		<td>True if one of the windows of this VS instance is the foreground window. This is very similar to the wnd_foreground variable that is active only when the foreground window is the VS main window.</td>
+		<td>
+			True if one of the windows of this VS instance is the foreground window.
+			This is very similar to the wnd_foreground variable that is active only when the foreground window is the
+			VS main window.
+		</td>
 	</tr>
 	<tr>
 		<td class="var_name">cmdline</td>
@@ -393,7 +490,10 @@ bool_val ? val0</pre></td>
 	<tr>
 		<td class="var_name">debug_mode</td>
 		<td class="var_name">string</td>
-		<td>&quot;&quot; or &quot;Running&quot; or &quot;Debugging&quot;. This is basically an enum. It can be used as a bool (just like the debugging variable) because it is empty string when not debugging.</td>
+		<td>
+			&quot;&quot; or &quot;Running&quot; or &quot;Debugging&quot;. This is basically an enum.
+			It can be used as a bool (just like the debugging variable) because it is empty string when not debugging.
+		</td>
 	</tr>
 	<tr>
 		<td class="var_name">debugging</td>
@@ -403,7 +503,10 @@ bool_val ? val0</pre></td>
 	<tr>
 		<td class="var_name">doc_dir</td>
 		<td class="var_name">string</td>
-		<td>Active document directory, there is no trailing path separator char. This is an empty string if we don't have an active document open.</td>
+		<td>
+			Active document directory, there is no trailing path separator char.
+			This is an empty string if we don't have an active document open.
+		</td>
 	</tr>
 	<tr>
 		<td class="var_name">doc_dirty</td>
@@ -413,22 +516,31 @@ bool_val ? val0</pre></td>
 	<tr>
 		<td class="var_name">doc_ext</td>
 		<td class="var_name">string</td>
-		<td>The extension of the active document. e.g.: &quot;cpp&quot; or &quot;cs&quot;. This is an empty string if we don't have an active document open.</td>
+		<td>
+			The extension of the active document.
+			E.g.: &quot;cpp&quot; or &quot;cs&quot;. This is an empty string if we don't have an active document open.
+		</td>
 	</tr>
 	<tr>
 		<td class="var_name">doc_file</td>
 		<td class="var_name">string</td>
-		<td>Active document filename with extension. e.g.: &quot;test.cpp&quot;.  This is an empty string if we don't have an active document open.</td>
+		<td>
+			Active document filename with extension.
+			E.g.: &quot;test.cpp&quot;.  This is an empty string if we don't have an active document open.
+		</td>
 	</tr>
 	<tr>
 		<td class="var_name">doc_filename</td>
 		<td class="var_name">string</td>
-		<td>Active document filename without extension. e.g.: &quot;test&quot;. This is an empty string if we don't have an active document open.</td>
+		<td>
+			Active document filename without extension.
+			E.g.: &quot;test&quot;. This is an empty string if we don't have an active document open.
+		</td>
 	</tr>
 	<tr>
 		<td class="var_name">doc_open</td>
 		<td class="var_name">bool</td>
-		<td>true if we have an open document, an active document</td>
+		<td>True if we have an open document, an active document</td>
 	</tr>
 	<tr>
 		<td class="var_name">doc_path</td>
@@ -443,7 +555,10 @@ bool_val ? val0</pre></td>
 	<tr>
 		<td class="var_name">multi_instances</td>
 		<td class="var_name">bool</td>
-		<td>True if at least one other instance of Visual Studio is running simultaneously. The other instances are allowed to be different versions of Visual Studio.</td>
+		<td>
+			True if at least one other instance of Visual Studio is running simultaneously.
+			The other instances are allowed to be different versions of Visual Studio.
+		</td>
 	</tr>
 	<tr>
 		<td class="var_name">multi_instances_same_ver</td>
@@ -551,7 +666,15 @@ bool_val ? val0</pre></td>
 
 <a name="regex_magic"></a>
 <h2>Regex magic</h2>
-As you see there are two regex matching operators <span class="exp_operator">=~</span> and <span class="exp_operator">!~</span>. These operators simply return bool values indicating the success or failure of the matching. This bool value alone is already very handy if all you want is making decisions but you can also use the powerful group capturing capabilities of the regex engine. In order to do so you have to use one of the regex matching operators as the conditional expression of an if-else statement or a ternary (<span class="expr_operator">?:</span>) operator. In case of successful regex match the executed branch of the <span class="expression">if-else</span> statement or ternary operator can use the value of the captured regex groups as $0, $1, ... and $regex_name if you have named regex groups.
+
+As you see there are two regex matching operators <span class="exp_operator">=~</span> and <span class="exp_operator">!~</span>.
+These operators simply return bool values indicating the success or failure of the matching.
+This bool value alone is already very handy if all you want is making decisions but you can also use the powerful
+group capturing capabilities of the regex engine. In order to do so you have to use one of the regex matching
+operators as the conditional expression of an if-else statement or a ternary (<span class="expr_operator">?:</span>) operator.
+In case of successful regex match the executed branch of the <span class="expression">if-else</span> statement or
+ternary operator can use the value of the captured regex groups as $0, $1, ... and $regex_name if you have named regex groups.
+
 <br/>Example:
 <pre class="expression">
 if (sln_path =~ &quot;Visual Studio.*?/(?&lt;subdir&gt;.*)/(?&lt;sln_name&gt;.*)\.sln&quot;) {
@@ -561,11 +684,16 @@ if (sln_path =~ &quot;Visual Studio.*?/(?&lt;subdir&gt;.*)/(?&lt;sln_name&gt;.*)
     orig_title
 }
 </pre>
-If we used the <span class="exp_operator">!~</span> operator then in case of successful match the else block would execute so the regex group variables would be accessible in the else branch. This regex group matching feature works similarly with the ternary (?:) operator too.
+If we used the <span class="exp_operator">!~</span> operator then in case of successful match the else block would execute
+so the regex group variables would be accessible in the else branch. This regex group matching feature works similarly with
+the ternary (?:) operator too.
 
 <a name="string_slicing"></a>
 <h3>String slicing</h3>
-The language doesn't support string slicing (as I think most users of the extensions won't need it) but you can still slice strings using regex magic just not as beautifully as if we had language support for it. A few examples:
+
+The language doesn't support string slicing (as I think most users of the extensions won't need it) but you can still
+slice strings using regex magic just not as beautifully as if we had language support for it. A few examples:
+
 <table class="expression">
 	<tr>
 		<td>str[4:]</td>
@@ -587,18 +715,50 @@ The language doesn't support string slicing (as I think most users of the extens
 
 <a name="exec_magic"></a>
 <h2>Exec magic: using the output of an executed command in your titlebar expression</h2>
-The <span class="expression">exec</span> function call is probably the most powerful feature of the expression language and the extension itself. It periodically executes a specified command in the given workdir and returns the output of the command. Optionally it "creates" a new variable and stores the return value into this new variable as well and you can access this variable only if you use <span class="expression">exec</span> as the conditional expression of an <span class="expression">if-else</span> statement or a conditional (ternary <span class="expr_operator">?:</span>) operator - this behaviour is similar to the group value access of the regex magic described previously.
+
+The <span class="expression">exec</span> function call is probably the most powerful feature of the expression language
+and the extension itself. It periodically executes a specified command in the given workdir and returns the output of
+the command. Optionally it "creates" a new variable and stores the return value into this new variable as well and you
+can access this variable only if you use <span class="expression">exec</span> as the conditional expression of an
+<span class="expression">if-else</span> statement or a conditional (ternary <span class="expr_operator">?:</span>)
+operator - this behaviour is similar to the group value access of the regex magic described previously.
+
 <pre class="expression">exec [variable] exec_period command workdir</pre>
 <ul>
-	<li><span class="expression">exec_period</span>: This must be an integer that is greater than zero, this specifies the period (in seconds) in which we regularly execute the command to update the return value of the <span class="expression">exec</span> function call.</li>
-	<li><span class="expression">command</span>: An expression that evaluates to a string, it is then used as the command to execute. Note that this command string is executed by the shell, more accurately in the following form:<pre class="expression">cmd /c command</pre>The <span class="expression">cmd</span> command is obtained from the COMSPEC environment variable.</li>
-	<li><span class="expression">workdir</span>: An expression that evaluates to a string, used as the working directory for the command. It must be either an empty string, or an absolute path. If you use an empty string then the current directory for the executed command isn't set so it inherits the current directory from Visual Studio.</li>
+	<li>
+		<span class="expression">exec_period</span>: This must be an integer that is greater than zero, this specifies
+		the period (in seconds) in which we regularly execute the command to update the return value of the
+		<span class="expression">exec</span> function call.
+	</li>
+	<li>
+		<span class="expression">command</span>: An expression that evaluates to a string, it is then used as the
+		command to execute. Note that this command string is executed by the shell, more accurately in the following
+		form:<pre class="expression">cmd /c command</pre>The <span class="expression">cmd</span> command is obtained
+		from the COMSPEC environment variable.
+	</li>
+	<li>
+		<span class="expression">workdir</span>: An expression that evaluates to a string, used as the working
+		directory for the command. It must be either an empty string, or an absolute path. If you use an empty string
+		then the current directory for the executed command isn't set so it inherits the current directory from Visual Studio.
+	</li>
 </ul>
+
 The command execution has 3 possible results:
 <ol>
-	<li>The specified command can not be launched, for example because the executable/command was not found or as a result of an invalid working directory. In this case the return value of <span class="expression">exec</span> is an empty string (like in case of any other error).</li>
-	<li>The specified command executes but it returns with error - a nozero exitcode. The return value of <span class="expression">exec</span> is an empty string.</li>
-	<li>The command executes successfully and terminates with a zero exitcode. In this case everything written by the executed program to its stderr is ignored. The output written by the command to its stdout is returned by the <span class="expression">exec</span> function call after processing it using the following steps:
+	<li>
+		The specified command can not be launched, for example because the executable/command was not found or as a
+		result of an invalid working directory. In this case the return value of <span class="expression">exec</span>
+		is an empty string (like in case of any other error).
+	</li>
+	<li>
+		The specified command executes but it returns with error - a nozero exitcode. The return value of
+		<span class="expression">exec</span> is an empty string.
+	</li>
+	<li>
+		The command executes successfully and terminates with a zero exitcode.
+		In this case everything written by the executed program to its stderr is ignored.
+		The output written by the command to its stdout is returned by the <span class="expression">exec</span>
+		function call after processing it using the following steps:
 		<ol>
 			<li>Removing all carriage returns from the output.</li>
 			<li>If the output string ends with a line feed (newline) character, then we remove it.</li>
@@ -606,11 +766,25 @@ The command execution has 3 possible results:
 		</ol>
 	</li>
 </ol>
-The exec command is extremely powerful. You can set your whole titlebar just by writing and executing your own script if you prefer that. You can pass the value of any expression language variable (VS internal state) to the executed command that can extract even more info from the outside world to compose the titlebar text. For example you can read an info txt from your solution directory for whatever info or your can show a simple clock in the titlebar of your VS... The possibilities are endless. For a few simple examples continue reading this help documentation about the <span class="expression">exec</span> function call and check out the <a href="#examples">Examples</a> section.
+
+The exec command is extremely powerful. You can set your whole titlebar just by writing and executing your own script
+if you prefer that. You can pass the value of any expression language variable (VS internal state) to the executed
+command that can extract even more info from the outside world to compose the titlebar text.
+For example you can read an info txt from your solution directory for whatever info or your can show a simple clock
+in the titlebar of your VS... The possibilities are endless.
+
+For a few simple examples continue reading this help documentation about the <span class="expression">exec</span>
+function call and check out the <a href="#examples">Examples</a> section.
 
 <a name="exec_quoting_hell"></a>
 <h3>Command string quoting hell</h3>
-The <span class="expression">command</span> parameter of <span class="expression">exec</span> is a single string in our expression language. This <span class="expression">command</span> string alone has to contain both the executable command and all of its arguments separated with whitespaces. The only problem is that both the pathname of the executable and some of its arguments may contain whitespace characters and somehow you have to tell "cmd /C" to interpret these as a single unit. 
+
+The <span class="expression">command</span> parameter of <span class="expression">exec</span> is a single string in
+our expression language. This <span class="expression">command</span> string alone has to contain both the executable
+command and all of its arguments separated with whitespaces. The only problem is that both the pathname of the
+executable and some of its arguments may contain whitespace characters and somehow you have to tell "cmd /C" to
+interpret these as a single unit.
+
 <table class="expression">
 	<tr>
 		<td>exec command</td>
@@ -629,11 +803,32 @@ The <span class="expression">command</span> parameter of <span class="expression
 		<td><pre class="title_text">&quot;c:\Program Files (x86)\scripts\myscript.py&quot; &quot;c:\Users\istvan\Documents\Visual Studio 2010\Projects\VSWindowTitleChanger\Forms&quot;</pre></td>
 	</tr>
 </table>
-Above you can see two ugly examples. The first one executes git using its full pathname that contains spaces. The second example is even worse, both the executable and its argument contain spaces and to complicate things further its parameter comes from a variable so the <span class="expression">command</span> parameter of <span class="expression">exec</span> becomes an expression that has to be surrounded by brackets. I know this quotation mark hell is ugly but this quoting stuff isn't the strength of this simple expression language. Fortunately you probably won't change your titlebar expression too often so you have to deal with this rarely. You have to pay this price for the flexibility and power of <span class="expression">exec</span>. :-)
+
+Above you can see two ugly examples. The first one executes git using its full pathname that contains spaces.
+The second example is even worse, both the executable and its argument contain spaces and to complicate things further
+its parameter comes from a variable so the <span class="expression">command</span> parameter of
+<span class="expression">exec</span> becomes an expression that has to be surrounded by brackets.
+I know this quotation mark hell is ugly but this quoting stuff isn't the strength of this simple expression language.
+Fortunately you probably won't change your titlebar expression too often so you have to deal with this rarely.
+You have to pay this price for the flexibility and power of <span class="expression">exec</span>. :-)
 
 <a name="exec_debugging"></a>
 <h3>Debugging exec</h3>
-When you are setting up an <span class="expression">exec</span> command you can have hard time in figuring out what goes wrong when the specified command fails: Does it execute at all? Is it command launching that fails or the command itself returns nozero exticode? It is hard to tell what went wrong because <span class="expression">exec</span> simply returns an empty string in case of an error. Fortunatley there is a remedy for this: In the Title Setup window of the extension you can check "Debug the exec command" checkbox. This checkbox has effect only while the setup window is open and it changes the behavior of the <span class="expression">exec</span> function in the following way: If <span class="expression">exec</span> fails for some reason then instead of returning an empty string it returns a big ugly error report string that comes quite handy for you even if it drastically changes/alters the evaluation of the title expression. Here is an example to this error output:
+
+When you are setting up an <span class="expression">exec</span> command you can have hard time in figuring out what
+goes wrong when the specified command fails: Does it execute at all? Is it command launching that fails or the command
+itself returns nozero exticode?
+
+It is hard to tell what went wrong because <span class="expression">exec</span> simply returns an empty string in case
+of an error. Fortunately there is a remedy for this: In the Title Setup window of the extension you can check
+"Debug the exec command" checkbox. This checkbox has effect only while the setup window is open and it changes the
+behavior of the <span class="expression">exec</span> function in the following way:
+If <span class="expression">exec</span> fails for some reason then instead of returning an empty string it returns a
+big ugly error report string that comes quite handy for you even if it drastically changes/alters the evaluation of
+the title expression.
+
+Here is an example to this error output:
+
 <table class="expression">
 	<tr>
 		<td>Expression</td>
@@ -644,18 +839,36 @@ When you are setting up an <span class="expression">exec</span> command you can 
 		<td><pre class="title_text">Git branch: [[[exec exitcode=1 stdout= stderr=&apos;git&apos; is not recognized as an internal or external command, operable program or batch file. ]]]</pre></td>
 	</tr>
 </table>
+
 Here the problem is trivial: my git command isn't on the PATH. I would have hard time finding out this without the debug feature.
 
 <a name="exec_more_info"></a>
 <h3>Some more info on how exec works</h3>
+
 <p>
-You may have questions like: Can <span class="expression">exec</span> cause my Visual Studio to hang up? What happens if the executed program hangs up or runs longer than the <span class="expression">exec_period</span> I used for my <span class="expression">exec</span> command?
+	You may have questions like: Can <span class="expression">exec</span> cause my Visual Studio to hang up?
+	What happens if the executed program hangs up or runs longer than the <span class="expression">exec_period</span>
+	I used for my <span class="expression">exec</span> command?
 </p>
 <p>
-The <span class="expression">exec</span> function call identifies your command by its <span class="expression">command</span> and <span class="expression">workdir</span> parameters and creates/caches a variable for this command internally, the extension uses this variable to store the output of the latest execution of the command. If you use the <span class="expression">exec</span> function call many times in your expression with the same <span class="expression">command</span> and <span class="expression">workdir</span> parameters then both of these <span class="expression">exec</span> function calls refer to the same internal variable that gets updated with the specified command with the smallest <span class="expression">exec_period</span> that was used for the <span class="expression">exec</span> function calls. The updating of these internal variables happen on a worker thread so program execution has no chance to hang up your Visual Studio.
+	The <span class="expression">exec</span> function call identifies your command by its
+	<span class="expression">command</span> and <span class="expression">workdir</span> parameters and creates/caches
+	a variable for this command internally, the extension uses this variable to store the output of the latest
+	execution of the command.
+
+	If you use the <span class="expression">exec</span> function call many times in your expression with the same
+	<span class="expression">command</span> and <span class="expression">workdir</span> parameters then both of these
+	<span class="expression">exec</span> function calls refer to the same internal variable that gets updated with the
+	specified command with the smallest <span class="expression">exec_period</span> that was used for the
+	<span class="expression">exec</span> function calls. The updating of these internal variables happen on a worker
+	thread so program execution has no chance to hang up your Visual Studio.
 </p>
 <p>
-What happens if your program hangs up or executes longer than the <span class="expression">exec_period</span> you specified? Lets say you use 5 as your <span class="expression">exec_period</span>. In this case if your program executes for more than 5 seconds then this extension doesn't relaunch another instance of the specified command, instead it waits for the first execution to finish and after this the extension immediately relaunches the command as the <span class="expression">exec_period</span> has already passed.
+	What happens if your program hangs up or executes longer than the <span class="expression">exec_period</span>
+	you specified? Lets say you use 5 as your <span class="expression">exec_period</span>.
+	In this case if your program executes for more than 5 seconds then this extension doesn't relaunch another instance
+	of the specified command, instead it waits for the first execution to finish and after this the extension
+	immediately relaunches the command as the <span class="expression">exec_period</span> has already passed.
 </p>
 
 <a name="examples"></a>
@@ -676,7 +889,11 @@ What happens if your program hangs up or executes longer than the <span class="e
 	<li>Showing the current date and time in the titlebar. :-) We are using the date and time commands of cmd for this.
 		<pre class="expression">exec 60 &quot;date /t&quot; &quot;&quot; + exec 5 &quot;time /t&quot; &quot;&quot;</pre>
 	</li>
-	<li>Showing the git branch name if there is a solution open and the solution directory is located in a git repo. We assume that the git command is on the PATH. Note: If the specified sln_dir isn't in a git repo then the following git command finishes with nozero exticode so the return value of the exec function call is an empty string (that is false if we convert it to bool).
+	<li>
+		Showing the git branch name if there is a solution open and the solution directory is located in a git repo.
+		We assume that the git command is on the PATH.
+		Note: If the specified sln_dir isn't in a git repo then the following git command finishes with nozero exticode
+		so the return value of the exec function call is an empty string (that is false if we convert it to bool).
 		<pre class="expression">
 if (sln_open) {
     sln_filename + (exec git_branch 5 "git rev-parse --abbrev-ref HEAD" sln_dir ? " git["+git_branch+"]")
@@ -695,8 +912,11 @@ if (sln_open) {
     "VS" + vs_version
 }		</pre>
 	</li>
-	<li>Putting only the solution filename and the branch name into your title when the branch name is somewhere in the name of a directory that contains the solution file.
-	Let's complicate things a bit more by supporting two projects that contain the branch name in their solution directory differently:
+	<li>
+		Putting only the solution filename and the branch name into your title when the branch name is somewhere in the
+		name of a directory that contains the solution file.
+		Let's complicate things a bit more by supporting two projects that contain the branch name in their solution
+		directory differently:
 		<pre class="expression">
 if (sln_path =~ &quot;(/MyProject1_(?&lt;branch&gt;[^/]+)/Code/Solutions/[^/]+\.sln)|(/(?&lt;branch&gt;[^/]+)_MyProject2/Solutions/[^/]+\.sln)$&quot;) {
     // MyProject1 has directory structure like root_dir/MyProject1_BranchName/Code/Solutions/Something.sln
@@ -722,11 +942,20 @@ if (sln_path =~ &quot;/MyProject1_(?&lt;branch&gt;[^/]+)/Code/Solutions/[^/]+\.s
 
 <a name="general_info"></a>
 <h2>General Info about the extension</h2>
+
 Copyright © 2013 István Pásztor
+
 <h3>Supported Visual Studio Versions</h3>
+
 Supported VS versions: VS2005, VS2008, VS2010, VS2012, VS2013, VS2015, VS2017
+
 <h3>Links</h3>
-The Visual Studio Gallery page of this extension: <a href="http://visualstudiogallery.msdn.microsoft.com/2e8ebfe4-023f-4c4d-9b7a-d05bbc5cb239">http://visualstudiogallery.msdn.microsoft.com/2e8ebfe4-023f-4c4d-9b7a-d05bbc5cb239</a><br/>
-The project is opensource released under the terms of <a href="http://opensource.org/licenses/MIT">The MIT License</a>: <a href="https://github.com/pasztorpisti/vs-window-title-changer">https://github.com/pasztorpisti/vs-window-title-changer</a>
+
+The Visual Studio Gallery page of this extension:
+<a href="http://visualstudiogallery.msdn.microsoft.com/2e8ebfe4-023f-4c4d-9b7a-d05bbc5cb239">http://visualstudiogallery.msdn.microsoft.com/2e8ebfe4-023f-4c4d-9b7a-d05bbc5cb239</a><br/>
+
+The project is opensource released under the terms of <a href="http://opensource.org/licenses/MIT">The MIT License</a>:
+<a href="https://github.com/pasztorpisti/vs-window-title-changer">https://github.com/pasztorpisti/vs-window-title-changer</a>
+
 </body>
 </html>
