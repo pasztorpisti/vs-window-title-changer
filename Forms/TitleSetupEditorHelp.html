@@ -58,19 +58,22 @@
 	</style>
 </head>
 <body>
+
 <h1>Tutorial for the Title Changer Visual Studio extension</h1>
+
 <ol class="toc">
-	<li><a href="#basic_usage">Basic usage</a></li>
-	<li><a href="#language_basics">Expression language basics</a>
+	<li><a href="#usage">Usage</a></li>
+	<li><a href="#language">Expression language</a>
 		<ol>
-			<li><a href="#operators">Expression language operators and their precedence</a></li>
-			<li><a href="#variables">Expression language variables and their description</a></li>
+			<li><a href="#lang_basics">Basics</a></li>
+			<li><a href="#operators">Operators and their precedence</a></li>
+			<li><a href="#variables">Variables and their description</a></li>
 			<li><a href="#regex_magic">Regex magic</a>
 				<ol>
 					<li><a href="#string_slicing">String slicing</a></li>
 				</ol>
 			</li>
-			<li><a href="#exec_magic">Exec magic: using the output of an executed command in your titlebar expression</a>
+			<li><a href="#exec_magic">Exec magic: using the output of an external command in your titlebar expression</a>
 				<ol>
 					<li><a href="#exec_quoting_hell">Command string quoting hell</a></li>
 					<li><a href="#exec_debugging">Debugging exec</a></li>
@@ -80,10 +83,14 @@
 		</ol>
 	</li>
 	<li><a href="#examples">Examples</a></li>
-	<li><a href="#general_info">General Info about the extension</a></li>
+	<li><a href="#about">About the extension</a></li>
 </ol>
-<a name="basic_usage"></a>
-<h2>Basic usage</h2>
+
+<a name="usage"></a>
+<h2>Usage</h2>
+
+<h3>Basics</h3>
+
 <p>
 	Open the setup window of the Title Changer extension: Go to <b>Tools | Options... | VS Window Title Changer</b>,
 	select the <b>Window Title Patterns</b> option and press its <b>"..."</b> button.
@@ -128,9 +135,11 @@ If you want to include a quotation mark in your text then put two quotation mark
 You can use any character inside a string except newline and of course you have to escape quotation marks by using double quotation marks.
 
 <h3>Taking it to the next level</h3>
+
 The extension provides you with a set of variables that contain some info about the state of Visual Studio.
 You can see the list of these variables along with their actual value in the listview at the bottom of the setup window.
 You can include the value of these variables in your titlebar.
+
 <table class="expression">
 	<tr>
 		<td>Expression</td>
@@ -164,7 +173,9 @@ and in that case your VS titlebar with this expression evaluates to the followin
 </table>
 There are many ways to deal with this but in either case we have to use a conditional expression.
 Here are a few solutions:
+
 <h4>Solution #1</h4>
+
 <table class="expression">
 	<tr>
 		<td>Expression</td>
@@ -179,7 +190,9 @@ Here are a few solutions:
 		<td><pre class="title_text"></pre></td>
 	</tr>
 </table>
+
 <h4>Solution #2</h4>
+
 <table class="expression">
 	<tr>
 		<td>Expression</td>
@@ -205,8 +218,12 @@ Of course these are not the only solutions but the above samples show well how t
 If you need something simple and you are lazy to read the expression language tutorial (that isn't long at all)
 then you can jump to the <a href="#examples">Examples section</a> to copy paste a template for yourself.
 
-<a name="language_basics"></a>
-<h2>Expression language basics</h2>
+<a name="language"></a>
+<h2>Expression language</h2>
+
+<a name="lang_basics"></a>
+<h3>Basics</h3>
+
 <ul>
 	<li>
 		The expression language of this extension is case insensitive when it comes to comparing string values and
@@ -240,9 +257,12 @@ then you can jump to the <a href="#examples">Examples section</a> to copy paste 
 	</li>
 	<li>You can use single-line comments just like in C++/C# by prefixing the comment with //</li>
 </ul>
+
 <a name="operators"></a>
-<h2>Expression language operators and their precedence</h2>
+<h3>Operators and their precedence</h3>
+
 Operators are listed top to bottom in descending precedence.
+
 <table class="normal">
 	<tr>
 		<th>Precedence</th>
@@ -427,7 +447,7 @@ bool_val ? val0</pre></td>
 </table>
 
 <a name="variables"></a>
-<h2>Expression language variables and their description</h2>
+<h3>Variables and their description</h3>
 <table class="normal">
 	<tr>
 		<th>Name</th>
@@ -665,7 +685,7 @@ bool_val ? val0</pre></td>
 </table>
 
 <a name="regex_magic"></a>
-<h2>Regex magic</h2>
+<h3>Regex magic</h3>
 
 As you see there are two regex matching operators <span class="exp_operator">=~</span> and <span class="exp_operator">!~</span>.
 These operators simply return bool values indicating the success or failure of the matching.
@@ -689,7 +709,7 @@ so the regex group variables would be accessible in the else branch. This regex 
 the ternary (?:) operator too.
 
 <a name="string_slicing"></a>
-<h3>String slicing</h3>
+<h4>String slicing</h4>
 
 The language doesn't support string slicing (as I think most users of the extensions won't need it) but you can still
 slice strings using regex magic just not as beautifully as if we had language support for it. A few examples:
@@ -714,7 +734,7 @@ slice strings using regex magic just not as beautifully as if we had language su
 </table>
 
 <a name="exec_magic"></a>
-<h2>Exec magic: using the output of an executed command in your titlebar expression</h2>
+<h3>Exec magic: using the output of an external command in your titlebar expression</h3>
 
 The <span class="expression">exec</span> function call is probably the most powerful feature of the expression language
 and the extension itself. It periodically executes a specified command in the given workdir and returns the output of
@@ -777,7 +797,7 @@ For a few simple examples continue reading this help documentation about the <sp
 function call and check out the <a href="#examples">Examples</a> section.
 
 <a name="exec_quoting_hell"></a>
-<h3>Command string quoting hell</h3>
+<h4>Command string quoting hell</h4>
 
 The <span class="expression">command</span> parameter of <span class="expression">exec</span> is a single string in
 our expression language. This <span class="expression">command</span> string alone has to contain both the executable
@@ -813,7 +833,7 @@ Fortunately you probably won't change your titlebar expression too often so you 
 You have to pay this price for the flexibility and power of <span class="expression">exec</span>. :-)
 
 <a name="exec_debugging"></a>
-<h3>Debugging exec</h3>
+<h4>Debugging exec</h4>
 
 When you are setting up an <span class="expression">exec</span> command you can have hard time in figuring out what
 goes wrong when the specified command fails: Does it execute at all? Is it command launching that fails or the command
@@ -843,7 +863,7 @@ Here is an example to this error output:
 Here the problem is trivial: my git command isn't on the PATH. I would have hard time finding out this without the debug feature.
 
 <a name="exec_more_info"></a>
-<h3>Some more info on how exec works</h3>
+<h4>Some more info on how exec works</h4>
 
 <p>
 	You may have questions like: Can <span class="expression">exec</span> cause my Visual Studio to hang up?
@@ -873,6 +893,7 @@ Here the problem is trivial: my git command isn't on the PATH. I would have hard
 
 <a name="examples"></a>
 <h2>Examples</h2>
+
 <ol>
 	<li>Using a constant string as the title text:
 		<pre class="expression">&quot;This is my constant VS title string&quot;</pre>
@@ -940,8 +961,8 @@ if (sln_path =~ &quot;/MyProject1_(?&lt;branch&gt;[^/]+)/Code/Solutions/[^/]+\.s
 	</li>
 </ol>
 
-<a name="general_info"></a>
-<h2>General Info about the extension</h2>
+<a name="about"></a>
+<h2>About the extension</h2>
 
 Copyright © 2013 István Pásztor
 
