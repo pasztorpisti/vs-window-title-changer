@@ -303,6 +303,7 @@ namespace VSWindowTitleChanger
             // columnVariableType
             // 
             this.columnVariableType.Text = "Type";
+            this.columnVariableType.Width = 105;
             // 
             // buttonHelp
             // 
