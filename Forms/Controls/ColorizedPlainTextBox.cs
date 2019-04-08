@@ -164,6 +164,10 @@ namespace VSWindowTitleChanger
 		}
 		static MsftLoader m_MsftLoader = new MsftLoader();
 
+/*
+// We don't anymore build for framework 2.0 and on with versions the below code caused
+// a crash during startup: System.ComponentModel.Win32Exception 'Class already exists'
+
 		protected override CreateParams CreateParams
 		{
 			// This makes the framework 2.0 RichTextBox much faster. It handles well some other things too, for example
@@ -181,7 +185,7 @@ namespace VSWindowTitleChanger
 				return create_params;
 			}
 		}
-
+*/
 		string m_PrevText;
 		int m_PrevSelStart;
 		int m_PrevSelLength;

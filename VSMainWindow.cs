@@ -193,19 +193,19 @@ namespace VSWindowTitleChanger
 
 		void TryfindTitleTextBlock()
 		{
-			DependencyObject root = HwndSource.FromHwnd(m_MainHWND).RootVisual as DependencyObject;
-			if (root != null)
-			{
-				DependencyObject titlebar = FindInSubtreeByClassNamePostfix(root, ".MainWindowTitleBar") as DependencyObject;
-				if (titlebar != null)
-				{
-					DependencyObject dock_panel = FindChildByClassNamePostfix(titlebar, ".DockPanel");
-					if (dock_panel != null)
-					{
-						m_TitleTextBlock = FindChildByClassNamePostfix(dock_panel, ".TextBlock") as TextBlock;
-					}
-				}
-			}
+			HwndSource hs = HwndSource.FromHwnd(m_MainHWND);
+			if (hs == null)
+				return;
+			DependencyObject root = hs.RootVisual as DependencyObject;
+			if (root == null)
+				return;
+			DependencyObject titlebar = FindInSubtreeByClassNamePostfix(root, ".MainWindowTitleBar") as DependencyObject;
+			if (titlebar == null)
+				return;
+			DependencyObject dock_panel = FindChildByClassNamePostfix(titlebar, ".DockPanel");
+			if (dock_panel == null)
+				return;
+			m_TitleTextBlock = FindChildByClassNamePostfix(dock_panel, ".TextBlock") as TextBlock;
 		}
 
 		DependencyObject FindChildByClassNamePostfix(DependencyObject parent, string postfix)
