@@ -367,8 +367,12 @@ namespace VSWindowTitleChanger
 						break;
 				}
 			}
-			g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-			g.DrawLines(m_UnderlinePen, points.ToArray());
+
+			if (points.Count >= 2)
+			{
+				g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+				g.DrawLines(m_UnderlinePen, points.ToArray());
+			}
 		}
 
 
